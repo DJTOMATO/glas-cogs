@@ -42,7 +42,7 @@ async def summon_watamelon(self, ctx, type: str):
         e.title = f"Here's a Random Watamelon {type.title()}! 🍉"
         e.set_image(url=choice(watamelon[type]))
         e.set_footer(
-            text="Source: /watamelon/ Code by Kuro-Cogs/blob/main/fumo/fumos.py",
+            text="Source: /watamelon/ - Code by Kuro-Cogs/blob/main/fumo/fumos.py",
             icon_url="https://files.catbox.moe/42wylc.png",
         )
     await ctx.send(embed=e)
