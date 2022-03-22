@@ -20,7 +20,11 @@ ogey = {
         "https://files.catbox.moe/gxj7u2.png",
     ],
     "gif": [
-        "https://files.catbox.moe/1lbqxs.gif",
+        "https://files.catbox.moe/m73l5q.gif",
+        "https://files.catbox.moe/b40gou.gif",
+        "https://files.catbox.moe/vd25ad.gif",
+        "https://files.catbox.moe/j95uui.gif",
+        "https://files.catbox.moe/jpl3j4.gif",
         "https://files.catbox.moe/1lbqxs.gif",
         "https://files.catbox.moe/f4ny5p.gif",
         "https://files.catbox.moe/mmbed9.gif",
