@@ -30,7 +30,7 @@
 [p]load downloader
 ```
 ```md
-[p]repo add glas-cogs https://github.com/dj_tomato/glas-cogs
+[p]repo add glas-cogs https://github.com/djtomato/glas-cogs
 ```
 ```md
 [p]cog install glas-cogs <cog_name>
