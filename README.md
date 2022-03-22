@@ -49,6 +49,7 @@
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 |  Watamelon   | Generates a random Watamelon (forked from Kuro-Cogs/Fumo) |            Kuro             |
+|  Ogey   | Generates a random Ogey (forked from Kuro-Cogs/Fumo) |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 
 
