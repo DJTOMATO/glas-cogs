@@ -52,13 +52,6 @@ class Watamelon(commands.Cog):
 
         await summon_watamelon(self, ctx, "gif")
 
-    @watamelon.command(aliases=["memes"])
-    @commands.cooldown(1, 3, commands.BucketType.user)
-    async def meme(self, ctx):
-        """Generates a random Watamelon meme."""
-
-        await summon_watamelon(self, ctx, "meme")
-
 
 def setup(bot):
     bot.add_cog(Watamelon(bot))
