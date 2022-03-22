@@ -1,0 +1,8 @@
+{
+    "author": ["Glas"],
+    "install_msg": "Thanks for installing my repo!\nFor Support, You can visit <#240212783503900673> in **Red - Cog Support** (https://discord.gg/GET4DVk) :D\nUse `[p]cog list glas-cogs` to see available cogs.",
+    "name": "glas-cogs",
+    "short": "Silly cogs nobody would use.",
+    "description": "Silly cogs nobody would use.",
+    "tags": ["custom", "customized", "fun", "glas", "tools", "utility"]
+}
