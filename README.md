@@ -48,10 +48,13 @@
 ### Customized/Edited Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
-|  Watamelon   | Generates a random Watamelon (forked from Kuro-Cogs/Fumo) |            [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs            |
+|  Watamelon   | Generates a random Watamelon (forked from Kuro-Cogs/Fumo) |            Kuro             |
+|  Fire        | New year fireworks                                        |            TrustyJaid       |
 
 
 ## Credits
 **Special Thanks** to:
 - [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs) for making Fumo Cog, where I based Watamelon from
+- [**TrustyJaid**](https://github.com/TrustyJAID/Trusty-cogs/) for teaching me how to make a basic Cog.
+- [**npc203**](https://github.com/npc203/npc-cogs) for being a inspiration on Cog "making" (>) best son ever.
 - **[Red Community](https://discord.gg/red)** for making the best Discord bot ever <3 Much love!.

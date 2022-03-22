@@ -1,0 +1,12 @@
+{
+    "name": "Fireworks!",
+    "short": "Generates a random firework.",
+    "description": "Generates a random firework from an API.",
+    "install_msg": "Thanks for installing `fire` cog! Please enjoy it :D",
+    "author": ["TrustyJaid", "Glas"],
+    "tags": ["image", "firework", "gif"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data."
+}
