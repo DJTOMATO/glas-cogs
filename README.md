@@ -54,7 +54,7 @@
 
 ## Credits
 **Special Thanks** to:
-- [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs) for making Fumo Cog, where I based Watamelon from
+- [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs) for making Fumo Cog, where I based Watamelon from and for making this awesome readme template
 - [**TrustyJaid**](https://github.com/TrustyJAID/Trusty-cogs/) for teaching me how to make a basic Cog.
 - [**npc203**](https://github.com/npc203/npc-cogs) for being a inspiration on Cog "making" (>) best son ever.
 - **[Red Community](https://discord.gg/red)** for making the best Discord bot ever <3 Much love!.
