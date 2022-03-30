@@ -34,23 +34,23 @@ class D4DJ(commands.Cog):
         self.bot.loop.create_task(self.session.close())
 
     @commands.group()
-    async def d4(self, ctx):
+    async def d4dj(self, ctx):
         """Generates D4DJ Image."""
         pass
 
-    @ogey.command(aliases=["images"])
+    @d4dj.command(aliases=["esora"])
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def image(self, ctx):
-        """Generates a random D4DJ image."""
+    async def esora(self, ctx):
+        """Generates a random Esora image."""
 
-        await summon_d4(self, ctx, "image")
+        await summon_d4(self, ctx, "esora")
 
-    @ogey.command(aliases=["gifs"])
+    @d4dj.command(aliases=["Noa"])
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def gif(self, ctx):
-        """Generates a random D4DJ GIF."""
+    async def noa(self, ctx):
+        """Generates a random Noa image."""
 
-        await summon_d4(self, ctx, "gif")
+        await summon_d4(self, ctx, "noa")
 
 
 def setup(bot):
