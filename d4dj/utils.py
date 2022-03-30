@@ -1,7 +1,7 @@
 from random import choice
 import discord
 
-from .d4dj import d4dj
+from .d4dj import esora
 
 
 async def summon_esora(self, ctx, type: str):
