@@ -35,19 +35,19 @@ async def summon_noa(self, ctx, type: str):
     if type == "random":
         get_noa = await noa_calling_ritual(self)
         if noa:
-            e.title = f"Here's a Random noa! 🐀"
+            e.title = f"Here's a Random Noa! ✨"
             e.set_image(url=get_noa)
             e.set_footer(
-                text="Source: https://fumoapi.herokuapp.com/",
-                icon_url="https://i.kym-cdn.com/photos/images/newsfeed/002/240/804/333.png",
+                text="Source: https://d4dj.fandom.com/",
+                icon_url="https://bae.lena.moe/ad5bq96j8zln.webp",
             )
         else:
             return await ctx.send("There's something wrong with the noa API, try again later!")
     else:
-        e.title = f"Here's a Random noa {type.title()}! 🐀"
+        e.title = f"Here's a Random Noa {type.title()}! ✨"
         e.set_image(url=choice(noa[type]))
         e.set_footer(
-            text="Source: /hlgg/ - Code by Kuro-Cogs/fumo",
-            icon_url="https://i.kym-cdn.com/photos/images/newsfeed/002/240/804/333.png",
+            text="Source: https://d4dj.fandom.com/",
+            icon_url="https://bae.lena.moe/ad5bq96j8zln.webp",
         )
     await ctx.send(embed=e)
