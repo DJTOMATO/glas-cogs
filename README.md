@@ -51,6 +51,7 @@
 |  Watamelon   | Generates a random Watamelon (forked from Kuro-Cogs/Fumo) |            Kuro             |
 |  Ogey   | Generates a random Ogey (forked from Kuro-Cogs/Fumo) |            Kuro             |
 |  Don   | Generates a random Don-chan (forked from Kuro-Cogs/Fumo) |            Kuro             |
+|  D4DJ   | Generates a random D4DJ Waifu (forked from Kuro-Cogs/Fumo) |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 
 

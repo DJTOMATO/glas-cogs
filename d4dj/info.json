@@ -1,0 +1,12 @@
+{
+    "name": "D4DJ",
+    "short": "Generates a random D4DJ image.",
+    "description": "Generates a random D4DJ image from an API.",
+    "install_msg": "Thanks for installing `D4DJ` cog! Please enjoy it :D",
+    "author": ["Kuro", "Glas"],
+    "tags": ["image", "D4DJ"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data."
+}
