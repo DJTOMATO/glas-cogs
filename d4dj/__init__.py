@@ -39,14 +39,14 @@ class D4DJ(commands.Cog):
         """Generates D4DJ Image."""
         pass
 
-    @d4dj.command(aliases=["esora"])
+    @d4dj.command(aliases=["esoraa"])
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def esora(self, ctx):
         """Generates a random Esora image."""
 
         await summon_esora(self, ctx, "esora")
 
-    @d4dj.command(aliases=["Noa"])
+    @d4dj.command(aliases=["Noaa"])
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def noa(self, ctx):
         """Generates a random Noa image."""
