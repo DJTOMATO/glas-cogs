@@ -3,7 +3,8 @@ import aiohttp
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import humanize_list
 
-from .utils import summon_d4
+from .utils import summon_esora
+from .utils import summon_noa
 
 
 class D4DJ(commands.Cog):
