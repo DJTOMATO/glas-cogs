@@ -48,13 +48,13 @@
 ### Customized/Edited Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
-|  Watamelon   | Generates a random Watamelon (forked from Kuro-Cogs/Fumo) |            Kuro             |
-|  Ogey   | Generates a random Ogey (forked from Kuro-Cogs/Fumo) |            Kuro             |
-|  Don   | Generates a random Don-chan (forked from Kuro-Cogs/Fumo) |            Kuro             |
-|  D4DJ   | Generates a random D4DJ Waifu (forked from Kuro-Cogs/Fumo) |            Kuro             |
+|  Watamelon   | Generates a random Watamelon*  |            Kuro             |
+|  Ogey   | Generates a random Ogey* |            Kuro             |
+|  Don   | Generates a random Don-chan*  |            Kuro             |
+|  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 
-
+* (forked from Kuro-Cogs/Fumo)
 ## Credits
 **Special Thanks** to:
 - [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs) for making Fumo Cog, where I based Watamelon from and for making this awesome readme template
