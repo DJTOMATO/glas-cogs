@@ -53,7 +53,7 @@
 |  Don   | Generates a random Don-chan*  |            Kuro             |
 |  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
-|  PfpImgen        | Make images from avatars!                                        |            PhenoM4n4n       |
+|  PfpImgen        | Make images from avatars! (two new commands added, more to come)                                       |            PhenoM4n4n       |
 
 * (forked from Kuro-Cogs/Fumo)
 ## Credits
