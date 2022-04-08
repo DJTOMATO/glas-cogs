@@ -82,6 +82,23 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["nofunallowed"], cooldown_after_parsing=True)
+    async def nofun(self, ctx, *, member: FuzzyMember = None):
+        """Make a nofun avatar..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_nofun, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def conference(self, ctx, *, member: FuzzyMember = None):
         """Make a conference avatar..."""
@@ -324,6 +341,32 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "neko.png")
+        fp.close()
+        return _file
+
+    def gen_nofun(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 155)
+
+        # base canvas
+        im = Image.new("RGBA", (512, 512), None)
+
+        # neko = Image.open(f"{bundled_data_path(self)}/nofun/nofun.png", mode="r").convert("RGBA")
+        nofunmask = Image.open(f"{bundled_data_path(self)}/nofun/nofunmask.png", mode="r").convert(
+            "RGBA"
+        )
+        # im.paste(neko, (0, 0), neko)
+        #        im = Image.FLIP_LEFT_RIGHT()
+        # pasting the pfp
+        im.paste(member_avatar, (140, 8), member_avatar)
+        im.paste(nofunmask, (0, 0), nofunmask)
+        nofunmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "nofun.png")
         fp.close()
         return _file
 
