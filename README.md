@@ -54,7 +54,7 @@
 |  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  PfpImgen        | Make images from avatars! (two new commands added, more to come)                                       |            PhenoM4n4n       |
-|  NoHugs        | Disables 'hug' command so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
+|  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 
 * (forked from Kuro-Cogs/Fumo)
 ## Credits
