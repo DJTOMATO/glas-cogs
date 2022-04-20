@@ -1,0 +1,12 @@
+{
+    "name": "NoHugs",
+    "short": "Disables General Cog hug command.",
+    "description": "Disables General Cog hug command so hugs from RolePlay cog can be used easily",
+    "install_msg": "Thanks for installing `nohugs` cog! Please enjoy it :D",
+    "author": ["Aikaterna"],
+    "tags": ["general"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data."
+}

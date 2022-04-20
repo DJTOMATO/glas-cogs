@@ -54,6 +54,7 @@
 |  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  PfpImgen        | Make images from avatars! (two new commands added, more to come)                                       |            PhenoM4n4n       |
+|  NoHugs        | Disables 'hug' command so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 
 * (forked from Kuro-Cogs/Fumo)
 ## Credits
@@ -61,4 +62,5 @@
 - [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs) for making Fumo Cog, where I based Watamelon from and for making this awesome readme template
 - [**TrustyJaid**](https://github.com/TrustyJAID/Trusty-cogs/) for teaching me how to make a basic Cog.
 - [**npc203**](https://github.com/npc203/npc-cogs) for being a inspiration on Cog "making" (>) best son ever.
+- [**aikaterna**](https://github.com/aikaterna/aikaterna-cogs) for being an incredible and patient teacher. <3
 - **[Red Community](https://discord.gg/red)** for making the best Discord bot ever <3 Much love!.
