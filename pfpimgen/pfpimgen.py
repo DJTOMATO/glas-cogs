@@ -674,7 +674,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_ahoy(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 228)
+        member_avatar = self.bytes_to_image(member_avatar, 190)
         # base canvas
         im = Image.new("RGBA", (960, 540), None)
         # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
@@ -684,7 +684,7 @@ class PfpImgen(commands.Cog):
         # im.paste(ogey, (0, 0), ogey)
 
         # pasting the pfp
-        im.paste(member_avatar, (385, 219), member_avatar)
+        im.paste(member_avatar, (315, 249), member_avatar)
         im.paste(ahoymask, (0, 0), ahoymask)
         ahoymask.close()
         member_avatar.close()
