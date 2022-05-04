@@ -299,6 +299,40 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def waku(self, ctx, *, member: FuzzyMember = None):
+        """Make a waku avatar..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_waku, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def idiot(self, ctx, *, member: FuzzyMember = None):
+        """Make an idiot avatar..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_idiot, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def petpet(self, ctx: commands.Context, member: FuzzyMember = None):
         """petpet someone"""
         member = member or ctx.author
@@ -674,9 +708,9 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_ahoy(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 190)
+        member_avatar = self.bytes_to_image(member_avatar, 150)
         # base canvas
-        im = Image.new("RGBA", (960, 540), None)
+        im = Image.new("RGBA", (640, 527), None)
         # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
         ahoymask = Image.open(f"{bundled_data_path(self)}/ahoy/ahoymask.png", mode="r").convert(
             "RGBA"
@@ -684,7 +718,7 @@ class PfpImgen(commands.Cog):
         # im.paste(ogey, (0, 0), ogey)
 
         # pasting the pfp
-        im.paste(member_avatar, (315, 289), member_avatar)
+        im.paste(member_avatar, (320, 340), member_avatar)
         im.paste(ahoymask, (0, 0), ahoymask)
         ahoymask.close()
         member_avatar.close()
@@ -694,5 +728,53 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "ahoy.png")
+        fp.close()
+        return _file
+
+    def gen_waku(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 600)
+        # base canvas
+        im = Image.new("RGBA", (720, 675), None)
+        # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
+        wakumask = Image.open(f"{bundled_data_path(self)}/waku/waku_mask.png", mode="r").convert(
+            "RGBA"
+        )
+        # im.paste(ogey, (0, 0), ogey)
+
+        # pasting the pfp
+        im.paste(member_avatar, (100, 90), member_avatar)
+        im.paste(wakumask, (0, 0), wakumask)
+        wakumask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "waku.png")
+        fp.close()
+        return _file
+
+    def gen_idiot(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+        # base canvas
+        im = Image.new("RGBA", (600, 416), None)
+        # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
+        idiotmask = Image.open(
+            f"{bundled_data_path(self)}/idiot/idiot_mask.png", mode="r"
+        ).convert("RGBA")
+        # im.paste(ogey, (0, 0), ogey)
+
+        # pasting the pfp
+        im.paste(member_avatar, (150, 40), member_avatar)
+        im.paste(idiotmask, (0, 0), idiotmask)
+        idiotmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "idiot.png")
         fp.close()
         return _file
