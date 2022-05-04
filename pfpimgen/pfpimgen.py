@@ -684,7 +684,7 @@ class PfpImgen(commands.Cog):
         # im.paste(ogey, (0, 0), ogey)
 
         # pasting the pfp
-        im.paste(member_avatar, (315, 249), member_avatar)
+        im.paste(member_avatar, (315, 289), member_avatar)
         im.paste(ahoymask, (0, 0), ahoymask)
         ahoymask.close()
         member_avatar.close()
