@@ -282,6 +282,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def ahoy(self, ctx, *, member: FuzzyMember = None):
+        """Make a ahoy avatar..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_ahoy, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def petpet(self, ctx: commands.Context, member: FuzzyMember = None):
         """petpet someone"""
         member = member or ctx.author
@@ -653,5 +670,30 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "shutup.png")
+        fp.close()
+        return _file
+
+
+         def gen_ahoy(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 228)
+        # base canvas
+        im = Image.new("RGBA", (960, 540), None)
+        # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
+        ahoymask = Image.open(f"{bundled_data_path(self)}/ahoy/ahoymask.png", mode="r").convert(
+            "RGBA"
+        )
+        # im.paste(ogey, (0, 0), ogey)
+
+        # pasting the pfp
+        im.paste(member_avatar, (585, 119), member_avatar)
+        im.paste(ahoymask, (0, 0), ahoymask)
+        ahoymask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "ahoy.png")
         fp.close()
         return _file
