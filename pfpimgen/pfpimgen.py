@@ -673,8 +673,7 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-
-         def gen_ahoy(self, ctx, member_avatar):
+    def gen_ahoy(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 228)
         # base canvas
         im = Image.new("RGBA", (960, 540), None)
