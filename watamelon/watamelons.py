@@ -635,6 +635,11 @@ watamelon = {
         "https://bae.lena.moe/rvj9a5f7a0su.png",
         "https://bae.lena.moe/i1eq3lo8fd1t.png",
         "https://bae.lena.moe/eq8sts3o6t26.png",
+        "https://cdn.discordapp.com/attachments/921094083471085589/981038184953675776/1653956123868.jpg",
+        "https://cdn.discordapp.com/attachments/921094083471085589/981038185503146015/1653955075085.jpg",
+        "https://cdn.discordapp.com/attachments/921094083471085589/981038186434277486/1653945787333.jpg",
+        "https://cdn.discordapp.com/attachments/921094083471085589/981038186652393482/1653944032538.jpg",
+        "https://cdn.discordapp.com/attachments/921094083471085589/981038187151499314/1653928210756.jpg",
     ],
     "gif": [
         "https://files.catbox.moe/vcyhjh.gif",
@@ -671,6 +676,7 @@ watamelon = {
         "https://i.imgur.com/ah7e4gi.gif",
         "https://bae.lena.moe/3s5wo8zeuy6n.gif",
         "https://bae.lena.moe/3qjww53djbfg.gif",
+        "https://cdn.discordapp.com/attachments/921094083471085589/981038185851285564/1653950207105.gif",
     ],
     # "videos" : [
     #     "https://telegra.ph/file/f2235dde2263d69cb5e22.mp4",
