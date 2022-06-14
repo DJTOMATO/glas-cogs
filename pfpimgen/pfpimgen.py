@@ -82,6 +82,23 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["you"], cooldown_after_parsing=True)
+    async def you(self, ctx, *, member: FuzzyMember = None):
+        """Make a you avatar..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_you, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["nofunallowed"], cooldown_after_parsing=True)
     async def nofun(self, ctx, *, member: FuzzyMember = None):
         """Make a nofun avatar..."""
@@ -776,5 +793,29 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "idiot.png")
+        fp.close()
+        return _file
+
+    def gen_you(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+        # base canvas
+        im = Image.new("RGBA", (600, 416), None)
+        # ahoy = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert("RGBA")
+        youmask = Image.open(f"{bundled_data_path(self)}/you/you_mask.png", mode="r").convert(
+            "RGBA"
+        )
+        # im.paste(you, (0, 0), you)
+
+        # pasting the pfp
+        im.paste(member_avatar, (150, 40), member_avatar)
+        im.paste(youmask, (0, 0), youmask)
+        youmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "you.png")
         fp.close()
         return _file
