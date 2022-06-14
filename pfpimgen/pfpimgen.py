@@ -807,7 +807,7 @@ class PfpImgen(commands.Cog):
         # im.paste(you, (0, 0), you)
 
         # pasting the pfp
-        im.paste(member_avatar, (300, 242), member_avatar)
+        im.paste(member_avatar, (300, 180), member_avatar)
         im.paste(youmask, (0, 0), youmask)
         youmask.close()
         member_avatar.close()
