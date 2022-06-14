@@ -82,7 +82,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["you"], cooldown_after_parsing=True)
+    @commands.command(aliases=["youu"], cooldown_after_parsing=True)
     async def you(self, ctx, *, member: FuzzyMember = None):
         """Make a you avatar..."""
         if not member:
