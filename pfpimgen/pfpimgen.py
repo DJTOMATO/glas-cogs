@@ -797,9 +797,9 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_you(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
+        member_avatar = self.bytes_to_image(member_avatar, 500)
         # base canvas
-        im = Image.new("RGBA", (600, 416), None)
+        im = Image.new("RGBA", (1434, 1284), None)
         # ahoy = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert("RGBA")
         youmask = Image.open(f"{bundled_data_path(self)}/you/you_mask.png", mode="r").convert(
             "RGBA"
