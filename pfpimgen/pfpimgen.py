@@ -837,7 +837,7 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def fumopic_you(self, ctx, member_avatar):
+    def gen_fumopic(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 130)
         # base canvas
         im = Image.new("RGBA", (451, 600), None)
