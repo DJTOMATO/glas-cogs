@@ -838,7 +838,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_fumopic(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 130)
+        member_avatar = self.bytes_to_image(member_avatar, 300)
         # base canvas
         im = Image.new("RGBA", (451, 600), None)
 
@@ -848,7 +848,7 @@ class PfpImgen(commands.Cog):
         # im.paste(you, (0, 0), you)
 
         # pasting the pfp
-        im.paste(member_avatar, (280, 140), member_avatar)
+        im.paste(member_avatar, (200, 200), member_avatar)
         im.paste(fumopicmask, (0, 0), fumopicmask)
         fumopicmask.close()
         member_avatar.close()
