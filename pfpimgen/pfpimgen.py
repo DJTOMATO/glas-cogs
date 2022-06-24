@@ -850,7 +850,7 @@ class PfpImgen(commands.Cog):
         # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        im.paste(member_avatar, (155, 200), member_avatar)
+        im.paste(member_avatar, (150, 200), member_avatar)
         im.paste(fumopicmask, (0, 0), fumopicmask)
         fumopicmask.close()
         member_avatar.close()
