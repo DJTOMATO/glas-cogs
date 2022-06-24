@@ -50,11 +50,14 @@
 |:------------:|----------------------------------------------------------|:----------------------------:|
 |  Watamelon   | Generates a random Watamelon*  |            Kuro             |
 |  Ogey   | Generates a random Ogey* |            Kuro             |
-|  Don   | Generates a random Don-chan*  |            Kuro             |
-|  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  PfpImgen        | Make images from avatars! (with extra 7 commands!)                                       |            PhenoM4n4n       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
+### Abandoned Cogs
+|     Name     |                       Description                        |            Author            |
+|:------------:|----------------------------------------------------------|:----------------------------:|
+| Don    | Generates a random Don-chan*  |            Kuro             |
+|  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
 |  NewCC        | Recreates ``cc list`` in a more fashionable way. **BUGGED, DON'T USE WITH MULTIPLE SERVERS, USE AT YOUR OWN RISK**|            Glas/Breeze       |
 
 * (forked from Kuro-Cogs/Fumo)
