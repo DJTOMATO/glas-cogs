@@ -881,9 +881,9 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_ina(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
+        member_avatar = self.bytes_to_image(member_avatar, 270)
         # base canvas
-        im = Image.new("RGBA", (451, 600), None)
+        im = Image.new("RGBA", (600, 338), None)
 
         inamask = Image.open(f"{bundled_data_path(self)}/ina/ina_mask.png", mode="r").convert(
             "RGBA"
@@ -893,7 +893,7 @@ class PfpImgen(commands.Cog):
         # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        im.paste(member_avatar, (150, 200), member_avatar)
+        im.paste(member_avatar, (120, 75), member_avatar)
         im.paste(inamask, (0, 0), inamask)
         inamask.close()
         member_avatar.close()
