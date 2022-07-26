@@ -53,6 +53,7 @@
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  PfpImgen        | Make images from avatars! (with extra 7 commands!)                                       |            PhenoM4n4n       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
+|  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
 ### Abandoned Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
