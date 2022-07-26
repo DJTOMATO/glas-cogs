@@ -923,7 +923,7 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def gen_gos(self, ctx, member_avatar):
+    def gen_gosling(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 250)
         # base canvas
         im = Image.new("RGBA", (512, 512), None)
