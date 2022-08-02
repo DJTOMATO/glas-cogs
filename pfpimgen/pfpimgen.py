@@ -967,7 +967,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_marisa(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
+        member_avatar = self.bytes_to_image(member_avatar, 750)
         # base canvas
         im = Image.new("RGBA", (433, 577), None)
 
