@@ -133,7 +133,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["gos"], cooldown_after_parsing=True)
+    @commands.command(aliases=["selfie"], cooldown_after_parsing=True)
     async def marisa(self, ctx, *, member: FuzzyMember = None):
         """Make a Marisa avatar..."""
         if not member:
