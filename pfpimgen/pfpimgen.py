@@ -1012,7 +1012,7 @@ class PfpImgen(commands.Cog):
     def gen_religion(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 520)
         # base canvas
-        im = Image.new("RGBA", (0, 0), None)
+        im = Image.new("RGBA", (520, 612), None)
 
         religionmask = Image.open(
             f"{bundled_data_path(self)}/religion/religion_mask.png", mode="r"
