@@ -1053,7 +1053,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_nep(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 563)
+        member_avatar = self.bytes_to_image(member_avatar, 768)
         # base canvas
         im = Image.new("RGBA", (768, 563), None)
 
