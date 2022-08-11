@@ -1065,7 +1065,7 @@ class PfpImgen(commands.Cog):
         # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        im.paste(member_avatar, (0, 0), member_avatar)
+        im.paste(member_avatar, (0, -20), member_avatar)
         im.paste(nepmask, (0, 0), nepmask)
         nepmask.close()
         member_avatar.close()
