@@ -167,6 +167,23 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["nepnep"], cooldown_after_parsing=True)
+    async def nep(self, ctx, *, member: FuzzyMember = None):
+        """Make a nepnep avatar..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_nep, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["inapic"], cooldown_after_parsing=True)
     async def ina(self, ctx, *, member: FuzzyMember = None):
         """Make a Ina avatar..."""
@@ -1032,5 +1049,31 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "religion.png")
+        fp.close()
+        return _file
+
+    def gen_nep(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 563)
+        # base canvas
+        im = Image.new("RGBA", (768, 563), None)
+
+        nepmask = Image.open(f"{bundled_data_path(self)}/nep/nep_mask.png", mode="r").convert(
+            "RGBA"
+        )
+        # im.paste(you, (0, 0), you)
+
+        # pasting the pfp
+
+        im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        im.paste(member_avatar, (0, 0), member_avatar)
+        im.paste(nepmask, (0, 0), nepmask)
+        nepmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "nep.png")
         fp.close()
         return _file
