@@ -1106,11 +1106,11 @@ class PfpImgen(commands.Cog):
         # im.paste(you, (0, 0), you)
 
         # pasting the pfp
-
+        im.paste(member_avatar, (50, -20), member_avatar)
         member_avatar = im.rotate(
             120, resample=0, expand=0, center=None, translate=None, fillcolor=None
         )
-        im.paste(member_avatar, (50, -20), member_avatar)
+
         im.paste(liesmask, (0, 0), liesmask)
         liesmask.close()
         member_avatar.close()
