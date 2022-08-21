@@ -1096,7 +1096,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_lies(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 768)
+        member_avatar = self.bytes_to_image(member_avatar, 350)
         # base canvas
         im = Image.new("RGBA", (701, 461), None)
 
