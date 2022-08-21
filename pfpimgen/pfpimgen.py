@@ -1109,7 +1109,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (-85, -260), member_avatar)
+        im.paste(member_avatar, (-83, -250), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
         liesmask.close()
         member_avatar.close()
