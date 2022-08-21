@@ -1097,7 +1097,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_lies(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 435)
+        member_avatar = self.bytes_to_image(member_avatar, 400)
 
         member_avatar = member_avatar.rotate(45, Image.NEAREST, expand=1)
         # base canvas
