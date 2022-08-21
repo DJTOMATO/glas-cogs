@@ -1097,7 +1097,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_lies(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 400)
+        member_avatar = self.bytes_to_image(member_avatar, 430)
 
         member_avatar = member_avatar.rotate(45, Image.NEAREST, expand=1)
         # base canvas
@@ -1109,7 +1109,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (-50, -290), member_avatar)
+        im.paste(member_avatar, (-20, -290), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
         liesmask.close()
         member_avatar.close()
