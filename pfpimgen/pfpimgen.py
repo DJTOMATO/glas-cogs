@@ -119,7 +119,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["gos"], cooldown_after_parsing=True)
     async def gosling(self, ctx, *, member: FuzzyMember = None):
-        """Make a Gosling avatar..."""
+        """Totally not gosling at all..."""
         if not member:
             member = ctx.author
 
@@ -136,7 +136,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["selfie"], cooldown_after_parsing=True)
     async def marisa(self, ctx, *, member: FuzzyMember = None):
-        """Make a Marisa avatar..."""
+        """Selfie with Marisa..."""
         if not member:
             member = ctx.author
 
@@ -170,7 +170,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["nepnep"], cooldown_after_parsing=True)
     async def nep(self, ctx, *, member: FuzzyMember = None):
-        """Make a nepnep avatar..."""
+        """Rom & Ram spooked at you..."""
         if not member:
             member = ctx.author
 
@@ -238,7 +238,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def conference(self, ctx, *, member: FuzzyMember = None):
-        """Make a conference avatar..."""
+        """Well well, what do you have to say?..."""
         if not member:
             member = ctx.author
 
@@ -420,7 +420,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def ahoy(self, ctx, *, member: FuzzyMember = None):
-        """Make a ahoy avatar..."""
+        """You and Marine <3..."""
         if not member:
             member = ctx.author
 
@@ -437,7 +437,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def waku(self, ctx, *, member: FuzzyMember = None):
-        """Make a waku avatar..."""
+        """Certified WakuWaku moment..."""
         if not member:
             member = ctx.author
 
@@ -454,7 +454,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def idiot(self, ctx, *, member: FuzzyMember = None):
-        """Make an idiot avatar..."""
+        """You're a fucking idiot..."""
         if not member:
             member = ctx.author
 
