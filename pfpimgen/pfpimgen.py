@@ -951,7 +951,7 @@ class PfpImgen(commands.Cog):
         # im.paste(you, (0, 0), you)
 
         # pasting the pfp
-        member_avatar = member_avatar.rotate(110, Image.NEAREST, expand=1)
+        member_avatar = member_avatar.rotate(30, Image.NEAREST, expand=1)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (150, 200), member_avatar)
         im.paste(fumopicmask, (0, 0), fumopicmask)
