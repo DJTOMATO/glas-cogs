@@ -1102,6 +1102,7 @@ class PfpImgen(commands.Cog):
         liesmask = Image.open(f"{bundled_data_path(self)}/lies/lies_mask.png", mode="r").convert(
             "RGBA"
         )
+        member_avatar.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
