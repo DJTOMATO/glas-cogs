@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 import asyncio
+from email.mime import image
 import functools
 from io import BytesIO
 from typing import Literal, Optional
@@ -1097,15 +1098,16 @@ class PfpImgen(commands.Cog):
 
     def gen_lies(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 435)
+        member_avatar = Image.rotate(45)
         # base canvas
         im = Image.new("RGBA", (701, 461), None)
         liesmask = Image.open(f"{bundled_data_path(self)}/lies/lies_mask.png", mode="r").convert(
             "RGBA"
         )
 
-        member_avatar = image.rotate(45)
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+
         im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
         liesmask.close()
