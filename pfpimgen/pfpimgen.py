@@ -1098,7 +1098,8 @@ class PfpImgen(commands.Cog):
 
     def gen_lies(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 435)
-        member_avatar = Image.rotate(45)
+
+        member_avatar.rotate(45, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (701, 461), None)
         liesmask = Image.open(f"{bundled_data_path(self)}/lies/lies_mask.png", mode="r").convert(
