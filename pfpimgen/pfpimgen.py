@@ -102,7 +102,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["fumopicture"], cooldown_after_parsing=True)
     async def fumopic(self, ctx, *, member: FuzzyMember = None):
-        """Make a fumopic avatar..."""
+        """Remilia caughts you in 4K..."""
         if not member:
             member = ctx.author
 
@@ -153,7 +153,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["youcould"], cooldown_after_parsing=True)
     async def religion(self, ctx, *, member: FuzzyMember = None):
-        """Make a religion avatar..."""
+        """We could make a religion out off this!..."""
         if not member:
             member = ctx.author
 
@@ -204,7 +204,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["inapic"], cooldown_after_parsing=True)
     async def ina(self, ctx, *, member: FuzzyMember = None):
-        """Make a Ina avatar..."""
+        """Ina is totally disgusted at you..."""
         if not member:
             member = ctx.author
 
@@ -221,7 +221,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["nofunallowed"], cooldown_after_parsing=True)
     async def nofun(self, ctx, *, member: FuzzyMember = None):
-        """Make a nofun avatar..."""
+        """No fun allowed!..."""
         if not member:
             member = ctx.author
 
@@ -255,7 +255,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def doctor(self, ctx, *, member: FuzzyMember = None):
-        """Make a doctor avatar..."""
+        """The Doctor is IN..."""
         if not member:
             member = ctx.author
 
@@ -313,7 +313,7 @@ class PfpImgen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
     async def banner(self, ctx, *, member: FuzzyMember = None):
-        """Banner"""
+        """To war we go!"""
         if not member:
             member = ctx.author
         async with ctx.typing():
@@ -979,7 +979,7 @@ class PfpImgen(commands.Cog):
         # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        im.paste(member_avatar, (120, 75), member_avatar)
+        im.paste(member_avatar, (105, 75), member_avatar)
         im.paste(inamask, (0, 0), inamask)
         inamask.close()
         member_avatar.close()
