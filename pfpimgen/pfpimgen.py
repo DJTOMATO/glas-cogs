@@ -202,6 +202,23 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["lookat"], cooldown_after_parsing=True)
+    async def ahri(self, ctx, *, member: FuzzyMember = None):
+        """Look at this shit..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_ahri, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["inapic"], cooldown_after_parsing=True)
     async def ina(self, ctx, *, member: FuzzyMember = None):
         """Ina is totally disgusted at you..."""
@@ -1119,5 +1136,31 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "lies.png")
+        fp.close()
+        return _file
+
+    def gen_ahri(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 200)
+
+        member_avatar = member_avatar.rotate(46, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (554, 650), None)
+        liesmask = Image.open(f"{bundled_data_path(self)}/ahri/ahri_mask.png", mode="r").convert(
+            "RGBA"
+        )
+
+        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+
+        im.paste(member_avatar, (120, 80), member_avatar)
+        im.paste(liesmask, (0, 0), liesmask)
+        liesmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "ahri.png")
         fp.close()
         return _file
