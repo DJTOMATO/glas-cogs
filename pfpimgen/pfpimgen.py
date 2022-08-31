@@ -1142,7 +1142,7 @@ class PfpImgen(commands.Cog):
     def gen_ahri(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 200)
 
-        member_avatar = member_avatar.rotate(46, Image.NEAREST, expand=1)
+        member_avatar = member_avatar.rotate(26, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (554, 650), None)
         liesmask = Image.open(f"{bundled_data_path(self)}/ahri/ahri_mask.png", mode="r").convert(
@@ -1152,7 +1152,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (120, 80), member_avatar)
+        im.paste(member_avatar, (160, 80), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
         liesmask.close()
         member_avatar.close()
