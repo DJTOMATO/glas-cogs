@@ -1187,7 +1187,7 @@ class PfpImgen(commands.Cog):
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (935, 339), None)
+        im = Image.new("RGBA", (940, 339), None)
         pippamask = Image.open(
             f"{bundled_data_path(self)}/pippa/pippa_mask.png", mode="r"
         ).convert("RGBA")
