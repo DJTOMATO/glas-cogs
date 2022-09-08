@@ -1183,7 +1183,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_pippa(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 130)
+        member_avatar = self.bytes_to_image(member_avatar, 120)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
@@ -1195,7 +1195,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (467, 170), member_avatar)
+        im.paste(member_avatar, (327, 130), member_avatar)
         im.paste(pippamask, (0, 0), pippamask)
         pippamask.close()
         member_avatar.close()
