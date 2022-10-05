@@ -1238,7 +1238,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (400, 230), member_avatar)
+        im.paste(member_avatar, (330, 230), member_avatar)
         im.paste(jailmask, (0, 0), jailmask)
         jailmask.close()
         member_avatar.close()
