@@ -1,30 +1,35 @@
-from .converters import FuzzyMember
+import asyncio
+from email.mime import image
+import functools
+from io import BytesIO
+from typing import Literal, Optional
+
 import aiohttp
 import discord
-import asyncio
-import moviepy
-import moviepy.editor as mpe
-import functools
 from PIL import Image, ImageDraw, ImageFont
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
-from datetime import datetime
-from redbot.core import commands
+from redbot.core.data_manager import cog_data_path
+
+RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
+
+from .converters import FuzzyMember
+
+import moviepy
+import moviepy.editor as mpe
+from moviepy.editor import CompositeVideoClip, TextClip, VideoFileClip
 from moviepy.editor import VideoFileClip
-from email.mime import image
-from io import BytesIO
-from typing import Literal, Optional
 
 
 class Movietar(commands.Cog):
     """
-    Make images from avatars!
+    Make a not-funny video
     """
 
-    __version__ = "1.1.1"
+    __version__ = "1.0.0"
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
@@ -48,12 +53,19 @@ class Movietar(commands.Cog):
 
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_vid, ctx, avatar)
-            image = await self.generate_image(ctx, task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
+
+            image = await self.gen_vid(ctx, avatar)
+            # fp = cog_data_path(self) / f"clip.mp4"
+            # file = discord.File(str(fp), filename="clip.mp4")
+            try:
+                await ctx.send(files=[image])
+            except Exception:
+                log.error("Error sending Movietar video", exc_info=True)
+                pass
+            try:
+                os.remove(image)
+            except Exception:
+                log.error("Error deleting Movietar video", exc_info=True)
 
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
@@ -85,13 +97,10 @@ class Movietar(commands.Cog):
             clip.duration
         )
 
-        final_clip.write_videofile(f"{bundled_data_path(self)}/test.mp4")
-        # final_clip.write_videofile("/test.mp4")
-        video = mp.VideoFileClip(f"{bundled_data_path(self)}/test.mp4")
-        # video = mp.VideoFileClip("/test.mp4")
+        final_clip.write_videofile(f"{bundled_data_path(self)}/clip.mp4")
+        video = mpe.VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         image = member_avatar
-
-        final = mp.CompositeVideoClip([image, video.set_position("center")])
-        # final.write_videofile("final.mp4")
+        final = mpe.CompositeVideoClip([image, video.set_position("center")])
+        final.write_videofile("test.mp4")
 
         return final
