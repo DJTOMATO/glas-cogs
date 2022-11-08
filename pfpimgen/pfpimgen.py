@@ -1269,11 +1269,11 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_sanic(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 120)
+        member_avatar = self.bytes_to_image(member_avatar, 140)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (800, 640), None)
+        im = Image.new("RGBA", (494, 557), None)
         jailmask = Image.open(f"{bundled_data_path(self)}/sanic/sanic_mask.png", mode="r").convert(
             "RGBA"
         )
@@ -1281,7 +1281,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (330, 230), member_avatar)
+        im.paste(member_avatar, (30, 30), member_avatar)
         im.paste(jailmask, (0, 0), jailmask)
         jailmask.close()
         member_avatar.close()
