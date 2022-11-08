@@ -37,9 +37,6 @@ class Movietar(commands.Cog):
     def cog_unload(self):
         asyncio.create_task(self.session.close())
 
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
-        return
-
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["movie"], cooldown_after_parsing=True)
