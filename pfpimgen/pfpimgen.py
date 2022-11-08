@@ -1269,7 +1269,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_sanic(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 100)
+        member_avatar = self.bytes_to_image(member_avatar, 220)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
