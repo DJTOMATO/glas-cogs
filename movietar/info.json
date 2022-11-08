@@ -2,7 +2,7 @@
     "name": "Movie Avatar!",
     "short": "Video + Avatar.",
     "description": "Inserts avatar into several videos.",
-    "install_msg": "Thanks for installing `fire` cog! Please enjoy it :D",
+    "install_msg": "Thanks for installing `movietar` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["video", "avatar", "bad-meme"],
     "hidden": false,
