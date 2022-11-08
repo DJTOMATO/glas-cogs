@@ -2,8 +2,10 @@ import discord
 import random
 from datetime import datetime
 from redbot.core import commands
+import moviepy
+import moviepy.editor as mpe
 
- 
+
 class Movietar(commands.Cog):
     """
     Make images from avatars!
@@ -42,6 +44,7 @@ class Movietar(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
+
     async def get_avatar(self, member: discord.User):
         avatar = BytesIO()
         await member.avatar_url_as(static_format="png").save(avatar, seek_begin=True)
@@ -55,20 +58,18 @@ class Movietar(commands.Cog):
 
     def gen_vid(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 156)
-                           
-        clip = VideoFileClip('clip.mp4')
-        masked_clip = clip.fx(mpe.vfx.mask_color, color=[0,1,0], s=3)
-        final_clip = mpe.CompositeVideoClip([
-            some_background,
-            masked_clip
-        ]).set_duration(clip.duration)
-        final_clip.write_videofile('test.mp4')
+
+        clip = VideoFileClip("clip.mp4")
+        masked_clip = clip.fx(mpe.vfx.mask_color, color=[0, 1, 0], s=3)
+        final_clip = mpe.CompositeVideoClip([some_background, masked_clip]).set_duration(
+            clip.duration
+        )
+        final_clip.write_videofile("test.mp4")
 
         video = mp.VideoFileClip("test.mp4")
         image = avatar
 
         final = mp.CompositeVideoClip([image, video.set_position("center")])
-        #final.write_videofile("final.mp4")
-        
-  
+        # final.write_videofile("final.mp4")
+
         return final
