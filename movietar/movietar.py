@@ -17,6 +17,8 @@ import functools
 from io import BytesIO
 from typing import Literal, Optional
 
+from .converters import FuzzyMember
+
 
 class Movietar(commands.Cog):
     """
