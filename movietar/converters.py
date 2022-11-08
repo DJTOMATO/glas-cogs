@@ -27,8 +27,6 @@ from rapidfuzz import process
 from redbot.core import commands
 from redbot.core.commands import BadArgument, MemberConverter
 from unidecode import unidecode
-import moviepy
-import moviepy.editor as mpe
 
 
 # original converter from https://github.com/TrustyJAID/Trusty-cogs/blob/master/serverstats/converters.py#L19
@@ -57,5 +55,3 @@ class FuzzyMember(MemberConverter):
             sorted_result = sorted(result, key=lambda r: r[1], reverse=True)
             member = sorted_result[0][0]
         return member
-
-            
