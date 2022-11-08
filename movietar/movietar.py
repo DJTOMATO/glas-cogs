@@ -1,5 +1,12 @@
+import aiohttp
 import discord
-import random
+from PIL import Image, ImageDraw, ImageFont
+from redbot.core import commands
+from redbot.core.bot import Red
+from redbot.core.config import Config
+from redbot.core.data_manager import bundled_data_path
+from redbot.core.utils.chat_formatting import pagify
+
 from datetime import datetime
 from redbot.core import commands
 import moviepy
@@ -9,15 +16,6 @@ from email.mime import image
 import functools
 from io import BytesIO
 from typing import Literal, Optional
-
-import aiohttp
-import discord
-from PIL import Image, ImageDraw, ImageFont
-from redbot.core import commands
-from redbot.core.bot import Red
-from redbot.core.config import Config
-from redbot.core.data_manager import bundled_data_path
-from redbot.core.utils.chat_formatting import pagify
 
 
 class Movietar(commands.Cog):
