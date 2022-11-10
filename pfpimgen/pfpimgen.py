@@ -237,8 +237,8 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["sapeado"], cooldown_after_parsing=True)
-    async def jail(self, ctx, *, member: FuzzyMember = None):
-        """to the jail..."""
+    async def cage(self, ctx, *, member: FuzzyMember = None):
+        """to the cage..."""
         if not member:
             member = ctx.author
 
@@ -1274,9 +1274,9 @@ class PfpImgen(commands.Cog):
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (494, 557), None)
-        sanicmask = Image.open(f"{bundled_data_path(self)}/sanic/sanic_mask.png", mode="r").convert(
-            "RGBA"
-        )
+        sanicmask = Image.open(
+            f"{bundled_data_path(self)}/sanic/sanic_mask.png", mode="r"
+        ).convert("RGBA")
 
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
