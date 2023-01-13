@@ -923,7 +923,7 @@ class PfpImgen(commands.Cog):
         # im.paste(ogey, (0, 0), ogey)
 
         # pasting the pfp
-        member_avatar = member_avatar.rotate(315, Image.NEAREST, expand=1)
+        member_avatar = member_avatar.rotate(35, Image.NEAREST, expand=1)
         im.paste(member_avatar, (320, 340), member_avatar)
         im.paste(ahoymask, (0, 0), ahoymask)
         ahoymask.close()
