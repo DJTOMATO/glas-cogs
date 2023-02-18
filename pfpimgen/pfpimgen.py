@@ -1361,7 +1361,7 @@ class PfpImgen(commands.Cog):
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (262, 352), None)
+        im = Image.new("RGBA", (262, 262), None)
         marimask = Image.open(
             f"{bundled_data_path(self)}/marihat/mari_mask.png", mode="r"
         ).convert("RGBA")
