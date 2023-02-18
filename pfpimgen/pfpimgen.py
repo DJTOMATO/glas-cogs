@@ -1357,7 +1357,7 @@ class PfpImgen(commands.Cog):
 
 
     def gen_marihat(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 352)
+        member_avatar = self.bytes_to_image(member_avatar, 262)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
@@ -1369,7 +1369,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (60, 110), member_avatar)
+        im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(marimask, (0, 0), marimask)
         marimask.close()
         member_avatar.close()
