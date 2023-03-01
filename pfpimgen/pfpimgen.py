@@ -1400,11 +1400,11 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_itis(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 486)
+        member_avatar = self.bytes_to_image(member_avatar, 300)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (685, 574), None)
+        im = Image.new("RGBA", (574, 685), None)
         itismask = Image.open(
             f"{bundled_data_path(self)}/itis/itis_mask.png", mode="r"
         ).convert("RGBA")
