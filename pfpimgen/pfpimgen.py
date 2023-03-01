@@ -1404,7 +1404,7 @@ class PfpImgen(commands.Cog):
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (574, 485), None)
+        im = Image.new("RGBA", (485, 574), None)
         itismask = Image.open(
             f"{bundled_data_path(self)}/itis/itis_mask.png", mode="r"
         ).convert("RGBA")
