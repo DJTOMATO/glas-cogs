@@ -45,17 +45,20 @@
 
 ## Cogs List
 
-### Customized/Edited Cogs
+### Active Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 |  Watamelon   | Generates a random Watamelon*  |            Kuro             |
+|  Movietar        | Make videos from your avatar (8 vids available!)|            Glas       |
+|  PfpImgen        | Make images from avatars! (with +20 new commands!)                                       |            PhenoM4n4n       |
+
+### Finished Cogs (Not updated anymore)
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
-|  PfpImgen        | Make images from avatars! (with +20 new commands!)                                       |            PhenoM4n4n       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 |  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
-|  Movietar        | Make videos from your avatar (8 vids available!)|            Glas       |
-### Abandoned Cogs
+
+### Deprecated/abandoned Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 | Don    | Generates a random Don-chan*  |            Kuro             |
