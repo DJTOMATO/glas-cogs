@@ -56,12 +56,27 @@ class Movietar(commands.Cog):
         """Se busca urgentemente.."""
         if not member:
             member = ctx.author
-
+        videotype = "crimes.mp4"
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp)  # just generates the video
+                image = self.gen_vid(ctx, avatar, fp, videotype)  # just generates the video
                 file = discord.File(fp, filename="crimenes.mp4")
+                await ctx.send(file=file)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["cuatrok"], cooldown_after_parsing=True)
+    async def fourk(self, ctx, *, member: FuzzyMember = None):
+        """caught in 4k.."""
+        if not member:
+            member = ctx.author
+        videotype = "4k.mp4"
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            with tempfile.TemporaryFile() as fp:
+                image = self.gen_vid(ctx, avatar, fp, videotype)  # just generates the video
+                file = discord.File(fp, filename="4k.mp4")
                 await ctx.send(file=file)
 
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
@@ -84,9 +99,9 @@ class Movietar(commands.Cog):
         image = image.resize((size, size), Image.ANTIALIAS)
         return image
 
-    def gen_vid(self, ctx, member_avatar, fp):
+    def gen_vid(self, ctx, member_avatar, fp, videotype):
         member_avatar = self.bytes_to_image(member_avatar, 300)
-        clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
+        clip = VideoFileClip(f"{bundled_data_path(self)}" + videotype)
         duration = clip.duration
 
         clip = clip.volumex(1.0)
