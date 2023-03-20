@@ -51,7 +51,7 @@
 |  Watamelon   | Generates a random Watamelon*  |            Kuro             |
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
-|  PfpImgen        | Make images from avatars! (with extra 20+ commands!)                                       |            PhenoM4n4n       |
+|  PfpImgen        | Make images from avatars! (with new +20 commands!)                                       |            PhenoM4n4n       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 |  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
 |  Movietar        | Make videos from your avatar|            Glas       |

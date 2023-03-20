@@ -60,7 +60,7 @@ class Movietar(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp)  # just generates the video
+                image = self.gen_vid(self, ctx, avatar, fp)  # just generates the video
                 file = discord.File(fp, filename="crimenes.mp4")
                 await ctx.send(file=file)
 
