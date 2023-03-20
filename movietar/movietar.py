@@ -23,6 +23,7 @@ from moviepy.editor import CompositeVideoClip, TextClip, VideoFileClip
 from moviepy.editor import VideoFileClip
 import moviepy.video.fx.all as vfx
 from moviepy.editor import *
+import numpy as np
 
 class Movietar(commands.Cog):
     """
@@ -101,12 +102,9 @@ class Movietar(commands.Cog):
         #test
         
         clip = clip.volumex(1.0)
-        clip = vfx.freeze(clip, 0, .2)
-
-        cat = (ImageClip(member_avatar)
-                    .set_duration(clip.duration)
-                    .set_position(("center", "center")))
-
+        #cat = (ImageClip(member_avatar))
+        numpydata = np.asarray(member_avatar)
+        cat = ImageClip(numpydata).set_duration(10).resize( (1920,1080) )
         clip = CompositeVideoClip([clip, cat])
 
         #clip.write_videofile("asdf.avi",fps=24, codec='rawvideo')
