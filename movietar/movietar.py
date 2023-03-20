@@ -55,8 +55,8 @@ class Movietar(commands.Cog):
             avatar = await self.get_avatar(member)
 
             image = await self.gen_vid(ctx, avatar)
-            # fp = cog_data_path(self) / f"clip.mp4"
-            # file = discord.File(str(fp), filename="clip.mp4")
+             fp = cog_data_path(self) / f"clip.mp4"
+             file = discord.File(str(fp), filename="clip.mp4")
             try:
                 await ctx.send(files=[image])
             except Exception:
