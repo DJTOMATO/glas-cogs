@@ -13,8 +13,6 @@ from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.data_manager import cog_data_path
-from .converters import ImageFinder
-
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
 from .converters import FuzzyMember
@@ -47,16 +45,13 @@ class Movietar(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["movie"], cooldown_after_parsing=True)
-    async def movietar(self, ctx, images: Optional[ImageFinder]):
+    async def movietar(self, ctx, *, member: FuzzyMember = None):
         """Makes a video with your avatar.."""
-        if images is None:
-            images = await ImageFinder().search_for_images(ctx)
-        if not images:
-            return await ctx.send_help()
-        image = images
+        if not member:
+            member = ctx.author
 
         async with ctx.typing():
-            avatar = await self.get_avatar(image)
+            avatar = await self.get_avatar(member)
             image = await self.gen_vid(ctx, avatar)
             fp = cog_data_path(self) / f"clip.mp4"
             file = discord.File(str(fp), filename="clip.mp4")
@@ -93,17 +88,32 @@ class Movietar(commands.Cog):
     def gen_vid(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
-        image_clip = mpe.ImageClip(member_avatar, duration=8).set_start(clip.duration)
+       # image_clip = mpe.ImageClip(member_avatar, duration=8).set_start(clip.duration)
         
         # clip = VideoFileClip("/clip.mp4")
         #masked_clip = clip.fx(mpe.vfx.mask_color, color=[0, 1, 0], s=3)
-        final_clip = mpe.CompositeVideoClip([image_clip, clip]).set_duration(
-            clip.duration
-        ).set_pos(("0","0"))
+        #final_clip = mpe.CompositeVideoClip([image_clip, clip]).set_duration(
+        #    clip.duration
+        #).set_pos(("0","0"))
 
-        final_clip.write_videofile(f"{bundled_data_path(self)}/clip.mp4")
-        video = mpe.VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
-        image = member_avatar
-        final = mpe.CompositeVideoClip([image, video.set_position("center")])
-        final.write_videofile("test.mp4")
-        return final
+        
+        #test
+        
+        clip = clip.volumex(1.0)
+        clip = vfx.freeze(clip, 0, .2)
+
+        cat = (ImageClip(member_avatar)
+                    .set_duration(clip.duration)
+                    .set_position(("center", "center")))
+
+        clip = CompositeVideoClip([clip, cat])
+
+        #clip.write_videofile("asdf.avi",fps=24, codec='rawvideo')
+        
+        #test        
+        #final_clip.write_videofile(f"{bundled_data_path(self)}/clip.mp4")
+        #video = mpe.VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
+        #image = member_avatar
+        #final = mpe.CompositeVideoClip([image, video.set_position("center")])
+        clip.write_videofile("tes2t.mp4")
+        return clip
