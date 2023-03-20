@@ -30,7 +30,7 @@ logging.captureWarnings(False)
 log = logging.getLogger("red.glas-cogs.movietar")
 class Movietar(commands.Cog):
     """
-    Make a not-funny video
+    Make trash videos with your avatar
     """
 
     __version__ = "1.0.0"
@@ -49,9 +49,9 @@ class Movietar(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["movie"], cooldown_after_parsing=True)
-    async def movietar(self, ctx, *, member: FuzzyMember = None):
-        """Makes a video with your avatar.."""
+    @commands.command(aliases=["crimee"], cooldown_after_parsing=True)
+    async def crimenes(self, ctx, *, member: FuzzyMember = None):
+        """Se busca urgentemente.."""
         if not member:
             member = ctx.author
 
