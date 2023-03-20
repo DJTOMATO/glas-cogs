@@ -19,10 +19,8 @@ RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 from .converters import FuzzyMember
 
 import moviepy
-import moviepy.editor as mpe
-from moviepy.editor import CompositeVideoClip, TextClip, VideoFileClip
+from moviepy.editor import CompositeVideoClip, VideoFileClip
 from moviepy.editor import VideoFileClip
-import moviepy.video.fx.all as vfx
 from moviepy.editor import *
 import numpy as np
 
@@ -56,10 +54,10 @@ class Movietar(commands.Cog):
             member = ctx.author
 
         async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            image = self.gen_vid(ctx, avatar)
-            
-            
+            avatar = await self.get_avatar(member) 
+            with tempfile.TemporaryFile() as fp:  # str path
+            image = self.gen_vid(ctx, avatar, fp) #just generates the video
+                
             fp = cog_data_path(self) / f"{ctx.message.id}final.mp4"
             file = discord.File(str(fp), filename="final.mp4")
             try:
@@ -68,7 +66,7 @@ class Movietar(commands.Cog):
                 log.error("Error sending Movietar video", exc_info=True)
                 pass
             try:
-                os.remove(image)
+                os.remove(fp)
             except Exception:
                 log.error("Error deleting Movietar video", exc_info=True)
 
@@ -93,26 +91,16 @@ class Movietar(commands.Cog):
         return image
 
     def gen_vid(self, ctx, member_avatar):
+        
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         duration = clip.duration
-       # image_clip = mpe.ImageClip(member_avatar, duration=8).set_start(clip.duration)
-        
-        # clip = VideoFileClip("/clip.mp4")
-        #masked_clip = clip.fx(mpe.vfx.mask_color, color=[0, 1, 0], s=3)
-        #final_clip = mpe.CompositeVideoClip([image_clip, clip]).set_duration(
-        #    clip.duration
-        #).set_pos(("0","0"))
-
-        
-        #test
         
         clip = clip.volumex(1.0)
-        #cat = (ImageClip(member_avatar))
         numpydata = np.asarray(member_avatar)
         cat = ImageClip(numpydata).set_duration(duration).resize( (300, 300) ).set_position((0, 147))
         clip = CompositeVideoClip([clip, cat])
-        clip.write_videofile(
+        data = clip.write_videofile(
             str(cog_data_path(self)) + f"/{ctx.message.id}final.mp4",
             threads=1,
             preset="superfast",
@@ -121,13 +109,5 @@ class Movietar(commands.Cog):
             temp_audiofile=str(cog_data_path(self) / f"{ctx.message.id}final.mp3")
             # ffmpeg_params=["-filter:a", "volume=0.5"]
         )
-        #clip.write_videofile("asdf.avi",fps=24, codec='rawvideo')
-        
-        #test        
-        #final_clip.write_videofile(f"{bundled_data_path(self)}/clip.mp4")
-        #video = mpe.VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
-        #image = member_avatar
-        #final = mpe.CompositeVideoClip([image, video.set_position("center")])
-        #clip.write_videofile(f"{bundled_data_path(self)}/tes2t.mp4")
         path = f"{cog_data_path(self)}/{ctx.message.id}final.mp4"
-        return path
+        return data
