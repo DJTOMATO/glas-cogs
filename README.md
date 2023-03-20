@@ -53,6 +53,8 @@
 |  PfpImgen        | Make images from avatars! (with +20 new commands!)                                       |            PhenoM4n4n       |
 
 ### Finished Cogs (Not updated anymore)
+|     Name     |                       Description                        |            Author            |
+|:------------:|----------------------------------------------------------|:----------------------------:|
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
