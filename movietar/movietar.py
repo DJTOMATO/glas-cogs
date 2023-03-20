@@ -5,6 +5,7 @@ from io import BytesIO
 from typing import Literal, Optional
 import logging
 import tempfile
+import pathlib
 
 import aiohttp
 import discord
@@ -60,9 +61,15 @@ class Movietar(commands.Cog):
         pos = "0, 147"
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp, videotype, pos)  # just generates the video
-                file = discord.File(fp, filename="crimenes.mp4")
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                folder = pathlib.Path(
+                    tmpdirname
+                )  # cant tell if it returns a string or a path object
+                file = folder / f"{ctx.message.id}final.mp4"
+                image = self.gen_vid(
+                    ctx, avatar, file, folder, videotype
+                )  # just generates the video
+                file = discord.File(file, filename="crimenes.mp4")
                 await ctx.send(file=file)
 
     @commands.bot_has_permissions(attach_files=True)
@@ -76,9 +83,15 @@ class Movietar(commands.Cog):
         pos = "30, 20"
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp, videotype, pos)  # just generates the video
-                file = discord.File(fp, filename="4k.mp4")
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                folder = pathlib.Path(
+                    tmpdirname
+                )  # cant tell if it returns a string or a path object
+                file = folder / f"{ctx.message.id}final.mp4"
+                image = self.gen_vid(
+                    ctx, avatar, file, folder, videotype
+                )  # just generates the video
+                file = discord.File(file, filename="4k.mp4")
                 await ctx.send(file=file)
 
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
@@ -111,13 +124,15 @@ class Movietar(commands.Cog):
         cat = ImageClip(numpydata).set_duration(duration).resize((300, 300)).set_position((pos))
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
-            fp,
-            threads=1,
-            preset="superfast",
-            verbose=False,
-            logger=None,
-            temp_audiofile=str(cog_data_path(self) / str(fp))
-            # ffmpeg_params=["-filter:a", "volume=0.5"]
+            str(
+                fp,
+                threads=1,
+                preset="superfast",
+                verbose=False,
+                logger=None,
+                temp_audiofile=str(folder / f"{ctx.message.id}final.mp3")
+                # ffmpeg_params=["-filter:a", "volume=0.5"]
+            )
         )
         path = fp
         return data
