@@ -68,7 +68,7 @@ class Movietar(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["cuatrok"], cooldown_after_parsing=True)
     async def fourk(self, ctx, *, member: FuzzyMember = None):
-        """caught in 4k.."""
+        """Caught in 4k.."""
         if not member:
             member = ctx.author
         videotype = "4k.mp4"
@@ -109,15 +109,13 @@ class Movietar(commands.Cog):
         cat = ImageClip(numpydata).set_duration(duration).resize((300, 300)).set_position((0, 147))
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
-            str(
-                fp,
-                threads=1,
-                preset="superfast",
-                verbose=False,
-                logger=None,
-                temp_audiofile=str(cog_data_path(self) / f"{ctx.message.id}final.mp3")
-                # ffmpeg_params=["-filter:a", "volume=0.5"]
-            )
+            fp,
+            threads=1,
+            preset="superfast",
+            verbose=False,
+            logger=None,
+            temp_audiofile=str(cog_data_path(self) / f"{ctx.message.id}final.mp3")
+            # ffmpeg_params=["-filter:a", "volume=0.5"]
         )
         path = fp
         return data
