@@ -60,7 +60,7 @@ class Movietar(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(self, ctx, avatar, fp)  # just generates the video
+                image = self.gen_vid(ctx, avatar, fp)  # just generates the video
                 file = discord.File(fp, filename="crimenes.mp4")
                 await ctx.send(file=file)
 
@@ -84,7 +84,7 @@ class Movietar(commands.Cog):
         image = image.resize((size, size), Image.ANTIALIAS)
         return image
 
-    def gen_vid(self, ctx, member_avatar, fp):
+    def gen_vid(ctx, member_avatar, fp):
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         duration = clip.duration
