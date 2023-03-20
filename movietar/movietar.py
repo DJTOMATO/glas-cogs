@@ -114,5 +114,5 @@ class Movietar(commands.Cog):
         #video = mpe.VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         #image = member_avatar
         #final = mpe.CompositeVideoClip([image, video.set_position("center")])
-        clip.write_videofile(f"{bundled_data_path(self)}/tes2t.mp4")
+        #clip.write_videofile(f"{bundled_data_path(self)}/tes2t.mp4")
         return clip
