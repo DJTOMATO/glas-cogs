@@ -94,7 +94,7 @@ class Movietar(commands.Cog):
         #masked_clip = clip.fx(mpe.vfx.mask_color, color=[0, 1, 0], s=3)
         final_clip = mpe.CompositeVideoClip([member_avatar, clip]).set_duration(
             clip.duration
-        ).set_pos(("0","0")))
+        ).set_pos(("0","0"))
 
         final_clip.write_videofile(f"{bundled_data_path(self)}/clip.mp4")
         video = mpe.VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
