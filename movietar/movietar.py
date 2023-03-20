@@ -57,7 +57,7 @@ class Movietar(commands.Cog):
 
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            image = self.gen_vid(ctx, avatar)
+            image = await self.gen_vid(ctx, avatar)
             
             
             fp = cog_data_path(self) / f"{ctx.message.id}final.mp4"
