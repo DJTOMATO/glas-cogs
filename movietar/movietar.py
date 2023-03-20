@@ -191,7 +191,7 @@ class Movietar(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["feeling"], cooldown_after_parsing=True)
-    async def facts(self, ctx, *, member: FuzzyMember = None):
+    async def consequences(self, ctx, *, member: FuzzyMember = None):
         """There are consequences.."""
         if not member:
             member = ctx.author
