@@ -3,6 +3,7 @@ from email.mime import image
 import functools
 from io import BytesIO
 from typing import Literal, Optional
+import logging
 
 import aiohttp
 import discord
@@ -25,6 +26,8 @@ import moviepy.video.fx.all as vfx
 from moviepy.editor import *
 import numpy as np
 
+logging.captureWarnings(False)
+log = logging.getLogger("red.glas-cogs.movietar")
 class Movietar(commands.Cog):
     """
     Make a not-funny video
