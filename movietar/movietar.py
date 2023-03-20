@@ -126,7 +126,7 @@ class Movietar(commands.Cog):
         """I've gotta blame somebody.."""
         if not member:
             member = ctx.author
-        videotype = "heman.mp4"
+        videotype = "blame.mp4"
         pos = (210, 20)
         avisize = (150, 150)
         async with ctx.typing():
