@@ -13,6 +13,7 @@ from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.data_manager import cog_data_path
+from .converters import ImageFinder
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -46,13 +47,16 @@ class Movietar(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["movie"], cooldown_after_parsing=True)
-    async def movietar(self, ctx, *, member: FuzzyMember = None):
+    async def movietar(self, ctx, images: Optional[ImageFinder]):
         """Makes a video with your avatar.."""
-        if not member:
-            member = ctx.author
+        if images is None:
+            images = await ImageFinder().search_for_images(ctx)
+        if not images:
+            return await ctx.send_help()
+        image = images
 
         async with ctx.typing():
-            avatar = await self.get_avatar(member)
+            avatar = await self.get_avatar(image)
             image = await self.gen_vid(ctx, avatar)
             fp = cog_data_path(self) / f"clip.mp4"
             file = discord.File(str(fp), filename="clip.mp4")
