@@ -4,6 +4,7 @@ import functools
 from io import BytesIO
 from typing import Literal, Optional
 import logging
+import tempfile
 
 import aiohttp
 import discord
@@ -55,20 +56,10 @@ class Movietar(commands.Cog):
 
         async with ctx.typing():
             avatar = await self.get_avatar(member) 
-            with tempfile.TemporaryFile() as fp:  # str path
-            image = self.gen_vid(ctx, avatar, fp) #just generates the video
-                
-            fp = cog_data_path(self) / f"{ctx.message.id}final.mp4"
-            file = discord.File(str(fp), filename="final.mp4")
-            try:
-                await ctx.send(files=[file])
-            except Exception:
-                log.error("Error sending Movietar video", exc_info=True)
-                pass
-            try:
-                os.remove(fp)
-            except Exception:
-                log.error("Error deleting Movietar video", exc_info=True)
+            with tempfile.TemporaryFile() as fp:
+                image = self.gen_vid(ctx, avatar, fp) #just generates the video
+                file = discord.File(fp, filename="crimenes.mp4")
+                await ctx.send(file=file)
 
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
@@ -101,7 +92,7 @@ class Movietar(commands.Cog):
         cat = ImageClip(numpydata).set_duration(duration).resize( (300, 300) ).set_position((0, 147))
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
-            str(cog_data_path(self)) + f"/{ctx.message.id}final.mp4",
+            str(fp,
             threads=1,
             preset="superfast",
             verbose=False,
