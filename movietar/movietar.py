@@ -90,6 +90,7 @@ class Movietar(commands.Cog):
     def gen_vid(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
+        duration = clip.duration
        # image_clip = mpe.ImageClip(member_avatar, duration=8).set_start(clip.duration)
         
         # clip = VideoFileClip("/clip.mp4")
@@ -104,7 +105,7 @@ class Movietar(commands.Cog):
         clip = clip.volumex(1.0)
         #cat = (ImageClip(member_avatar))
         numpydata = np.asarray(member_avatar)
-        cat = ImageClip(numpydata).set_duration(7.20).resize( (300, 300) ).set_position((0, 147))
+        cat = ImageClip(numpydata).set_duration(duration).resize( (300, 300) ).set_position((0, 147))
         clip = CompositeVideoClip([clip, cat])
         clip.write_videofile(
             str(cog_data_path(self)) + f"/final.mp4",
