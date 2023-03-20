@@ -58,7 +58,7 @@ class Movietar(commands.Cog):
             fp = cog_data_path(self) / f"final.mp4"
             file = discord.File(str(fp), filename="final.mp4")
             try:
-                await ctx.send(files=[image])
+                await ctx.send(files=[fp])
             except Exception:
                 log.error("Error sending Movietar video", exc_info=True)
                 pass
@@ -124,4 +124,5 @@ class Movietar(commands.Cog):
         #image = member_avatar
         #final = mpe.CompositeVideoClip([image, video.set_position("center")])
         #clip.write_videofile(f"{bundled_data_path(self)}/tes2t.mp4")
-        return True
+        path = f"{cog_data_path(self)}/final.mp4"
+        return path
