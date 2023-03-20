@@ -97,8 +97,8 @@ class Movietar(commands.Cog):
             preset="superfast",
             verbose=False,
             logger=None,
-            temp_audiofile=str(cog_data_path(self) / f"{ctx.message.id}final.mp3")
+            temp_audiofile=str(fp / f"{ctx.message.id}final.mp3")
             # ffmpeg_params=["-filter:a", "volume=0.5"]
         )
-        path = f"{cog_data_path(self)}/{ctx.message.id}final.mp4"
+        path = fp/{ctx.message.id}final.mp4"
         return data
