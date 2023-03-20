@@ -55,8 +55,8 @@ class Movietar(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             image = await self.gen_vid(ctx, avatar)
-            fp = cog_data_path(self) / f"clip.mp4"
-            file = discord.File(str(fp), filename="clip.mp4")
+            fp = cog_data_path(self) / f"final.mp4"
+            file = discord.File(str(fp), filename="final.mp4")
             try:
                 await ctx.send(files=[image])
             except Exception:
@@ -106,7 +106,15 @@ class Movietar(commands.Cog):
         numpydata = np.asarray(member_avatar)
         cat = ImageClip(numpydata).set_duration(10).resize( (1920,1080) )
         clip = CompositeVideoClip([clip, cat])
-
+        clip.write_videofile(
+            str(cog_data_path(self)) + f"/final.mp4",
+            threads=1,
+            preset="superfast",
+            verbose=False,
+            logger=None,
+            temp_audiofile=str(cog_data_path(self) / f"final.mp3")
+            # ffmpeg_params=["-filter:a", "volume=0.5"]
+        )
         #clip.write_videofile("asdf.avi",fps=24, codec='rawvideo')
         
         #test        
@@ -115,4 +123,4 @@ class Movietar(commands.Cog):
         #image = member_avatar
         #final = mpe.CompositeVideoClip([image, video.set_position("center")])
         #clip.write_videofile(f"{bundled_data_path(self)}/tes2t.mp4")
-        return clip
+        return True
