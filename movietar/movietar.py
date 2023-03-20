@@ -67,7 +67,7 @@ class Movietar(commands.Cog):
                 )  # cant tell if it returns a string or a path object
                 file = folder / f"{ctx.message.id}final.mp4"
                 image = self.gen_vid(
-                    ctx, avatar, file, folder, videotype
+                    ctx, avatar, file, folder, videotype, pos
                 )  # just generates the video
                 file = discord.File(file, filename="crimenes.mp4")
                 await ctx.send(file=file)
@@ -89,7 +89,7 @@ class Movietar(commands.Cog):
                 )  # cant tell if it returns a string or a path object
                 file = folder / f"{ctx.message.id}final.mp4"
                 image = self.gen_vid(
-                    ctx, avatar, file, folder, videotype
+                    ctx, avatar, file, folder, videotype, pos
                 )  # just generates the video
                 file = discord.File(file, filename="4k.mp4")
                 await ctx.send(file=file)
