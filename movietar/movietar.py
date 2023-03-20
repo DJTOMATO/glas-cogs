@@ -100,7 +100,7 @@ class Movietar(commands.Cog):
                 preset="superfast",
                 verbose=False,
                 logger=None,
-                temp_audiofile=fp
+                temp_audiofile=str(cog_data_path(self) / f"{ctx.message.id}final.mp3")
                 # ffmpeg_params=["-filter:a", "volume=0.5"]
             )
         )
