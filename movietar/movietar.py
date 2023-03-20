@@ -116,7 +116,7 @@ class Movietar(commands.Cog):
                 image = self.gen_vid(
                     ctx, avatar, file, folder, videotype, pos, avisize
                 )  # just generates the video
-                file = discord.File(file, filename="4k.mp4")
+                file = discord.File(file, filename="heman.mp4")
                 await ctx.send(file=file)
 
     @commands.bot_has_permissions(attach_files=True)
@@ -139,7 +139,7 @@ class Movietar(commands.Cog):
                 image = self.gen_vid(
                     ctx, avatar, file, folder, videotype, pos, avisize
                 )  # just generates the video
-                file = discord.File(file, filename="4k.mp4")
+                file = discord.File(file, filename="blame.mp4")
                 await ctx.send(file=file)
 
     @commands.bot_has_permissions(attach_files=True)
@@ -162,7 +162,7 @@ class Movietar(commands.Cog):
                 image = self.gen_vid(
                     ctx, avatar, file, folder, videotype, pos, avisize
                 )  # just generates the video
-                file = discord.File(file, filename="4k.mp4")
+                file = discord.File(file, filename="bernie.mp4")
                 await ctx.send(file=file)
 
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
