@@ -51,14 +51,15 @@
 |  Watamelon   | Generates a random Watamelon*  |            Kuro             |
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
-|  PfpImgen        | Make images from avatars! (with extra 7 commands!)                                       |            PhenoM4n4n       |
+|  PfpImgen        | Make images from avatars! (with extra 20+ commands!)                                       |            PhenoM4n4n       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 |  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
+|  Movietar        | Make videos from your avatar|            Glas       |
 ### Abandoned Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 | Don    | Generates a random Don-chan*  |            Kuro             |
-|  D4DJ   | Generates a random D4DJ Waifu*  |            Kuro             |
+|  D4DJ   | Generates a random D4DJ*  |            Kuro             |
 |  NewCC        | Recreates ``cc list`` in a more fashionable way. **BUGGED, DON'T USE WITH MULTIPLE SERVERS, USE AT YOUR OWN RISK**|            Glas/Breeze       |
 
 * (forked from Kuro-Cogs/Fumo)
@@ -68,4 +69,5 @@
 - [**TrustyJaid**](https://github.com/TrustyJAID/Trusty-cogs/) for teaching me how to make a basic Cog.
 - [**npc203**](https://github.com/npc203/npc-cogs) for being a inspiration on Cog "making" (>) best son ever.
 - [**aikaterna**](https://github.com/aikaterna/aikaterna-cogs) for being an incredible and patient teacher. <3
+- [**AAA3A**](https://github.com/AAA3A-AAA3A/AAA3A-cogs) for aiding me with my spaghetti code past midnight. <3
 - **[Red Community](https://discord.gg/red)** for making the best Discord bot ever <3 Much love!.
