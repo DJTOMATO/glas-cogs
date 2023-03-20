@@ -57,10 +57,11 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "crimes.mp4"
+        pos = "0, 147"
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp, videotype)  # just generates the video
+                image = self.gen_vid(ctx, avatar, fp, videotype, pos)  # just generates the video
                 file = discord.File(fp, filename="crimenes.mp4")
                 await ctx.send(file=file)
 
@@ -72,10 +73,11 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "4k.mp4"
+        pos = 30, 20
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp, videotype)  # just generates the video
+                image = self.gen_vid(ctx, avatar, fp, videotype, pos)  # just generates the video
                 file = discord.File(fp, filename="4k.mp4")
                 await ctx.send(file=file)
 
@@ -99,14 +101,14 @@ class Movietar(commands.Cog):
         image = image.resize((size, size), Image.ANTIALIAS)
         return image
 
-    def gen_vid(self, ctx, member_avatar, fp, videotype):
+    def gen_vid(self, ctx, member_avatar, fp, videotype, pos):
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/" + videotype)
         duration = clip.duration
 
         clip = clip.volumex(1.0)
         numpydata = np.asarray(member_avatar)
-        cat = ImageClip(numpydata).set_duration(duration).resize((300, 300)).set_position((0, 147))
+        cat = ImageClip(numpydata).set_duration(duration).resize((300, 300)).set_position((pos))
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
             fp,
