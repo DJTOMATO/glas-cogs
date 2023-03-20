@@ -88,11 +88,11 @@ class Movietar(commands.Cog):
 
     def gen_vid(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 300)
-
+        
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         # clip = VideoFileClip("/clip.mp4")
-        masked_clip = clip.fx(mpe.vfx.mask_color, color=[0, 1, 0], s=3)
-        final_clip = mpe.CompositeVideoClip([member_avatar, masked_clip]).set_duration(
+        #masked_clip = clip.fx(mpe.vfx.mask_color, color=[0, 1, 0], s=3)
+        final_clip = mpe.CompositeVideoClip([member_avatar, clip]).set_duration(
             clip.duration
         )
 
@@ -101,5 +101,5 @@ class Movietar(commands.Cog):
         image = member_avatar
         final = mpe.CompositeVideoClip([image, video.set_position("center")])
         final.write_videofile("test.mp4")
-
+        video = mpe.
         return final
