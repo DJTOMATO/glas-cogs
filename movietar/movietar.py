@@ -116,7 +116,7 @@ class Movietar(commands.Cog):
 
     def gen_vid(self, ctx, member_avatar, fp, videotype, pos):
         member_avatar = self.bytes_to_image(member_avatar, 300)
-        clip = VideoFileClip(f"{bundled_data_path(self)}/" + videotype)
+        clip = VideoFileClip(bundled_data_path(self) / videotype)
         duration = clip.duration
 
         clip = clip.volumex(1.0)
