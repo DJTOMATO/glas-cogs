@@ -104,7 +104,7 @@ class Movietar(commands.Cog):
         clip = clip.volumex(1.0)
         #cat = (ImageClip(member_avatar))
         numpydata = np.asarray(member_avatar)
-        cat = ImageClip(numpydata).set_duration(10).resize( (300, 300) ).set_position(("bottom","left"))
+        cat = ImageClip(numpydata).set_duration(10).resize( (300, 300) ).set_position((0, 150))
         clip = CompositeVideoClip([clip, cat])
         clip.write_videofile(
             str(cog_data_path(self)) + f"/final.mp4",
