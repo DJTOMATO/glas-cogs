@@ -150,7 +150,7 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "bernie.mp4"
-        pos = (175, 90)
+        pos = (170, 85)
         avisize = (190, 190)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
@@ -173,8 +173,8 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "cons.mp4"
-        pos = (185, 50)
-        avisize = (180, 180)
+        pos = (175, 35)
+        avisize = (185, 185)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -196,7 +196,7 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "facts.mp4"
-        pos = (175, 30)
+        pos = (165, 30)
         avisize = (180, 180)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
@@ -219,8 +219,8 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "nogod.mp4"
-        pos = (160, 30)
-        avisize = (180, 180)
+        pos = (130, 30)
+        avisize = (200, 200)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
