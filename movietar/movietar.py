@@ -92,7 +92,7 @@ class Movietar(commands.Cog):
                     ctx, avatar, file, folder, videotype, pos
                 )  # just generates the video
                 file = discord.File(file, filename="4k.mp4")
-                await ctx.send(file=file)aaa
+                await ctx.send(file=file)
 
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
