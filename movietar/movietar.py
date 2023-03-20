@@ -124,15 +124,13 @@ class Movietar(commands.Cog):
         cat = ImageClip(numpydata).set_duration(duration).resize((300, 300)).set_position((pos))
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
-            str(
-                fp,
-                threads=1,
-                preset="superfast",
-                verbose=False,
-                logger=None,
-                temp_audiofile=str(folder / f"{ctx.message.id}final.mp3")
-                # ffmpeg_params=["-filter:a", "volume=0.5"]
-            )
+            str(fp),
+            threads=1,
+            preset="superfast",
+            verbose=False,
+            logger=None,
+            temp_audiofile=str(folder / f"{ctx.message.id}final.mp3")
+            # ffmpeg_params=["-filter:a", "volume=0.5"]
         )
         path = fp
         return data
