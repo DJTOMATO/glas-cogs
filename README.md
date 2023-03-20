@@ -54,7 +54,7 @@
 |  PfpImgen        | Make images from avatars! (with +20 new commands!)                                       |            PhenoM4n4n       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 |  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
-|  Movietar        | Make videos from your avatar|            Glas       |
+|  Movietar        | Make videos from your avatar (8 vids available!)|            Glas       |
 ### Abandoned Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
