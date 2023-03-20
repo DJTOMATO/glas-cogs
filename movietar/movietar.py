@@ -113,12 +113,12 @@ class Movietar(commands.Cog):
         cat = ImageClip(numpydata).set_duration(duration).resize( (300, 300) ).set_position((0, 147))
         clip = CompositeVideoClip([clip, cat])
         clip.write_videofile(
-            str(cog_data_path(self)) + f"/final.mp4",
+            str(cog_data_path(self)) + f"/{ctx.message.id}final.mp4",
             threads=1,
             preset="superfast",
             verbose=False,
             logger=None,
-            temp_audiofile=str(cog_data_path(self) / f"final.mp3")
+            temp_audiofile=str(cog_data_path(self) / f"{ctx.message.id}final.mp3")
             # ffmpeg_params=["-filter:a", "volume=0.5"]
         )
         #clip.write_videofile("asdf.avi",fps=24, codec='rawvideo')
@@ -129,5 +129,5 @@ class Movietar(commands.Cog):
         #image = member_avatar
         #final = mpe.CompositeVideoClip([image, video.set_position("center")])
         #clip.write_videofile(f"{bundled_data_path(self)}/tes2t.mp4")
-        path = f"{cog_data_path(self)}/final.mp4"
+        path = f"{cog_data_path(self)}/{ctx.message.id}final.mp4"
         return path
