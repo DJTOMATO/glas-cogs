@@ -21,7 +21,7 @@ import moviepy
 import moviepy.editor as mpe
 from moviepy.editor import CompositeVideoClip, TextClip, VideoFileClip
 from moviepy.editor import VideoFileClip
-
+import moviepy.video.fx.all as vfx
 
 class Movietar(commands.Cog):
     """
