@@ -15,6 +15,7 @@ from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.data_manager import cog_data_path
+
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
 from .converters import FuzzyMember
@@ -27,6 +28,8 @@ import numpy as np
 
 logging.captureWarnings(False)
 log = logging.getLogger("red.glas-cogs.movietar")
+
+
 class Movietar(commands.Cog):
     """
     Make trash videos with your avatar
@@ -55,9 +58,9 @@ class Movietar(commands.Cog):
             member = ctx.author
 
         async with ctx.typing():
-            avatar = await self.get_avatar(member) 
+            avatar = await self.get_avatar(member)
             with tempfile.TemporaryFile() as fp:
-                image = self.gen_vid(ctx, avatar, fp) #just generates the video
+                image = self.gen_vid(ctx, avatar, fp)  # just generates the video
                 file = discord.File(fp, filename="crimenes.mp4")
                 await ctx.send(file=file)
 
@@ -82,23 +85,24 @@ class Movietar(commands.Cog):
         return image
 
     def gen_vid(self, ctx, member_avatar):
-        
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         duration = clip.duration
-        
+
         clip = clip.volumex(1.0)
         numpydata = np.asarray(member_avatar)
-        cat = ImageClip(numpydata).set_duration(duration).resize( (300, 300) ).set_position((0, 147))
+        cat = ImageClip(numpydata).set_duration(duration).resize((300, 300)).set_position((0, 147))
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
-            str(fp,
-            threads=1,
-            preset="superfast",
-            verbose=False,
-            logger=None,
-            temp_audiofile=str(fp / f"{ctx.message.id}final.mp3")
-            # ffmpeg_params=["-filter:a", "volume=0.5"]
+            str(
+                fp,
+                threads=1,
+                preset="superfast",
+                verbose=False,
+                logger=None,
+                temp_audiofile=fp
+                # ffmpeg_params=["-filter:a", "volume=0.5"]
+            )
         )
-        path = fp/{ctx.message.id}final.mp4"
+        path = fp
         return data
