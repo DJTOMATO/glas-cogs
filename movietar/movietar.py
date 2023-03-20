@@ -54,7 +54,7 @@ class Movietar(commands.Cog):
 
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            image = await self.gen_vid(ctx, avatar)
+            image = self.gen_vid(ctx, avatar)
             fp = cog_data_path(self) / f"final.mp4"
             file = discord.File(str(fp), filename="final.mp4")
             try:
