@@ -84,7 +84,7 @@ class Movietar(commands.Cog):
         image = image.resize((size, size), Image.ANTIALIAS)
         return image
 
-    def gen_vid(self, ctx, member_avatar):
+    def gen_vid(self, ctx, member_avatar, fp):
         member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self)}/clip.mp4")
         duration = clip.duration
