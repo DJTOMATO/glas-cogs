@@ -58,10 +58,12 @@ class Movietar(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             image = self.gen_vid(ctx, avatar)
-            fp = cog_data_path(self) / f"final.mp4"
+            
+            
+            fp = cog_data_path(self) / f"{ctx.message.id}final.mp4"
             file = discord.File(str(fp), filename="final.mp4")
             try:
-                await ctx.send(files=[fp])
+                await ctx.send(files=[file])
             except Exception:
                 log.error("Error sending Movietar video", exc_info=True)
                 pass
