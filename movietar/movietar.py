@@ -266,7 +266,7 @@ class Movietar(commands.Cog):
             member = ctx.author
         videotype = "mike.mp4"
         pos = (80, 60)
-        avisize = (200, 200)
+        avisize = (190, 190)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -278,6 +278,29 @@ class Movietar(commands.Cog):
                     ctx, avatar, file, folder, videotype, pos, avisize
                 )  # just generates the video
                 file = discord.File(file, filename="mike.mp4")
+                await ctx.send(file=file)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["harina"], cooldown_after_parsing=True)
+    async def flour(self, ctx, *, member: FuzzyMember = None):
+        """Just flour.."""
+        if not member:
+            member = ctx.author
+        videotype = "flour.mp4"
+        pos = (150, 20)
+        avisize = (200, 200)
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                folder = pathlib.Path(
+                    tmpdirname
+                )  # cant tell if it returns a string or a path object
+                file = folder / f"{ctx.message.id}final.mp4"
+                image = self.gen_vid(
+                    ctx, avatar, file, folder, videotype, pos, avisize
+                )  # just generates the video
+                file = discord.File(file, filename="flour.mp4")
                 await ctx.send(file=file)
 
     # ads
