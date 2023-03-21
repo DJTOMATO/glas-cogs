@@ -257,6 +257,29 @@ class Movietar(commands.Cog):
                 file = discord.File(file, filename="place.mp4")
                 await ctx.send(file=file)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["mikes"], cooldown_after_parsing=True)
+    async def mike(self, ctx, *, member: FuzzyMember = None):
+        """MM eating mike's.."""
+        if not member:
+            member = ctx.author
+        videotype = "mike.mp4"
+        pos = (180, 40)
+        avisize = (200, 200)
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                folder = pathlib.Path(
+                    tmpdirname
+                )  # cant tell if it returns a string or a path object
+                file = folder / f"{ctx.message.id}final.mp4"
+                image = self.gen_vid(
+                    ctx, avatar, file, folder, videotype, pos, avisize
+                )  # just generates the video
+                file = discord.File(file, filename="mike.mp4")
+                await ctx.send(file=file)
+
     # ads
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
