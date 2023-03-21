@@ -289,7 +289,7 @@ class Movietar(commands.Cog):
             member = ctx.author
         videotype = "flour.mp4"
         pos = (150, 0)
-        avisize = (220, 220)
+        avisize = (190, 190)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
