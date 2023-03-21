@@ -265,7 +265,7 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "mike.mp4"
-        pos = (90, 100)
+        pos = (80, 60)
         avisize = (200, 200)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
