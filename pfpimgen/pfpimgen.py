@@ -1418,15 +1418,11 @@ class PfpImgen(commands.Cog):
     def gen_naruto(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 500)
 
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (720, 720), None)
-        narumask = Image.open(f"{bundled_data_path(self)}/naruto/mari_mask.png", mode="r").convert(
+        narumask = Image.open(f"{bundled_data_path(self)}/naruto/naru_mask.png", mode="r").convert(
             "RGBA"
         )
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(narumask, (0, 0), narumask)
