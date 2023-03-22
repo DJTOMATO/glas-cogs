@@ -534,7 +534,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -551,7 +551,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -568,7 +568,24 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def thisnow(self, ctx, *, member: FuzzyMember = None):
+        """We can end this now..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_naruto, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -1372,7 +1389,6 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-
     def gen_marihat(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 262)
 
@@ -1399,15 +1415,41 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
+    def gen_naruto(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 500)
+
+        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (720, 720), None)
+        marimask = Image.open(f"{bundled_data_path(self)}/naruto/mari_mask.png", mode="r").convert(
+            "RGBA"
+        )
+
+        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+
+        im.paste(member_avatar, (0, 0), member_avatar)
+        im.paste(marimask, (0, 0), marimask)
+        marimask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "naruto.png")
+        fp.close()
+        return _file
+
     def gen_itis(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 600)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (600, 600), None)
-        itismask = Image.open(
-            f"{bundled_data_path(self)}/itis/itis_mask.png", mode="r"
-        ).convert("RGBA")
+        itismask = Image.open(f"{bundled_data_path(self)}/itis/itis_mask.png", mode="r").convert(
+            "RGBA"
+        )
 
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
