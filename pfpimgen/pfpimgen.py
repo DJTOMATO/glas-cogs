@@ -1436,8 +1436,8 @@ class PfpImgen(commands.Cog):
         canvas.text(
             (250, 500),
             text,
-            font=(font, 20)
-            fill=(206, 194, 114),
+            font=(font, 20),
+            fill=(0, 0, 0),
             align="left",
             stroke_width=2,
             stroke_fill=(0, 0, 0),
