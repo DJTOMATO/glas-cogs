@@ -1434,12 +1434,12 @@ class PfpImgen(commands.Cog):
         canvas = ImageDraw.Draw(im)
         text_width, text_height = canvas.textsize(text, font, stroke_width=2)
         canvas.text(
-            (250, 500),
+            (200, 500),
             text,
-            font=(font, 20),
+            font=font,
             fill=(0, 0, 0),
             align="left",
-            stroke_width=2,
+            stroke_width=4,
             stroke_fill=(0, 0, 0),
         )
 
