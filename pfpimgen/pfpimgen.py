@@ -576,10 +576,10 @@ class PfpImgen(commands.Cog):
         """We can end this now..."""
         if not member:
             member = ctx.author
-
+        username = ctx.get_username()
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_naruto, ctx, avatar)
+            task = functools.partial(self.gen_naruto, ctx, avatar, username)
             image = await self.generate_image(ctx, task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -1415,7 +1415,7 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def gen_naruto(self, ctx, member_avatar):
+    def gen_naruto(self, ctx, member_avatar, username):
         member_avatar = self.bytes_to_image(member_avatar, 500)
 
         # base canvas
@@ -1429,7 +1429,7 @@ class PfpImgen(commands.Cog):
         narumask.close()
         member_avatar.close()
         # test
-        text = self.get_username()
+        text = username
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
         text_width, text_height = canvas.textsize(text, font, stroke_width=2)
