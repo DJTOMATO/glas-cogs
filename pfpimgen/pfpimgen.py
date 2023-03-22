@@ -1421,7 +1421,7 @@ class PfpImgen(commands.Cog):
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (720, 720), None)
-        marimask = Image.open(f"{bundled_data_path(self)}/naruto/mari_mask.png", mode="r").convert(
+        narumask = Image.open(f"{bundled_data_path(self)}/naruto/mari_mask.png", mode="r").convert(
             "RGBA"
         )
 
@@ -1429,10 +1429,27 @@ class PfpImgen(commands.Cog):
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (0, 0), member_avatar)
-        im.paste(marimask, (0, 0), marimask)
-        marimask.close()
+        im.paste(narumask, (0, 0), narumask)
+        narumask.close()
         member_avatar.close()
+        # test
+        text = self.get_username()
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=2)
+        canvas.text(
+            (200, 600),
+            text,
+            font=font,
+            fill=(206, 194, 114),
+            align="left",
+            stroke_width=2,
+            stroke_fill=(0, 0, 0),
+        )
 
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        # test
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
