@@ -576,7 +576,7 @@ class PfpImgen(commands.Cog):
         """We can end this now..."""
         if not member:
             member = ctx.author
-        username = ctx.get_username()
+        username = member.display_name
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_naruto, ctx, avatar, username)
