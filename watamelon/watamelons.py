@@ -795,6 +795,19 @@ watamelon = {
         "https://i.imgur.com/azR8Tqd.jpeg"
         "https://i.imgur.com/MbJVauK.jpeg",
         "https://i.imgur.com/hNWD4BY.png",
+        "https://i.imgur.com/XvpUKSY.jpeg",
+        "https://i.imgur.com/tBUXc0N.png",
+        "https://i.imgur.com/xUsKjHp.jpeg",
+        "https://i.imgur.com/D8wRMFv.jpeg",
+        "https://i.imgur.com/0wBz8vI.png",
+        "https://i.imgur.com/iKJx2jj.jpeg",
+        "https://i.imgur.com/YBwoM4P.png",
+        "https://i.imgur.com/jGAJpdU.png",
+        "https://i.imgur.com/aucGQGl.jpeg",
+        "https://i.imgur.com/lOkdPUC.jpeg",
+        "https://i.imgur.com/iPyhTSd.jpeg",
+        "https://i.imgur.com/i44B0xf.jpeg",
+        "https://i.imgur.com/JobTMrA.jpeg"
     ],
     "gif": [
         "https://files.catbox.moe/vcyhjh.gif",
