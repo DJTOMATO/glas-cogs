@@ -49,8 +49,8 @@
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 |  Watamelon   | Generates a random Watamelon*  |            Kuro             |
-|  Movietar        | Make videos from your avatar (8 vids available!)|            Glas       |
-|  PfpImgen        | Make images from avatars! (with +20 new commands!)                                       |            PhenoM4n4n       |
+|  Movietar        | Make videos from your avatar (+10 vids!)|            Glas       |
+|  PfpImgen        | Make images from avatars! (+20 new commands!)                                       |            PhenoM4n4n       |
 
 ### Finished Cogs (Not updated anymore)
 |     Name     |                       Description                        |            Author            |
