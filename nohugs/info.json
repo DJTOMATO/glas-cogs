@@ -5,8 +5,8 @@
     "install_msg": "Thanks for installing `nohugs` cog! Please enjoy it :D \n \n Please note that cog load order is not guaranteed, so it's not guaranteed to work every time, even thought my initial tests and reboots seemed to work. Just keep this in mind",
     "author": ["Aikaterna"],
     "tags": ["general"],
-    "hidden": false,
-    "disabled": false,
+    "hidden": true,
+    "disabled": true,
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data."
 }
