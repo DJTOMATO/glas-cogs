@@ -1,8 +1,8 @@
 {
-    "name": "DO NOT USE THIS - I've gave up. Movie Avatar!",
-    "short": "DO NOT USE THIS - I've gave up. Video + Avatar.",
-    "description": "DO NOT USE THIS - I've gave up. Inserts avatar into several videos.",
-    "install_msg": "DO NOT USE THIS - I've gave up. Thanks for installing `movietar` cog! Please enjoy it :D",
+    "name": "Movie Avatars!",
+    "short": "Video + Avatar.",
+    "description": "Inserts avatar into several videos.",
+    "install_msg": "Thanks for installing `movietar` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["video", "avatar", "bad-meme"],
     "hidden": false,
