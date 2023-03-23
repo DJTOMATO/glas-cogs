@@ -52,20 +52,13 @@
 |  Movietar        | Make videos from your avatar (+10 vids!)|            Glas       |
 |  PfpImgen        | Make images from avatars! (+20 new commands!)                                       |            PhenoM4n4n       |
 
-### Finished Cogs (Not updated anymore)
+### Finished Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 |  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
-
-### Deprecated/abandoned Cogs
-|     Name     |                       Description                        |            Author            |
-|:------------:|----------------------------------------------------------|:----------------------------:|
-| Don    | Generates a random Don-chan*  |            Kuro             |
-|  D4DJ   | Generates a random D4DJ*  |            Kuro             |
-|  NewCC        | Recreates ``cc list`` in a more fashionable way. **BUGGED, DON'T USE WITH MULTIPLE SERVERS, USE AT YOUR OWN RISK**|            Glas/Breeze       |
 
 * (forked from Kuro-Cogs/Fumo)
 ## Credits
