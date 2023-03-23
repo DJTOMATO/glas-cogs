@@ -48,16 +48,15 @@
 ### Active Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
-|  Watamelon   | Generates a random Watamelon*  |            Kuro             |
-|  Movietar        | Make videos from your avatar (+10 vids!)|            Glas       |
-|  PfpImgen        | Make images from avatars! (+20 new commands!)                                       |            PhenoM4n4n       |
+|  Watamelon   | Posts a random Watamelon image*  |            Kuro             |
+|  Movietar        | Make videos with avatars! (+10 vids!)|            Glas       |
+|  PfpImgen        | Make images with avatars! (+20 new images!)                                       |            PhenoM4n4n       |
 
 ### Finished Cogs
 |     Name     |                       Description                        |            Author            |
 |:------------:|----------------------------------------------------------|:----------------------------:|
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
-|  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
 
 
 * (forked from Kuro-Cogs/Fumo)
