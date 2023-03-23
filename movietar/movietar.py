@@ -307,12 +307,12 @@ class Movietar(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["wtff"], cooldown_after_parsing=True)
     async def wtf(self, ctx, *, member: FuzzyMember = None):
-        """Just flour.."""
+        """Korone..."""
         if not member:
             member = ctx.author
         videotype = "wtf.mp4"
         pos = (0, 0)
-        avisize = (200, 200)
+        avisize = (400, 400)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -325,7 +325,7 @@ class Movietar(commands.Cog):
                 )  # just generates the video
                 file = discord.File(file, filename="wtf.mp4")
                 await ctx.send(file=file)
-                
+
     # ads
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
