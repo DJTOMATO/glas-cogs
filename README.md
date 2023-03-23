@@ -58,7 +58,7 @@
 |  Ogey   | Generates a random Ogey* |            Kuro             |
 |  Fire        | New year fireworks                                        |            TrustyJaid       |
 |  NoHugs        | Disables 'hug' so 'hugs' from max-cogs/roleplay can be used as an alias|            Aikaterna       |
-|  Waifu        | Grabs waifus/husbandos from Nekos.best API|            MAX       |
+
 
 * (forked from Kuro-Cogs/Fumo)
 ## Credits
