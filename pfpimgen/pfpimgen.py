@@ -982,15 +982,10 @@ class PfpImgen(commands.Cog):
 
     def gen_ahoy(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 150)
-        # base canvas
         im = Image.new("RGBA", (640, 527), None)
-        # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
         ahoymask = Image.open(f"{bundled_data_path(self)}/ahoy/ahoymask.png", mode="r").convert(
             "RGBA"
         )
-        # im.paste(ogey, (0, 0), ogey)
-
-        # pasting the pfp
         member_avatar = member_avatar.rotate(41, Image.NEAREST, expand=1)
         im.paste(member_avatar, (280, 310), member_avatar)
         im.paste(ahoymask, (0, 0), ahoymask)
@@ -1007,15 +1002,13 @@ class PfpImgen(commands.Cog):
 
     def gen_waku(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 600)
-        # base canvas
+
         im = Image.new("RGBA", (720, 675), None)
-        # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
+
         wakumask = Image.open(f"{bundled_data_path(self)}/waku/waku_mask.png", mode="r").convert(
             "RGBA"
         )
-        # im.paste(ogey, (0, 0), ogey)
 
-        # pasting the pfp
         im.paste(member_avatar, (100, 90), member_avatar)
         im.paste(wakumask, (0, 0), wakumask)
         wakumask.close()
@@ -1031,15 +1024,12 @@ class PfpImgen(commands.Cog):
 
     def gen_idiot(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 300)
-        # base canvas
         im = Image.new("RGBA", (600, 416), None)
-        # ahoy = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
+
         idiotmask = Image.open(
             f"{bundled_data_path(self)}/idiot/idiot_mask.png", mode="r"
         ).convert("RGBA")
-        # im.paste(ogey, (0, 0), ogey)
 
-        # pasting the pfp
         im.paste(member_avatar, (150, 40), member_avatar)
         im.paste(idiotmask, (0, 0), idiotmask)
         idiotmask.close()
@@ -1055,15 +1045,13 @@ class PfpImgen(commands.Cog):
 
     def gen_you(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 130)
-        # base canvas
+
         im = Image.new("RGBA", (717, 642), None)
-        # ahoy = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert("RGBA")
+
         youmask = Image.open(f"{bundled_data_path(self)}/you/you_mask.png", mode="r").convert(
             "RGBA"
         )
-        # im.paste(you, (0, 0), you)
 
-        # pasting the pfp
         im.paste(member_avatar, (280, 140), member_avatar)
         im.paste(youmask, (0, 0), youmask)
         youmask.close()
@@ -1079,17 +1067,14 @@ class PfpImgen(commands.Cog):
 
     def gen_fumopic(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 260)
-        # base canvas
+
         im = Image.new("RGBA", (451, 600), None)
 
         fumopicmask = Image.open(
             f"{bundled_data_path(self)}/fumopic/fumopic_mask.png", mode="r"
         ).convert("RGBA")
-        # im.paste(you, (0, 0), you)
 
-        # pasting the pfp
         member_avatar = member_avatar.rotate(315, Image.NEAREST, expand=1)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (120, 200), member_avatar)
         im.paste(fumopicmask, (0, 0), fumopicmask)
         fumopicmask.close()
@@ -1105,15 +1090,13 @@ class PfpImgen(commands.Cog):
 
     def gen_ina(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 270)
-        # base canvas
+
         im = Image.new("RGBA", (600, 338), None)
 
         inamask = Image.open(f"{bundled_data_path(self)}/ina/ina_mask.png", mode="r").convert(
             "RGBA"
         )
-        # im.paste(you, (0, 0), you)
 
-        # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (105, 75), member_avatar)
@@ -1137,9 +1120,7 @@ class PfpImgen(commands.Cog):
         gosmask = Image.open(
             f"{bundled_data_path(self)}/gosling/gosling_mask.png", mode="r"
         ).convert("RGBA")
-        # im.paste(you, (0, 0), you)
 
-        # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (50, 0), member_avatar)
@@ -1157,16 +1138,13 @@ class PfpImgen(commands.Cog):
 
     def gen_marisa(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 750)
-        # base canvas
+
         im = Image.new("RGBA", (433, 577), None)
 
         marisamask = Image.open(
             f"{bundled_data_path(self)}/marisa/marisa_mask.png", mode="r"
         ).convert("RGBA")
-        # im.paste(you, (0, 0), you)
-
-        # pasting the pfp
-
+        
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(marisamask, (0, 0), marisamask)
@@ -1183,15 +1161,12 @@ class PfpImgen(commands.Cog):
 
     def gen_religion(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 520)
-        # base canvas
+
         im = Image.new("RGBA", (520, 612), None)
 
         religionmask = Image.open(
             f"{bundled_data_path(self)}/religion/religion_mask.png", mode="r"
         ).convert("RGBA")
-        # im.paste(you, (0, 0), you)
-
-        # pasting the pfp
 
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (0, 0), member_avatar)
@@ -1215,10 +1190,6 @@ class PfpImgen(commands.Cog):
         nepmask = Image.open(f"{bundled_data_path(self)}/nep/nep_mask.png", mode="r").convert(
             "RGBA"
         )
-        # im.paste(you, (0, 0), you)
-
-        # pasting the pfp
-
         im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(member_avatar, (0, -20), member_avatar)
         im.paste(nepmask, (0, 0), nepmask)
@@ -1243,9 +1214,6 @@ class PfpImgen(commands.Cog):
             "RGBA"
         )
 
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-
         im.paste(member_avatar, (-83, -250), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
         liesmask.close()
@@ -1263,14 +1231,10 @@ class PfpImgen(commands.Cog):
         member_avatar = self.bytes_to_image(member_avatar, 250)
 
         member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (554, 650), None)
         liesmask = Image.open(f"{bundled_data_path(self)}/ahri/ahri_mask.png", mode="r").convert(
             "RGBA"
         )
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (295, 110), member_avatar)
         im.paste(liesmask, (0, 0), liesmask)
@@ -1287,16 +1251,10 @@ class PfpImgen(commands.Cog):
 
     def gen_pippa(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 120)
-
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (940, 339), None)
         pippamask = Image.open(
             f"{bundled_data_path(self)}/pippa/pippa_mask.png", mode="r"
         ).convert("RGBA")
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (327, 130), member_avatar)
         im.paste(pippamask, (0, 0), pippamask)
@@ -1314,15 +1272,10 @@ class PfpImgen(commands.Cog):
     def gen_jail(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 120)
 
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (800, 640), None)
         jailmask = Image.open(f"{bundled_data_path(self)}/jail/jail_mask.png", mode="r").convert(
             "RGBA"
         )
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (330, 230), member_avatar)
         im.paste(jailmask, (0, 0), jailmask)
@@ -1340,15 +1293,11 @@ class PfpImgen(commands.Cog):
     def gen_sanic(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 190)
 
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (494, 557), None)
         sanicmask = Image.open(
             f"{bundled_data_path(self)}/sanic/sanic_mask.png", mode="r"
         ).convert("RGBA")
 
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (50, 100), member_avatar)
         im.paste(sanicmask, (0, 0), sanicmask)
@@ -1366,15 +1315,10 @@ class PfpImgen(commands.Cog):
     def gen_dream(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 750)
 
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (913, 960), None)
         dreammask = Image.open(
             f"{bundled_data_path(self)}/dream/dream_mask.png", mode="r"
         ).convert("RGBA")
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (60, 110), member_avatar)
         im.paste(dreammask, (0, 0), dreammask)
@@ -1392,15 +1336,10 @@ class PfpImgen(commands.Cog):
     def gen_marihat(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 262)
 
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (262, 262), None)
         marimask = Image.open(
             f"{bundled_data_path(self)}/marihat/mari_mask.png", mode="r"
         ).convert("RGBA")
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(marimask, (0, 0), marimask)
@@ -1428,7 +1367,6 @@ class PfpImgen(commands.Cog):
         im.paste(narumask, (0, 0), narumask)
         narumask.close()
         member_avatar.close()
-        # test
         text = username
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
