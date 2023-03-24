@@ -107,7 +107,7 @@ class Youwoulnt(commands.Cog):
         )
         im.paste(image, (0, 0), image)
         texto = self.parse_text(text)
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 60)
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 90)
         canvas = ImageDraw.Draw(im)
         
         margin = offset = 40
