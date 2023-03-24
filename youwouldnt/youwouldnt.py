@@ -43,9 +43,9 @@ RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 from .converters import FuzzyMember
 
 
-class Youwoulnt(commands.Cog):
+class Youwouldnt(commands.Cog):
     """
-   You wouldn't
+     Youwouldnt
     """
 
     __version__ = "1.0.0"
@@ -72,7 +72,7 @@ class Youwoulnt(commands.Cog):
         """You wouln't steal a meme..."""
         
         async with ctx.typing():
-            task = functools.partial(self.gen_woulnt, ctx, text)
+            task = functools.partial(self.gen_wouldnt, ctx, text)
             image = await self.generate_image(ctx, task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -95,7 +95,7 @@ class Youwoulnt(commands.Cog):
         return image
 
 
-    def gen_woulnt(self, ctx, text):
+    def gen_wouldnt(self, ctx, text):
         
         # base canvas
         im = Image.new("RGBA", (818, 574), None)
