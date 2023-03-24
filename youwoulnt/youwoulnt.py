@@ -102,15 +102,16 @@ class Youwoulnt(commands.Cog):
     
         # base canvas
         im = Image.new("RGBA", (818, 574), None)
-        woulnt = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert(
+        image = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert(
             "RGBA"
         )
+        im.paste(image, (0, 0), image)
         text = text
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=2)
         canvas.text(
-            (250, 530),
+            ((im.width - text_width) / 2, 285),
             text,
             font=font,
             fill=(0, 0, 0),
