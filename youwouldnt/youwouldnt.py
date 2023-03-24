@@ -45,10 +45,10 @@ from .converters import FuzzyMember
 
 class Youwoulnt(commands.Cog):
     """
-   You wouln't
+   You wouldn't
     """
 
-    __version__ = "1.1.1"
+    __version__ = "1.0.0"
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
@@ -65,9 +65,6 @@ class Youwoulnt(commands.Cog):
     async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         return
     
-    def parse_text(self, text):
-        return urllib.parse.quote(text)  
-      
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -106,18 +103,16 @@ class Youwoulnt(commands.Cog):
             "RGBA"
         )
         im.paste(image, (0, 0), image)
-        #print(text)
-        #texto = self.parse_text(text)
-        #print(texto)
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 100)
+
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 130)
         canvas = ImageDraw.Draw(im)
         
-        margin = 50
-        offset = 50
+        margin = 40
+        offset = 60
         
         
-        for line in textwrap.wrap(text, width=20):
-            canvas.text((margin+20, offset), line, font=font, spacing=2,fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
+        for line in textwrap.wrap(text, width=16):
+            canvas.text((margin+30, offset+50), line, font=font, spacing=500, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
 
 

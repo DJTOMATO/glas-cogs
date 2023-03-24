@@ -1,9 +1,9 @@
 {
-    "name": "Youwoulnt",
+    "name": "Youwouldnt",
     "short": "Steal a!",
     "description": "Make a image based on the classic meme",
     "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
-    "install_msg": "Thanks for installing Youwoulnt!",
+    "install_msg": "Thanks for installing Youwouldnt!",
     "author": ["Glas"],
     "required_cogs": {},
     "requirements": ["Pillow", "unidecode", "rapidfuzz"],
