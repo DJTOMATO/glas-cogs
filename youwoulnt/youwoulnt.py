@@ -73,7 +73,7 @@ class Youwoulnt(commands.Cog):
     @commands.command(cooldown_after_parsing=True)
     async def youwo(self, ctx, *, text: commands.clean_content(fix_channel_mentions=True)):
         """You wouln't steal a meme..."""
-        text = self.parse_text(text)
+        
         async with ctx.typing():
             task = functools.partial(self.gen_woulnt, ctx, text)
             image = await self.generate_image(ctx, task)
@@ -106,16 +106,16 @@ class Youwoulnt(commands.Cog):
             "RGBA"
         )
         im.paste(image, (0, 0), image)
-        print(text)
-        texto = self.parse_text(text)
-        print(texto)
+        #print(text)
+        #texto = self.parse_text(text)
+        #print(texto)
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 70)
         canvas = ImageDraw.Draw(im)
         
         margin = offset = 50
-        for line in textwrap.wrap(texto, width=30):
+        for line in textwrap.wrap(text, width=30):
             canvas.text((margin, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
-            offset += font.getsize(line)[1]       
+            offset += font.getsize(line)[3]       
 
         fp = BytesIO()
         im.save(fp, "PNG")
