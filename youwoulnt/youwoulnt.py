@@ -120,7 +120,8 @@ class Youwoulnt(commands.Cog):
             canvas.text((margin, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
 
-        canvas.multiline_textbbox(200,100, text, font=font, anchor=None, spacing=4, align='center', direction=None, features=None, language=None, stroke_width=0, embedded_color=False)
+        canvas.multiline_textbbox(200,100, text, font, anchor=None, spacing=4, align='center', direction=None, features=None, language=None, stroke_width=0, embedded_color=False)
+        
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
