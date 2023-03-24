@@ -116,8 +116,8 @@ class Youwoulnt(commands.Cog):
         offset = 50
         
         
-        for line in textwrap.wrap(text, width=25):
-            canvas.text((margin+20, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
+        for line in textwrap.wrap(text, width=20):
+            canvas.text((margin+20, offset), line, font=font, spacing=2,fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
 
 
