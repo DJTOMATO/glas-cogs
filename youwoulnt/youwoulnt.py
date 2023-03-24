@@ -107,10 +107,10 @@ class Youwoulnt(commands.Cog):
         )
         im.paste(image, (0, 0), image)
         texto = self.parse_text(text)
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 90)
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 70)
         canvas = ImageDraw.Draw(im)
         
-        margin = offset = 90
+        margin = offset = 50
         for line in textwrap.wrap(texto, width=40):
             canvas.text((margin, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
