@@ -109,7 +109,7 @@ class Youwoulnt(commands.Cog):
         #print(text)
         #texto = self.parse_text(text)
         #print(texto)
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 80)
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 100)
         canvas = ImageDraw.Draw(im)
         
         margin = 50
@@ -117,7 +117,7 @@ class Youwoulnt(commands.Cog):
         
         
         for line in textwrap.wrap(text, width=25):
-            canvas.text((margin, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
+            canvas.text((margin+20, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
 
 
