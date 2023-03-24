@@ -109,7 +109,7 @@ class Youwoulnt(commands.Cog):
         #print(text)
         #texto = self.parse_text(text)
         #print(texto)
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 70)
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 80)
         canvas = ImageDraw.Draw(im)
         
         margin = 50
