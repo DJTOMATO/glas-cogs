@@ -116,20 +116,18 @@ class Youwoulnt(commands.Cog):
         texto = self.parse_text(text)
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 60)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(texto, font, stroke_width=2)
+       
         caption_new = ""
         for ii in word_list:
             caption_new = caption_new+ ii + '\n'
 
-        canvas.text((60,canvas.size[1]/1.5),caption_new ,font = font ,fill=(255, 0, 0), align="center",
+        canvas.text((60,canvas.size[1]/1.5), caption_new,font = font, fill=(255, 0, 0), align="center",
             stroke_width=1,
             stroke_fill=(169,169,169),)
 
         fp = BytesIO()
         im.save(fp, "PNG")
         # test
-        fp = BytesIO()
-        im.save(fp, "PNG")
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "woulnt.png")
