@@ -27,7 +27,7 @@ from email.mime import image
 import functools
 from io import BytesIO
 from typing import Literal, Optional
-
+import textwrap
 import aiohttp
 import discord
 import urllib
@@ -99,7 +99,14 @@ class Youwoulnt(commands.Cog):
 
 
     def gen_woulnt(self, ctx, text):
-    
+        wrapper = textwrap.TextWrapper(width=50) 
+        word_list = wrapper.wrap(text=text) 
+        caption_new = ''
+        for ii in word_list[:-1]:
+            caption_new = caption_new + ii + '\n'
+        caption_new += word_list[-1]
+
+
         # base canvas
         im = Image.new("RGBA", (818, 574), None)
         image = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert(
@@ -110,15 +117,13 @@ class Youwoulnt(commands.Cog):
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 60)
         canvas = ImageDraw.Draw(im)
         text_width, text_height = canvas.textsize(texto, font, stroke_width=2)
-        canvas.text(
-            ((im.width - text_width) / 2, 285),
-            text,
-            font=font,
-            fill=(255, 255, 255),
-            align="center",
+        caption_new = ""
+        for ii in word_list:
+            caption_new = caption_new+ ii + '\n'
+
+        canvas.text((60,canvas.size[1]/1.5),caption_new ,font = font ,fill=(255, 0, 0), align="center",
             stroke_width=1,
-            stroke_fill=(169,169,169),
-        )
+            stroke_fill=(169,169,169),)
 
         fp = BytesIO()
         im.save(fp, "PNG")
