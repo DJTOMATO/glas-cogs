@@ -107,17 +107,17 @@ class Youwoulnt(commands.Cog):
         )
         im.paste(image, (0, 0), image)
         text = text
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 30)
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 100)
         canvas = ImageDraw.Draw(im)
         text_width, text_height = canvas.textsize(text, font, stroke_width=2)
         canvas.text(
             ((im.width - text_width) / 2, 285),
             text,
             font=font,
-            fill=(0, 0, 0),
-            align="left",
+            fill=(255, 255, 255),
+            align="center",
             stroke_width=1,
-            stroke_fill=(0, 0, 0),
+            stroke_fill=(169,169,169),
         )
 
         fp = BytesIO()
