@@ -109,26 +109,12 @@ class Youwoulnt(commands.Cog):
         texto = self.parse_text(text)
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 60)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(texto, font, stroke_width=2)
         
         margin = offset = 40
         for line in textwrap.wrap(text, width=40):
-            canvas.text((margin, offset), line, font=font, fill="#aa0000")
+            canvas.text((margin, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
-             
-        canvas.text(
-            (0, 0),
-            text,
-            font=font,
-            fill=(255, 255, 255),
-            align="center",
-            stroke_width=1,
-            stroke_fill=(169,169,169),
-        )
 
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        # test
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
