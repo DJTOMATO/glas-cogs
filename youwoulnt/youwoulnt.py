@@ -106,12 +106,14 @@ class Youwoulnt(commands.Cog):
             "RGBA"
         )
         im.paste(image, (0, 0), image)
+        print(text)
         texto = self.parse_text(text)
+        print(texto)
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 70)
         canvas = ImageDraw.Draw(im)
         
         margin = offset = 50
-        for line in textwrap.wrap(texto, width=40):
+        for line in textwrap.wrap(texto, width=30):
             canvas.text((margin, offset), line, font=font, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
 
