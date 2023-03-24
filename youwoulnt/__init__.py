@@ -34,5 +34,5 @@ with open(Path(__file__).parent / "info.json") as fp:
 
 
 def setup(bot: Red):
-    cog = Youwoulnt(bot)
+    cog = youwoulnt(bot)
     bot.add_cog(cog)
