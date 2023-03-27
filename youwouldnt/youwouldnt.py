@@ -23,25 +23,20 @@ SOFTWARE.
 """
 
 import asyncio
-from email.mime import image
+
 import functools
 from io import BytesIO
-from typing import Literal, Optional
+from typing import Literal
 import textwrap
 import aiohttp
 import discord
-import urllib
 from PIL import Image, ImageDraw, ImageFont
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
-from redbot.core.utils.chat_formatting import pagify
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
-
-from .converters import FuzzyMember
-
 
 class Youwouldnt(commands.Cog):
     """
@@ -109,13 +104,10 @@ class Youwouldnt(commands.Cog):
         
         margin = 40
         offset = 60
-        
-        
+                
         for line in textwrap.wrap(text, width=13):
             canvas.text((margin+30, offset+50), line, font=font, spacing=500, fill="#FFFFFF", align="center", stroke_width=1, stroke_fill=(169,169,169))
             offset += font.getsize(line)[1]       
-
-
         
         fp = BytesIO()
         im.save(fp, "PNG")

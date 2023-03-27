@@ -555,7 +555,7 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def marihat(self, ctx, *, member: FuzzyMember = None):
+    async def marisa(self, ctx, *, member: FuzzyMember = None):
         """Marisa Hat..."""
         if not member:
             member = ctx.author
