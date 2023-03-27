@@ -1331,7 +1331,7 @@ class PfpImgen(commands.Cog):
         return _file
     
     def gen_funado(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 190)
+        member_avatar = self.bytes_to_image(member_avatar, 400)
 
         im = Image.new("RGBA", (960, 958), None)
         funamask = Image.open(
@@ -1339,7 +1339,7 @@ class PfpImgen(commands.Cog):
         ).convert("RGBA")
 
         im.paste(funamask, (0, 0), funamask)
-        im.paste(member_avatar, (50, 100), member_avatar)
+        im.paste(member_avatar, (200, 100), member_avatar)
         
         funamask.close()
         member_avatar.close()
