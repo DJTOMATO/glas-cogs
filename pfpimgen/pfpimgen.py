@@ -534,6 +534,24 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
+   
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def funado(self, ctx, *, member: FuzzyMember = None):
+        """Estoy funado..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_funado, ctx, avatar)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+        
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -1309,6 +1327,28 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "sanic.png")
+        fp.close()
+        return _file
+    
+    def gen_funado(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 190)
+
+        im = Image.new("RGBA", (960, 958), None)
+        funamask = Image.open(
+            f"{bundled_data_path(self)}/funa/funado.jpg", mode="r"
+        ).convert("RGBA")
+
+
+        im.paste(member_avatar, (50, 100), member_avatar)
+        im.paste(funamask, (0, 0), funamask)
+        funamask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "funado.png")
         fp.close()
         return _file
 
