@@ -1338,9 +1338,9 @@ class PfpImgen(commands.Cog):
             f"{bundled_data_path(self)}/funado/funado.jpg", mode="r"
         ).convert("RGBA")
 
-
-        im.paste(member_avatar, (50, 100), member_avatar)
         im.paste(funamask, (0, 0), funamask)
+        im.paste(member_avatar, (50, 100), member_avatar)
+        
         funamask.close()
         member_avatar.close()
 
