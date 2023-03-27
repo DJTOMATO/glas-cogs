@@ -1335,7 +1335,7 @@ class PfpImgen(commands.Cog):
 
         im = Image.new("RGBA", (960, 958), None)
         funamask = Image.open(
-            f"{bundled_data_path(self)}/funa/funado.jpg", mode="r"
+            f"{bundled_data_path(self)}/funado/funado.jpg", mode="r"
         ).convert("RGBA")
 
 
