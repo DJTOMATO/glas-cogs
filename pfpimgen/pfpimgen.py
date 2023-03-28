@@ -1476,11 +1476,11 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_mhr(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 640)
+        member_avatar = self.bytes_to_image(member_avatar, 522)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (720, 720), None)
+        im = Image.new("RGBA", (602, 602), None)
         mhrmask = Image.open(f"{bundled_data_path(self)}/mhr/mhr_mask.png", mode="r").convert(
             "RGBA"
         )
