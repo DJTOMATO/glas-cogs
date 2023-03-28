@@ -1476,7 +1476,7 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_mhr(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 680)
+        member_avatar = self.bytes_to_image(member_avatar, 650)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
