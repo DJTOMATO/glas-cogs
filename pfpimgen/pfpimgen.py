@@ -67,7 +67,7 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["catgirl"], cooldown_after_parsing=True)
-    async def neko(self, ctx, *, member: FuzzyMember = None):
+    async def ineko(self, ctx, *, member: FuzzyMember = None):
         """Make a neko avatar..."""
         if not member:
             member = ctx.author
