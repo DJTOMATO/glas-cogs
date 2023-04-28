@@ -1648,7 +1648,7 @@ class PfpImgen(commands.Cog):
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (602, 602), None)
+        im = Image.new("RGBA", (613, 316), None)
         pointmask = Image.open(
             f"{bundled_data_path(self)}/point/point_mask.png", mode="r"
         ).convert("RGBA")
@@ -1656,7 +1656,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (0, 80), member_avatar)
+        im.paste(member_avatar, (0, 0), member_avatar)
         im.paste(pointmask, (0, 0), pointmask)
         pointmask.close()
         member_avatar.close()
