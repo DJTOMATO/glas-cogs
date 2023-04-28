@@ -691,7 +691,7 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def point(self, ctx, *, member: FuzzyMember = None):
+    async def denwa(self, ctx, *, member: FuzzyMember = None):
         """Point at..."""
         if not member:
             member = ctx.author
