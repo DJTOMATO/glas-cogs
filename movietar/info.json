@@ -9,5 +9,6 @@
     "disabled": false,
     "requirements": ["moviepy", "rapidfuzz"],
     "type": "COG",
-    "end_user_data_statement": "This cog does not store end user data."
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
 }

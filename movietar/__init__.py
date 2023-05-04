@@ -1,5 +1,5 @@
 from .movietar import Movietar
 
 
-def setup(bot):
-    bot.add_cog(Movietar(bot))
+async def setup(bot):
+    await bot.add_cog(Movietar(bot))

@@ -4,5 +4,6 @@
     "name": "glas-cogs",
     "short": "Silly cogs nobody would use.",
     "description": "Silly cogs nobody would use.",
-    "tags": ["custom", "customized", "fun", "glas", "tools", "utility"]
+    "tags": ["custom", "customized", "fun", "glas", "tools", "utility"],
+    "min_bot_version": "3.5.0"
 }
