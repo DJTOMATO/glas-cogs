@@ -338,7 +338,7 @@ class Movietar(commands.Cog):
 
     async def get_avatar(self, member: discord.User):
         avatar = BytesIO()
-        await member.user.display_avatar_as(static_format="png").save(avatar, seek_begin=True)
+        await user.display_avatar_as(static_format="png").save(avatar, seek_begin=True)
         return avatar
 
     @staticmethod
