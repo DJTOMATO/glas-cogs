@@ -759,7 +759,7 @@ class PfpImgen(commands.Cog):
             fp.close()
         await ctx.send(file=file)
 
-    async def generate_image(self, ctx: commands.Context, task: functools.partial):
+    async def generate_image(self, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
         try:
             image = await asyncio.wait_for(task, timeout=60)
