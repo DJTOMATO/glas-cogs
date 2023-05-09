@@ -1738,8 +1738,8 @@ class PfpImgen(commands.Cog):
             "RGBA"
         )
 
-        # im.paste(member_avatar, (0, 0), member_avatar)
-        # im.paste(narumask, (0, 0), narumask)
+        # im.paste(gen_didyou, (0, 0), member_avatar)
+        im.paste(gen_didyou, (0, 0), gen_didyou)
         gen_didyou.close()
         member_avatar.close()
         text = ctx.guild.name
