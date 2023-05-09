@@ -606,6 +606,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def didyou(self, ctx, *, member: FuzzyMember = None):
+        """Did you know..."""
+        if not member:
+            member = ctx.author
+        username = member.display_name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_didyou, ctx, avatar, username)
+            image = await self.generate_image(ctx, task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def itis(self, ctx, *, member: FuzzyMember = None):
         """You are running out..."""
         if not member:
@@ -1710,5 +1727,43 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "amigo.png")
+        fp.close()
+        return _file
+
+    def gen_didyou(self, ctx, member_avatar, username):
+        member_avatar = self.bytes_to_image(member_avatar, 500)
+
+        # base canvas
+        im = Image.new("RGBA", (1000, 750), None)
+        gen_didyou = Image.open(
+            f"{bundled_data_path(self)}/didyou/didyou_mask.png", mode="r"
+        ).convert("RGBA")
+
+        # im.paste(member_avatar, (0, 0), member_avatar)
+        # im.paste(narumask, (0, 0), narumask)
+        gen_didyou.close()
+        member_avatar.close()
+        text = discord.guild.name
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        canvas.text(
+            (250, 530),
+            text,
+            font=font,
+            fill=(0, 0, 0),
+            align="left",
+            stroke_width=1,
+            stroke_fill=(0, 0, 0),
+        )
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        # test
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "didyou.png")
         fp.close()
         return _file
