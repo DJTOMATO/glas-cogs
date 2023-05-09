@@ -1694,7 +1694,7 @@ class PfpImgen(commands.Cog):
         # base canvas
         im = Image.new("RGBA", (512, 512), None)
         amigomask = Image.open(
-            f"{bundled_data_path(self)}/point/point_mask.png", mode="r"
+            f"{bundled_data_path(self)}/amigo/amigo_mask.png", mode="r"
         ).convert("RGBA")
 
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
