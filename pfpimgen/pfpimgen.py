@@ -1688,11 +1688,11 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_amigo(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 512)
+        member_avatar = self.bytes_to_image(member_avatar, 256)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (512, 512), None)
+        im = Image.new("RGBA", (256, 256), None)
         amigomask = Image.open(
             f"{bundled_data_path(self)}/amigo/amigo_mask.png", mode="r"
         ).convert("RGBA")
