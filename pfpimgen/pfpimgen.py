@@ -58,8 +58,8 @@ class PfpImgen(commands.Cog):
         )
         self.session = aiohttp.ClientSession()
 
-    def cog_unload(self):
-        asyncio.create_task(self.session.close())
+    async def cog_unload(self):
+        await self.session.close()
 
     async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         return
@@ -75,7 +75,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_neko, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -92,7 +92,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_you, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -109,7 +109,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_fumopic, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -126,7 +126,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_gosling, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -143,7 +143,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_marisa, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -160,7 +160,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_religion, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -177,7 +177,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_nep, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -194,7 +194,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_lies, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -211,7 +211,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_ahri, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -228,7 +228,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_pippa, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -245,7 +245,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_jail, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -262,7 +262,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_ina, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -279,7 +279,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_nofun, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -296,7 +296,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_ogey, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -313,7 +313,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_doctor, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -324,21 +324,20 @@ class PfpImgen(commands.Cog):
     @commands.command(cooldown_after_parsing=True)
     async def bonk(self, ctx, *, member: FuzzyMember = None):
         """Bonk! Go to horny jail."""
-        await ctx.trigger_typing()
-        bonker = False
-        if member:
-            bonker = ctx.author
-        else:
-            member = ctx.author
 
         async with ctx.typing():
+            bonker = False
+            if member:
+                bonker = ctx.author
+            else:
+                member = ctx.author
             victim_avatar = await self.get_avatar(member)
             if bonker:
                 bonker_avatar = await self.get_avatar(bonker)
                 task = functools.partial(self.gen_bonk, ctx, victim_avatar, bonker_avatar)
             else:
                 task = functools.partial(self.gen_bonk, ctx, victim_avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -354,7 +353,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_simp, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -370,7 +369,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_banner, ctx, avatar, member.color)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -395,7 +394,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_nickel, ctx, avatar, text[:29])
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -418,7 +417,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_stop, ctx, avatar, text)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -433,7 +432,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_horny, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -461,7 +460,7 @@ class PfpImgen(commands.Cog):
             if biden:
                 biden = await self.get_avatar(biden)
             task = functools.partial(self.gen_shut, ctx, trump, text, biden_avatar=biden)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -478,7 +477,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_ahoy, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -495,7 +494,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_waku, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -512,7 +511,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_idiot, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -529,7 +528,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_sanic, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -546,7 +545,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_funado, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -563,7 +562,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_dream, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -580,7 +579,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_marihat, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -597,7 +596,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_naruto, ctx, avatar, username)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -614,7 +613,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_didyou, ctx, avatar, username)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -631,7 +630,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_itis, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -648,7 +647,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_slur, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -665,7 +664,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_jar, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -682,7 +681,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_punch, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -699,7 +698,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_mhr, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -716,7 +715,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_point, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -733,7 +732,7 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_amigo, ctx, avatar)
-            image = await self.generate_image(ctx, task)
+            image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
         else:
@@ -746,7 +745,7 @@ class PfpImgen(commands.Cog):
         """petpet someone"""
         member = member or ctx.author
         async with ctx.typing():
-            params = {"image": str(member.display_avatar_as(format="png"))}
+            params = {"avatar": member.display_avatar.replace(format="png").url}
             url = "https://api.popcat.xyz/pet"
             async with self.session.get(url, params=params) as resp:
                 if resp.status != 200:
