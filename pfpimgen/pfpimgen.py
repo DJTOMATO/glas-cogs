@@ -1735,9 +1735,9 @@ class PfpImgen(commands.Cog):
 
         # base canvas
         im = Image.new("RGBA", (1000, 750), None)
-        gen_didyou = Image.open(
-            f"{bundled_data_path(self)}/didyou/didyou_mask.png", mode="r"
-        ).convert("RGBA")
+        gen_didyou = Image.open(f"{bundled_data_path(self)}/didyou/didyou.png", mode="r").convert(
+            "RGBA"
+        )
 
         # im.paste(member_avatar, (0, 0), member_avatar)
         # im.paste(narumask, (0, 0), narumask)
