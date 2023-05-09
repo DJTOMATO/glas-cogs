@@ -1742,7 +1742,7 @@ class PfpImgen(commands.Cog):
         # im.paste(narumask, (0, 0), narumask)
         gen_didyou.close()
         member_avatar.close()
-        text = guild.name
+        text = ctx.guild.name
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
         text_width, text_height = canvas.textsize(text, font, stroke_width=1)
