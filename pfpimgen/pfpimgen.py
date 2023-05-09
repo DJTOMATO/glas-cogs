@@ -1764,6 +1764,6 @@ class PfpImgen(commands.Cog):
         im.save(fp, "PNG")
         fp.seek(0)
         im.close()
-        _file = discord.File(fp, "didyouu.png")
+        _file = discord.File(fp, "didyou.png")
         fp.close()
         return _file
