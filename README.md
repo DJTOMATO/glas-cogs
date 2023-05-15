@@ -2,7 +2,7 @@
 
 <div align="center">
   <a href="https://github.com/Cog-Creators/Red-DiscordBot">
-    <img src="https://img.shields.io/badge/Red--DiscordBot-v3-cb533f?style=for-the-badge&logo=github&link=https://github.com/Cog-Creators/Red-DiscordBot" alt="Red's GitHub Repo">
+    <img src="https://img.shields.io/badge/Red--DiscordBot-v3.5.2-cb533f?style=for-the-badge&logo=github&link=https://github.com/Cog-Creators/Red-DiscordBot" alt="Red's GitHub Repo">
   </a>
   <a href="https://discord.gg/red">
     <img src="https://img.shields.io/badge/Red%20--%20Discord%20Bot-Join-cb533f?style=for-the-badge&logo=discord&link=https://discord.gg/red" alt="Red - Discord Bot">
@@ -16,10 +16,10 @@
   </a>
   <br>
   <a href="https://www.python.org">
-    <img src="https://img.shields.io/badge/python-v3.8%20|%20v3.9-blue?style=for-the-badge&logo=python" alt="Python 3.9">
+    <img src="https://img.shields.io/badge/python-v3.11.0-blue?style=for-the-badge&logo=python" alt="Python 3.9">
   </a>
   <a href="https://github.com/Rapptz/discord.py">
-    <img src="https://img.shields.io/badge/discord.py-v1.7.3-blue?style=for-the-badge&logo=github" alt="discord.py">
+    <img src="https://img.shields.io/badge/discord.py-v2.2.3-blue?style=for-the-badge&logo=github" alt="discord.py">
   </a>
   <img src="https://i.imgur.com/58WLcni.png" alt="Glas-Cogs"> <!--width=827 height=323-->
 </div>
