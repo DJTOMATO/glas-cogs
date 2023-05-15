@@ -345,7 +345,7 @@ class Movietar(commands.Cog):
     @staticmethod
     def bytes_to_image(image: BytesIO, size: int):
         image = Image.open(image).convert("RGBA")
-        image = image.resize((size, size), Image.ANTIALIAS)
+        image = image.resize((size, size), Image.Resampling.LANCZOS)
         return image
 
     def gen_vid(self, ctx, member_avatar, fp, folder, videotype, pos, avisize):
@@ -363,8 +363,10 @@ class Movietar(commands.Cog):
             preset="superfast",
             verbose=False,
             logger=None,
-            temp_audiofile=str(folder / f"{ctx.message.id}final.mp3")
-            # ffmpeg_params=["-filter:a", "volume=0.5"]
+            codec="libx264",
+            audio_codec="aac",
+            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4")
+            # ffmpeg_params=['-struct -2'],
         )
         path = fp
         return data
