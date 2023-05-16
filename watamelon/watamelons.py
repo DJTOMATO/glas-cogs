@@ -717,7 +717,6 @@ watamelon = {
         "https://i.imgur.com/U5bqzpm.jpeg",
         "https://i.imgur.com/oOs6O6C.jpeg",
         "https://i.imgur.com/NTtfQZC.jpeg",
-        "https://i.imgur.com/LY4bEnl.png",
         "https://i.imgur.com/47E1weQ.jpeg",
         "https://i.imgur.com/Y13XzW7.png",
         "https://i.imgur.com/uCCL7iM.png",

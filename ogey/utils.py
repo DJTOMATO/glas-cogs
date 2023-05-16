@@ -22,7 +22,7 @@ async def summon_ogey(self, ctx, type: str):
         e.title = f"Here's a Random Ogey {type.title()}! 🐀"
         e.set_image(url=choice(ogey[type]))
         e.set_footer(
-            text="Source: /hlgg/ - Code by Kuro-Cogs/fumo",
+            text="Code by Kuro",
             icon_url="https://i.kym-cdn.com/photos/images/newsfeed/002/240/804/333.png",
         )
     await ctx.send(embed=e)

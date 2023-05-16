@@ -158,6 +158,7 @@ ogey = {
         "https://i.imgur.com/01YUSsO.jpeg",
         "https://i.imgur.com/7Sk9o3r.png",
         "https://i.imgur.com/QL8vr9M.png",
+        "https://i.imgur.com/LY4bEnl.png",
         "https://i.imgur.com/qkMEBxW.png",
         "https://i.imgur.com/0VIh92K.jpeg",
         "https://i.imgur.com/YgC6mi3.png",
