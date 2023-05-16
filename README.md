@@ -46,7 +46,7 @@
 ## Cogs List
 
 ### Active Cogs
-|     Name     |                       Description                        |            Author            |            d.py2 support            |
+|     Name     |                       Description                        |            Author            |            d.py2 Compatible            |
 |:------------:|----------------------------------------------------------|:----------------------------:|:----------------------------:|
 |  Watamelon   | Posts a random Watamelon image*  |            Kuro             |✅|
 |  Movietar        | Make videos with avatars! (+10 vids!)|            Glas       |✅|
