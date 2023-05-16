@@ -50,7 +50,7 @@
 |:------------:|----------------------------------------------------------|:----------------------------:|:----------------------------:|
 |  Watamelon   | Posts a random Watamelon image*  |            Kuro             |✅|
 |  Movietar        | Make videos with avatars! (+10 vids!)|            Glas       |✅|
-|  PfpImgen        | Make images with avatars! (+20 new images!)                                       |            PhenoM4n4n       |✅|
+|  PfpImgen        | Make images with avatars! (+23 new images!)                                       |            PhenoM4n4n       |✅|
 |  Youwouldnt        | You Wouldn't Steal a Car                                      |            Glas       |✅|
 |  Weeedcog        | comic cog, now with +1300 weeb images                                  |            dualmoon       |✅|
 |  Ogey   | Generates a random Ogey* |            Kuro             |✅|
