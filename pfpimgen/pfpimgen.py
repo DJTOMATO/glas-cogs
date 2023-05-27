@@ -1761,7 +1761,7 @@ class PfpImgen(commands.Cog):
         # base canvas
         im = Image.new("RGBA", (555, 553), None)
         ireally = Image.open(
-            f"{bundled_data_path(self)}/ireally/ireally_mask.png", mode="r"
+            f"{bundled_data_path(self)}/ireally/ireally.png", mode="r"
         ).convert("RGBA")
 
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
