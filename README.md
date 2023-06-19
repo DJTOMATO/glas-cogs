@@ -41,7 +41,7 @@
 ***Note**: `[p] is your bot's prefix, so replace it!`
 
 ## Support
-**For support**, you can **find and ping me (Glas#0973) in [*#support_othercogs*](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
+**For support**, you can **find and ping me (dj_tomato) in [*#support_othercogs*](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
 
 ## Cogs List
 
