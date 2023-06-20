@@ -326,6 +326,29 @@ class Movietar(commands.Cog):
                 file = discord.File(file, filename="wtf.mp4")
                 await ctx.send(file=file)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["lolazo"], cooldown_after_parsing=True)
+    async def lold(self, ctx, *, member: FuzzyMember = None):
+        """Lol'd at you..."""
+        if not member:
+            member = ctx.author
+        videotype = "mlol.mp4"
+        pos = (5, 30)
+        avisize = (200, 200)
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                folder = pathlib.Path(
+                    tmpdirname
+                )  # cant tell if it returns a string or a path object
+                file = folder / f"{ctx.message.id}final.mp4"
+                image = self.gen_vidt(
+                    ctx, avatar, file, folder, videotype, pos, avisize
+                )  # just generates the video
+                file = discord.File(file, filename="lold.mp4")
+                await ctx.send(file=file)
+
     # ads
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
@@ -356,6 +379,32 @@ class Movietar(commands.Cog):
         clip = clip.volumex(1.0)
         numpydata = np.asarray(member_avatar)
         cat = ImageClip(numpydata).set_duration(duration).resize((avisize)).set_position((pos))
+        clip = CompositeVideoClip([clip, cat])
+        data = clip.write_videofile(
+            str(fp),
+            threads=1,
+            preset="superfast",
+            verbose=False,
+            logger=None,
+            codec="libx264",
+            audio_codec="aac",
+            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4")
+            # ffmpeg_params=['-struct -2'],
+        )
+        path = fp
+        return data
+
+    def gen_vidt(self, ctx, member_avatar, fp, folder, videotype, pos, avisize):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+        clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
+        duration = clip.duration
+
+        clip = clip.volumex(1.0)
+        numpydata = np.asarray(member_avatar)
+        cat = ImageClip(numpydata).set_duration(8).resize((avisize)).set_position((pos))
+        cat = (
+            ImageClip(numpydata).set_start(5).set_duration(3).resize((avisize)).set_position((pos))
+        )
         clip = CompositeVideoClip([clip, cat])
         data = clip.write_videofile(
             str(fp),
