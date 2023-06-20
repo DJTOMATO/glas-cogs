@@ -334,8 +334,8 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "mlol.mp4"
-        pos = (5, 30)
-        avisize = (200, 200)
+        pos = (23, 15)
+        avisize = (100, 100)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -400,12 +400,27 @@ class Movietar(commands.Cog):
         duration = clip.duration
 
         clip = clip.volumex(1.0)
+        pos = (40, 20)
         numpydata = np.asarray(member_avatar)
-        cat = ImageClip(numpydata).set_duration(8).resize((avisize)).set_position((pos))
         cat = (
-            ImageClip(numpydata).set_start(5).set_duration(3).resize((avisize)).set_position((pos))
+            ImageClip(numpydata)
+            .set_start(0)
+            .set_duration(7.2)
+            .resize((avisize))
+            .set_position((pos))
         )
         clip = CompositeVideoClip([clip, cat])
+        avisize = (150, 150)
+        pos = (0, 0)
+        cat2 = (
+            ImageClip(numpydata)
+            .set_start(12)
+            .set_duration(3.3)
+            .resize((avisize))
+            .set_position((pos))
+        )
+
+        clip = CompositeVideoClip([clip, cat2])
         data = clip.write_videofile(
             str(fp),
             threads=1,
