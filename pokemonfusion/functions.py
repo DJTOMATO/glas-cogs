@@ -24,6 +24,8 @@ async def datacheck():
 
 async def VerifyName(names, name):
     # Compare Pokemon name `a` with the list `data`
+    print(names)
+    print(ids)
     n = name
     n = n.lower()
     n = n.title()
@@ -39,4 +41,5 @@ async def GetID(ids, name):
         print(f"ALgo debug: a")
         return a
     except ValueError:
-        return await ctx.send(f"Fucky wucky happened while retrieving the ID, Value: {name}")
+        return ValueError
+        # return "Error" ctx.send(f"Fucky wucky happened while retrieving the ID, Value: {name}")
