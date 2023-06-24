@@ -74,7 +74,7 @@ class PokeFusion(commands.Cog):
             except ValueError as e:
                 return await ctx.send(f"Error creating the URL: {e}")
 
-            em = discord.Embed(description=f"{name1} + {name2} = {name3}")
+            em = discord.Embed(description=f"{name1.title} + {name2.title} = {name3.title}")
             em.title = "Pokemon Fusion"
             em.color = discord.Color(8599000)
             #            em.footer = "Try it with !pokefuse <Pkmn1> <pkmn2>"
