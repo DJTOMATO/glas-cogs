@@ -77,6 +77,6 @@ class PokeFusion(commands.Cog):
             em = discord.Embed(description=f"{name1} + {name2} = {name3}")
             em.title = "Pokemon Fusion"
             em.color = discord.Color(8599000)
-            em.timestamp = "Try it with !pokefuse <Pkmn1> <pkmn2>"
+            em.footer = "Try it with !pokefuse <Pkmn1> <pkmn2>"
             em.set_image(url=url3)
             await ctx.send(embed=em)
