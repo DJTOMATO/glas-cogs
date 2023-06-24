@@ -30,9 +30,9 @@ async def VerifyName(names, name):
     n = name
     print(names)
     print(f"Original name: {n}")
-    n.lower()
+    n = n.lower()
     print(f"Lowercased Name: {n}")
-    n.title()
+    n = n.title()
     print(f"Final name: {n}")
     if n in names:
         return True

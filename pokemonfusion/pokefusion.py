@@ -43,8 +43,8 @@ class PokeFusion(commands.Cog):
                 # checks if pokemon exists in the database
                 id1 = 1
                 id2 = 2
-                veri = VerifyName(names, name2)
-                if veri == False:
+                veri2 = VerifyName(names, name2)
+                if veri2 == False:
                     return await ctx.send(
                         f"The pokemon {name2} does not exist, Please type it again. Check Pkmn2"
                     )
