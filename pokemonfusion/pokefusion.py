@@ -33,9 +33,9 @@ class PokeFusion(commands.Cog):
 
         # checks if pokemon exists in the database
         try:  # exists
-            name2 = VerifyName(a)
+            name2 = VerifyName(b)
         except:  # does not exist
-            return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
+            return await ctx.send(f"The pokemon {b} does not exist, Please type it again.")
         try:  # obtain id of such pokemon
             id2 = GetID(name2)
         except:
