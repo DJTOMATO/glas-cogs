@@ -33,20 +33,20 @@ class PokeFusion(commands.Cog):
         else:
             id1 = 666
             # Initial check
-            print(f"The ID of the Pokemon {name1} is {id1}")
+            # print(f"The ID of the Pokemon {name1} is {id1}")
         try:
             # We Assign the ID based on Name
             id1 = await GetID(names, name1)
         except ValueError:
             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
-            # return f"Error: Failed to retrieve the ID for the pokemon {name}"
-        else:
-            print(f"After checking, The ID of the Pokemon {name1} is {id1}")
-            # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
-        # END Check Poke 1
 
-        # Check Poke 2
-        veri = await VerifyName(names, name2)
+        else:
+            # print(f"After checking, The ID of the Pokemon {name1} is {id1}")
+            # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
+            # END Check Poke 1
+
+            # Check Poke 2
+            veri = await VerifyName(names, name2)
         if veri == False:
             return await ctx.send(
                 f"The pokemon {name2} does not exist, Please type it again. Check Pkmn2"
@@ -54,7 +54,7 @@ class PokeFusion(commands.Cog):
         else:
             id2 = 666
             # Initial check
-            print(f"The ID of the Pokemon {name2} is {id2}")
+            # print(f"The ID of the Pokemon {name2} is {id2}")
         try:
             # We Assign the ID based on Name
             id2 = await GetID(names, name2)
@@ -62,7 +62,7 @@ class PokeFusion(commands.Cog):
             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name2}")
             # return f"Error: Failed to retrieve the ID for the pokemon {name}"
         else:
-            print(f"After checking, The ID of the Pokemon {name2} is {id2}")
+            # print(f"After checking, The ID of the Pokemon {name2} is {id2}")
             # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
             # END Check Poke 2
 

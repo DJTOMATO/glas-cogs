@@ -48,8 +48,9 @@
 ### Active Cogs
 |     Name     |                       Description                        |            Author            |            d.py2 Compatible            |
 |:------------:|----------------------------------------------------------|:----------------------------:|:----------------------------:|
-|  Watamelon   | Posts a random Watamelon image*  |            Kuro             |✅|
+|  Pokefuse   | Fusions Gen1 Pokemons  |            Glas             |✅|
 |  Movietar        | Make videos with avatars! (+10 vids!)|            Glas       |✅|
+|  Watamelon   | Posts a random Watamelon image*  |            Kuro             |✅|
 |  PfpImgen        | Make images with avatars! (+23 new images!)                                       |            PhenoM4n4n       |✅|
 |  Youwouldnt        | You Wouldn't Steal a Car                                      |            Glas       |✅|
 |  Weeedcog        | comic cog, now with +1300 weeb images                                  |            dualmoon       |✅|
