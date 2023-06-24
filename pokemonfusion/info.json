@@ -1,0 +1,13 @@
+{
+    "name": "Pokemon Fusion!",
+    "short": "Fusion Gen 1 Pokemons.",
+    "description": "gets data from Pkmnfusion.",
+    "install_msg": "Thanks for installing `pokemonfusion` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["image", "pokemon", "meme"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
