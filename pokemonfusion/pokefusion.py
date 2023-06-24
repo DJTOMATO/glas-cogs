@@ -34,7 +34,7 @@ class PokeFusion(commands.Cog):
             try:  # obtain id of such pokemon
                 id1 = GetID(ids, name1)
             except:
-                return await ctx.send(f"Something happened, Idk LMAO.")
+                return await ctx.send(f"Something happened, Idk LMAO. Veri1")
             finally:
                 # nothing
                 # Assuming name and ID were OK, we go on
@@ -50,7 +50,7 @@ class PokeFusion(commands.Cog):
                     try:  # obtain id of such pokemon
                         id2 = GetID(name2)
                     except:
-                        return await ctx.send(f"Something happened, Idk LMAO.")
+                        return await ctx.send(f"Something happened, Idk LMAO. Veri2")
                     else:
                         # Assuming name and ID were OK, we go on
                         # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"

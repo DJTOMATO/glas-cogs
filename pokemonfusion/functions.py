@@ -44,8 +44,5 @@ async def GetID(ids, name):
     try:
         a = ids.index(name)
         return a
-    except:
-        return await ctx.send(f"Fucky wucky happened while retreiving the ID, Value: {a}")
-
-    else:
-        return False
+    except ValueError:
+        return f"Fucky wucky happened while retrieving the ID, Value: {name}"
