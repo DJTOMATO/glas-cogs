@@ -21,9 +21,9 @@ class PokeFusion(commands.Cog):
         """Searches for pokemons.."""
 
         # checks if pokemon exists in the database
-        try:  # exists
-            name1 = VerifyName(a)
-        except:  # does not exist
+        name1 = a
+        veri = VerifyName(a)
+        if veri == False:
             return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
         else:
             try:  # obtain id of such pokemon
@@ -36,9 +36,9 @@ class PokeFusion(commands.Cog):
                 # UNUSED url1 = f"https://images.alexonsager.net/pokemon/{id1}"
 
                 # checks if pokemon exists in the database
-                try:  # exists
-                    name2 = VerifyName(b)
-                except:  # does not exist
+                name2 = b
+                veri = VerifyName(b)
+                if veri == False:
                     return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
                 else:
                     try:  # obtain id of such pokemon
