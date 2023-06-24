@@ -52,12 +52,12 @@ class PokeFusion(commands.Cog):
                 f"The pokemon {name2} does not exist, Please type it again. Check Pkmn2"
             )
         else:
-            id1 = 666
+            id2 = 666
             # Initial check
             print(f"The ID of the Pokemon {name2} is {id2}")
         try:
             # We Assign the ID based on Name
-            id1 = await GetID(names, name2)
+            id2 = await GetID(names, name2)
         except ValueError:
             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name2}")
             # return f"Error: Failed to retrieve the ID for the pokemon {name}"
