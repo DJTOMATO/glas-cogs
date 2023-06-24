@@ -25,18 +25,18 @@ def datacheck():
     # print(f"The First pokemon is : {names[1]} and it's ID number is {ids[1]}")  # Output Sample
 
 
-def VerifyName(self, ctx, names, a):
+def VerifyName(self, ctx, names, name):
     # Compare Pokemon name `a` with the list `data`
-    if a in names:
+    name.lower()
+    name.title()
+    if name in names:
         return True
     else:
         return False
 
 
 async def GetID(self, ctx, ids, name):
-    # Compare Pokemon ID `a` with the list `data`
-    name.lower()
-    name.title()
+    # Obtains ID by name provided
     try:
         a = ids.index(name)
         return a
