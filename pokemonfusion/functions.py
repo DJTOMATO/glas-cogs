@@ -36,6 +36,7 @@ async def VerifyName(names, name):
 async def GetID(ids, name):
     try:
         a = ids.index(name)
+        print(f"ALgo debug: a")
         return a
     except ValueError:
         return await ctx.send(f"Fucky wucky happened while retrieving the ID, Value: {name}")
