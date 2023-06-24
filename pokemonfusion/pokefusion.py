@@ -24,6 +24,7 @@ class PokeFusion(commands.Cog):
         """Searches for pokemons.."""
         await datacheck()
         # checks if pokemon exists in the database
+        # Check Poke 1
         veri = await VerifyName(names, name1)
         if veri == False:
             return await ctx.send(
@@ -41,13 +42,33 @@ class PokeFusion(commands.Cog):
             # return f"Error: Failed to retrieve the ID for the pokemon {name}"
         else:
             print(f"After checking, The ID of the Pokemon {name1} is {id1}")
-
-            # Assuming name and ID were OK, we go on
             # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
-            name3 = "PLACEHOLDER UNTIL I FIND A WAY"  # Pending, create method to fuse names
-            print(f"id1 = {id1}")
-            id2 = 2
-            # print(f"id2 = {id2}")
+        # END Check Poke 1
+
+        # Check Poke 2
+        veri = await VerifyName(names, name2)
+        if veri == False:
+            return await ctx.send(
+                f"The pokemon {name2} does not exist, Please type it again. Check Pkmn2"
+            )
+        else:
+            id1 = 666
+            # Initial check
+            print(f"The ID of the Pokemon {name2} is {id2}")
+        try:
+            # We Assign the ID based on Name
+            id1 = await GetID(names, name2)
+        except ValueError:
+            raise ValueError("Error: Failed to retrieve the ID for the pokemon {name2}")
+            # return f"Error: Failed to retrieve the ID for the pokemon {name}"
+        else:
+            print(f"After checking, The ID of the Pokemon {name2} is {id2}")
+            # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
+            # END Check Poke 2
+
+            mixed = mix_names(name1, name2)
+            name3 = f"{mixed}"  # Pending, create method to fuse names
+
             try:
                 url3 = f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
             except ValueError as e:

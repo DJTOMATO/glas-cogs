@@ -36,9 +36,20 @@ async def VerifyName(names, name):
 
 async def GetID(names, name):
     try:
-        a = names.index(name)
+        n = name
+        n = n.lower()
+        n = n.title()
+        a = names.index(n)
         return a
     # except ValueError as e:
     #            return await ctx.send(f"Error: Failed to retrieve the ID for the pokemon {name}")
     except ValueError:
         raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
+
+
+# Thanks Autto! <3
+async def mix_names(a, b):
+    half_a = a[: len(a) // 2]  # Take the first half of name a
+    half_b = b[: len(b) // 2]  # Take the first half of name b
+    mixed_name = half_a + half_b  # Join the two halves
+    return mixed_name
