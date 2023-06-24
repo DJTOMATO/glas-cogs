@@ -5,20 +5,15 @@ from redbot.core import commands
 from .functions import *
 
 
-def __init__(self, red: Red):
-    with open("/pokefusion.csv", newline="") as f:
-        reader = csv.reader(f)
-        data = list(reader)
-        x = data
-        print(reader[1, 1])
-
-
-x = data
-
-
 class PokeFusion(commands.Cog):
+    """
+    Fuse Gen1 Pkmns in a terrible fashion
+    """
+
     @commands.command()
     async def pokefuse(self, ctx, a, b):
+        """Searches for pokemons.."""
+
         # checks if pokemon exists in the database
         try:  # exists
             name1 = VerifyName(a)
