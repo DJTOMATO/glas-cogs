@@ -55,9 +55,12 @@ class PokeFusion(commands.Cog):
                         # Assuming name and ID were OK, we go on
                         # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
                         name3 = "PLACEHOLDER UNTIL I FIND A WAY"  # Pending, create method to fuse names
-                        url3 = (
-                            f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
-                        )
+                        print(f"id1 = {id1}")
+                        print(f"id2 = {id2}")
+                        try:
+                            url3 = f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
+                        except ValueError:
+                            return f"Error Creating the URL: {ValueError}"
                         em = discord.Embed(description=f"{name1} + {name2} = {name3}")
                         em.title = "Pokemon Fusion"
                         em.color = discord.Color(8599000)
