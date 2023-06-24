@@ -41,6 +41,8 @@ class PokeFusion(commands.Cog):
                 # UNUSED url1 = f"https://images.alexonsager.net/pokemon/{id1}"
 
                 # checks if pokemon exists in the database
+                id1 = 1
+                id2 = 2
                 veri = VerifyName(names, name2)
                 if veri == False:
                     return await ctx.send(
