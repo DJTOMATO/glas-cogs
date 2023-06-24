@@ -1,19 +1,16 @@
 import discord
-import csv
 from datetime import datetime
 from redbot.core import commands
 from redbot.core.bot import Red
 from .functions import *
 
+# Thanks Flame
+from .functions import names, ids
+
 
 # Thanks MAX <3
 def __init__(self, red: Red):
     self.bot = red
-
-
-# Global vars to store data
-global names
-global ids
 
 
 class PokeFusion(commands.Cog):
