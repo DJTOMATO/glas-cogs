@@ -25,15 +25,13 @@ async def datacheck():
 async def VerifyName(names, name):
     # Compare Pokemon name `a` with the list `data`
     n = name
-    print(names)
-    print(f"Original name: {n}")
     n = n.lower()
-    print(f"Lowercased Name: {n}")
     n = n.title()
-    print(f"Final name: {n}")
     if n in names:
+        print(f"{n} = true")
         return True
     else:
+        print(f"{n} = false")
         return False
 
 

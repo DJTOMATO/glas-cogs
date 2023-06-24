@@ -32,6 +32,7 @@ class PokeFusion(commands.Cog):
         else:
             try:  # obtain id of such pokemon
                 id1 = await GetID(ids, name1)
+
             except:
                 return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn1")
             finally:
