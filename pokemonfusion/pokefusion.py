@@ -37,8 +37,9 @@ class PokeFusion(commands.Cog):
             # We Assign the ID based on Name
             id1 = await GetID(ids, name1)
         except ValueError:
-            print(f"Fucky wucky happened while retrieving the ID: {ValueError}")
-        finally:
+            raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
+            # return f"Error: Failed to retrieve the ID for the pokemon {name}"
+        else:
             print(f"After checking, The ID of the Pokemon {name1} is {id1}")
 
             # Assuming name and ID were OK, we go on
@@ -50,7 +51,8 @@ class PokeFusion(commands.Cog):
             try:
                 url3 = f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
             except ValueError:
-                return await ctx.send(f"Error Creating the URL: {ValueError}")
+                raise ValueError("Error Creating the URL: {ValueError}")
+
             em = discord.Embed(description=f"{name1} + {name2} = {name3}")
             em.title = "Pokemon Fusion"
             em.color = discord.Color(8599000)
