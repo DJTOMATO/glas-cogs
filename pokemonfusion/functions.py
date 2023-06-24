@@ -39,7 +39,7 @@ async def GetID(names, name):
         n = name
         n = n.lower()
         n = n.title()
-        a = names.index(n)
+        a = names.index(n) + 1
         return a
     # except ValueError as e:
     #            return await ctx.send(f"Error: Failed to retrieve the ID for the pokemon {name}")
