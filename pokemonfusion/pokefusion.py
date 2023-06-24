@@ -2,6 +2,7 @@ import discord
 import csv
 from datetime import datetime
 from redbot.core import commands
+from redbot.core.bot import Red
 from .functions import *
 
 
