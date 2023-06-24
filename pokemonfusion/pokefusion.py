@@ -9,7 +9,7 @@ from .functions import names, ids
 
 
 # Thanks MAX <3
-def __init__(self, red: Red):
+async def __init__(self, red: Red):
     self.bot = red
     datacheck()
 
@@ -28,13 +28,13 @@ class PokeFusion(commands.Cog):
         veri = VerifyName(names, name1)
         if veri == False:
             return await ctx.send(
-                f"The pokemon {name1} does not exist, Please type it again. Veri1"
+                f"The pokemon {name1} does not exist, Please type it again. Check Pkmn1"
             )
         else:
             try:  # obtain id of such pokemon
                 id1 = GetID(ids, name1)
             except:
-                return await ctx.send(f"Something happened, Idk LMAO. Veri1")
+                return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn1")
             finally:
                 # nothing
                 # Assuming name and ID were OK, we go on
@@ -44,13 +44,13 @@ class PokeFusion(commands.Cog):
                 veri = VerifyName(names, name2)
                 if veri == False:
                     return await ctx.send(
-                        f"The pokemon {name2} does not exist, Please type it again. Veri2"
+                        f"The pokemon {name2} does not exist, Please type it again. Check Pkmn2"
                     )
                 else:
                     try:  # obtain id of such pokemon
                         id2 = GetID(ids, name2)
                     except:
-                        return await ctx.send(f"Something happened, Idk LMAO. Veri2")
+                        return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn2")
                     else:
                         # Assuming name and ID were OK, we go on
                         # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
@@ -60,7 +60,7 @@ class PokeFusion(commands.Cog):
                         try:
                             url3 = f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
                         except ValueError:
-                            return f"Error Creating the URL: {ValueError}"
+                            return await ctx.send(f"Error Creating the URL: {ValueError}")
                         em = discord.Embed(description=f"{name1} + {name2} = {name3}")
                         em.title = "Pokemon Fusion"
                         em.color = discord.Color(8599000)

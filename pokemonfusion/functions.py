@@ -4,13 +4,14 @@ from rapidfuzz import process
 from redbot.core import commands
 from redbot.core.commands import BadArgument, MemberConverter
 from unidecode import unidecode
+import discord
 
 # ~~Global~~ vars to store data
 names = []
 ids = []
 
 
-def datacheck():
+async def datacheck():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     with open(f"{dir_path}/pkmn.csv", newline="") as csvfile:
         csv_reader = list(csv.reader(csvfile, delimiter=" ", quotechar="|"))
@@ -24,16 +25,15 @@ def datacheck():
 datacheck()
 
 
-def VerifyName(names, name):
+async def VerifyName(names, name):
     # Compare Pokemon name `a` with the list `data`
-    print(f"Nombre Orig: {name}")
-    name.lower()
-    print(f"Nombre Lower: {name}")
-    name.title()
-    print(f"Nombre Final: {name}")
-    if name in names:
-        print(names)
-
+    n = name
+    print(f"Nombre Orig: {n}")
+    n.lower()
+    print(f"Nombre Lower: {n}")
+    n.title()
+    print(f"Nombre Final: {n}")
+    if n in names:
         return True
     else:
         return False
@@ -45,4 +45,4 @@ async def GetID(ids, name):
         a = ids.index(name)
         return a
     except ValueError:
-        return f"Fucky wucky happened while retrieving the ID, Value: {name}"
+        return await ctx.send(f"Fucky wucky happened while retrieving the ID, Value: {name}")
