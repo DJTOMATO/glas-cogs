@@ -33,7 +33,7 @@ def VerifyName(self, ctx, names, a):
         return False
 
 
-def GetID(self, ctx, ids, name):
+async def GetID(self, ctx, ids, name):
     # Compare Pokemon ID `a` with the list `data`
     name.lower()
     name.title()
@@ -41,7 +41,7 @@ def GetID(self, ctx, ids, name):
         a = ids.index(name)
         return a
     except:
-        return ctx.send(f"Fucky wucky happened while retreiving the ID, Value: {a}")
+        return await ctx.send(f"Fucky wucky happened while retreiving the ID, Value: {a}")
 
     else:
         return False
