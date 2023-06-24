@@ -36,8 +36,7 @@ async def VerifyName(names, name):
 async def GetID(ids, name):
     try:
         a = ids.index(name)
-        print(f"ALgo debug: a")
+        print(f"I don't rember what I was testing anymore: {a}")
         return a
     except ValueError:
-        return ValueError
-        # return "Error" ctx.send(f"Fucky wucky happened while retrieving the ID, Value: {name}")
+        raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
