@@ -66,7 +66,7 @@ class PokeFusion(commands.Cog):
             # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
             # END Check Poke 2
 
-            mixed = mix_names(name1, name2)
+            mixed = await mix_names(name1, name2)
             name3 = f"{mixed}"  # Pending, create method to fuse names
 
             try:
