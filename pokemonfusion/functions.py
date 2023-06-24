@@ -21,6 +21,9 @@ def datacheck():
             ids.append(id)
 
 
+datacheck()
+
+
 def VerifyName(names, name):
     # Compare Pokemon name `a` with the list `data`
     print(f"Nombre Orig: {name}")

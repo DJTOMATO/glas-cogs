@@ -11,6 +11,7 @@ from .functions import names, ids
 # Thanks MAX <3
 def __init__(self, red: Red):
     self.bot = red
+    datacheck()
 
 
 class PokeFusion(commands.Cog):
@@ -19,14 +20,16 @@ class PokeFusion(commands.Cog):
     """
 
     @commands.command()
-    async def pokefuse(self, ctx, a, b):
+    async def pokefuse(self, ctx, name1, name2):
         """Searches for pokemons.."""
 
         # checks if pokemon exists in the database
-        name1 = a
-        veri = VerifyName(names, a)
+
+        veri = VerifyName(names, name1)
         if veri == False:
-            return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
+            return await ctx.send(
+                f"The pokemon {name1} does not exist, Please type it again. Veri1"
+            )
         else:
             try:  # obtain id of such pokemon
                 id1 = GetID(ids, name1)
@@ -38,10 +41,11 @@ class PokeFusion(commands.Cog):
                 # UNUSED url1 = f"https://images.alexonsager.net/pokemon/{id1}"
 
                 # checks if pokemon exists in the database
-                name2 = b
-                veri = VerifyName(names, b)
+                veri = VerifyName(names, name2)
                 if veri == False:
-                    return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
+                    return await ctx.send(
+                        f"The pokemon {name2} does not exist, Please type it again. Veri2"
+                    )
                 else:
                     try:  # obtain id of such pokemon
                         id2 = GetID(name2)
