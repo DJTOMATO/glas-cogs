@@ -24,8 +24,6 @@ async def datacheck():
 
 async def VerifyName(names, name):
     # Compare Pokemon name `a` with the list `data`
-    print(names)
-    print(ids)
     n = name
     n = n.lower()
     n = n.title()
