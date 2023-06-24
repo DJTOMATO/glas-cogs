@@ -70,13 +70,13 @@ class PokeFusion(commands.Cog):
             name3 = f"{mixed}"  # Pending, create method to fuse names
 
             try:
-                url3 = f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
+                url3 = f"https://images.alexonsager.net/pokemon/fused/{id2}/{id2}.{id1}.png"
             except ValueError as e:
                 return await ctx.send(f"Error creating the URL: {e}")
 
             em = discord.Embed(description=f"{name1} + {name2} = {name3}")
             em.title = "Pokemon Fusion"
             em.color = discord.Color(8599000)
-            em.timestamp = datetime.now()
+            em.timestamp = "Try it with !pokefuse <Pkmn1> <pkmn2>"
             em.set_image(url=url3)
             await ctx.send(embed=em)
