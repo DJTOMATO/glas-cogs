@@ -27,9 +27,14 @@ def datacheck():
 
 def VerifyName(self, ctx, names, name):
     # Compare Pokemon name `a` with the list `data`
+    print(f"Nombre Orig: {name}")
     name.lower()
+    print(f"Nombre Lower: {name}")
     name.title()
+    print(f"Nombre Final: {name}")
     if name in names:
+        print(names)
+
         return True
     else:
         return False
