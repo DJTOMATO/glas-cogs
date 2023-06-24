@@ -22,9 +22,6 @@ async def datacheck():
             ids.append(id)
 
 
-datacheck()
-
-
 async def VerifyName(names, name):
     # Compare Pokemon name `a` with the list `data`
     n = name

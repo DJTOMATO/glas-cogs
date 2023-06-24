@@ -22,9 +22,8 @@ class PokeFusion(commands.Cog):
     @commands.command()
     async def pokefuse(self, ctx, name1, name2):
         """Searches for pokemons.."""
-
+        await datacheck()
         # checks if pokemon exists in the database
-
         veri = await VerifyName(names, name1)
         if veri == False:
             return await ctx.send(
@@ -32,7 +31,7 @@ class PokeFusion(commands.Cog):
             )
         else:
             try:  # obtain id of such pokemon
-                id1 = GetID(ids, name1)
+                id1 = await GetID(ids, name1)
             except:
                 return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn1")
             finally:
@@ -50,7 +49,7 @@ class PokeFusion(commands.Cog):
                     )
                 else:
                     try:  # obtain id of such pokemon
-                        id2 = GetID(ids, name2)
+                        id2 = await GetID(ids, name2)
                     except:
                         return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn2")
                     else:
