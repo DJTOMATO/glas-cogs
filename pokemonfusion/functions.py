@@ -49,7 +49,7 @@ async def GetID(names, name):
 
 # Thanks Autto! <3
 async def mix_names(a, b):
-    half_a = a[: len(a) // 2 + 2]  # Take the first half of name a
-    half_b = b[len(b) // 2 :]  # Take the first half of name b
+    half_a = a[: len(a) // 2 + 1]  # Take the first half of name a
+    half_b = b[len(b) // 2 + 1 :]  # Take the first half of name b
     mixed_name = half_a + half_b  # Join the two halves
     return mixed_name
