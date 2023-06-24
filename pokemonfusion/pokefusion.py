@@ -50,8 +50,8 @@ class PokeFusion(commands.Cog):
             # print(f"id2 = {id2}")
             try:
                 url3 = f"https://images.alexonsager.net/pokemon/fused/{id1}/{id1}.{id2}.png"
-            except ValueError:
-                raise ValueError("Error Creating the URL: {ValueError}")
+            except ValueError as e:
+                return await ctx.send(f"Error creating the URL: {e}")
 
             em = discord.Embed(description=f"{name1} + {name2} = {name3}")
             em.title = "Pokemon Fusion"
