@@ -14,7 +14,7 @@ ids = []
 async def datacheck():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     with open(f"{dir_path}/pkmn.csv", newline="") as csvfile:
-        csv_reader = list(csv.reader(csvfile, delimiter=", ", quotechar="|"))
+        csv_reader = list(csv.reader(csvfile, delimiter=",", quotechar="|"))
         for row in csv_reader:
             id = row[0]
             name = row[1]
