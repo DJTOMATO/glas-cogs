@@ -5,8 +5,8 @@
     "install_msg": "Thanks for installing `pokemonfusion` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["image", "pokemon", "meme"],
-    "hidden": false,
-    "disabled": false,
+    "hidden": true,
+    "disabled": true,
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
     "min_bot_version": "3.5.0"
