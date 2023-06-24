@@ -1,8 +1,8 @@
 {
     "name": "Pokemon Fusion!",
     "short": "Fusion Gen 1 Pokemons.",
-    "description": "gets data from Pkmnfusion.",
-    "install_msg": "Thanks for installing `pokemonfusion` cog! Please enjoy it :D",
+    "description": "Fuses Gen 1 Pokemons.",
+    "install_msg": "Thanks for installing `pokefuse` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["image", "pokemon", "meme"],
     "hidden": true,
