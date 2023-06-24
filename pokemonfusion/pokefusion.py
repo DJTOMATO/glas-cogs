@@ -35,7 +35,7 @@ class PokeFusion(commands.Cog):
             print(f"The ID of the Pokemon {name1} is {id1}")
         try:
             # We Assign the ID based on Name
-            id1 = await GetID(ids, name1)
+            id1 = await GetID(names, name1)
         except ValueError:
             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
             # return f"Error: Failed to retrieve the ID for the pokemon {name}"
