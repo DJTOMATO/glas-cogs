@@ -28,15 +28,12 @@ async def VerifyName(names, name):
     n = n.lower()
     n = n.title()
     if n in names:
-        print(f"{n} = true")
         return True
     else:
-        print(f"{n} = false")
         return False
 
 
 async def GetID(ids, name):
-    # Obtains ID by name provided
     try:
         a = ids.index(name)
         return a

@@ -24,9 +24,8 @@ class PokeFusion(commands.Cog):
         """Searches for pokemons.."""
         await datacheck()
         # checks if pokemon exists in the database
-        print(names)
-        print(ids)
         veri = await VerifyName(names, name1)
+        print(f"The value of veri is: {veri}")
         if veri == False:
             return await ctx.send(
                 f"The pokemon {name1} does not exist, Please type it again. Check Pkmn1"
