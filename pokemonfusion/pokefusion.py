@@ -48,7 +48,7 @@ class PokeFusion(commands.Cog):
                     )
                 else:
                     try:  # obtain id of such pokemon
-                        id2 = GetID(name2)
+                        id2 = GetID(ids, name2)
                     except:
                         return await ctx.send(f"Something happened, Idk LMAO. Veri2")
                     else:
