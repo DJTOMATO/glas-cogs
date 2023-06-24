@@ -11,6 +11,11 @@ def __init__(self, red: Red):
     self.bot = red
 
 
+# Global vars to store data
+global names
+global ids
+
+
 class PokeFusion(commands.Cog):
     """
     Fuse Gen1 Pkmns in a terrible fashion
@@ -22,12 +27,12 @@ class PokeFusion(commands.Cog):
 
         # checks if pokemon exists in the database
         name1 = a
-        veri = VerifyName(a)
+        veri = VerifyName(names, a)
         if veri == False:
             return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
         else:
             try:  # obtain id of such pokemon
-                id1 = GetID(name1)
+                id1 = GetID(ids, name1)
             except:
                 return await ctx.send(f"Something happened, Idk LMAO.")
             finally:
@@ -37,7 +42,7 @@ class PokeFusion(commands.Cog):
 
                 # checks if pokemon exists in the database
                 name2 = b
-                veri = VerifyName(b)
+                veri = VerifyName(names, b)
                 if veri == False:
                     return await ctx.send(f"The pokemon {a} does not exist, Please type it again.")
                 else:

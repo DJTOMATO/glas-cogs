@@ -7,10 +7,6 @@ from redbot.core.commands import BadArgument, MemberConverter
 from unidecode import unidecode
 
 
-global names
-global ids
-
-
 def datacheck():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     with open(f"{dir_path}\\pkmn.csv", newline="") as csvfile:
