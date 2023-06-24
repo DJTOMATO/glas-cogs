@@ -6,7 +6,7 @@
     "author": ["Glas"],
     "tags": ["image", "pokemon", "meme"],
     "hidden": true,
-    "disabled": true,
+    "disabled": false,
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
     "min_bot_version": "3.5.0"
