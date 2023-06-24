@@ -31,8 +31,9 @@ class PokeFusion(commands.Cog):
             )
         else:
             try:  # obtain id of such pokemon
+                print(id1)
                 id1 = await GetID(ids, name1)
-
+                print(id1)
             except:
                 return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn1")
             finally:
@@ -50,7 +51,9 @@ class PokeFusion(commands.Cog):
                     )
                 else:
                     try:  # obtain id of such pokemon
+                        print(id2)
                         id2 = await GetID(ids, name2)
+                        print(id2)
                     except:
                         return await ctx.send(f"Something happened, Idk LMAO. Check Pkmn2")
                     else:
