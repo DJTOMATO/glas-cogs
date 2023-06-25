@@ -75,7 +75,7 @@ class PokeFusion(commands.Cog):
                 return await ctx.send(f"Error creating the URL: {e}")
 
             em = discord.Embed(description=f"{name1.title()} + {name2.title()} = {name3.title()}")
-            em.title = "Pokemon Fusion"
+            em.title = "GEN 1 - Pokemon Fusion"
             em.color = discord.Color(8599000)
             #            em.footer = "Try it with !pokefuse <Pkmn1> <pkmn2>"
             em.timestamp = datetime.now()
