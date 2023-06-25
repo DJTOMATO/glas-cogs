@@ -1,9 +1,7 @@
 import csv
 import os
-from rapidfuzz import process
 from redbot.core import commands
 from redbot.core.commands import BadArgument, MemberConverter
-from unidecode import unidecode
 import discord
 
 # ~~Global~~ vars to store data
