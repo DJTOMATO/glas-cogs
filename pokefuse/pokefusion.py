@@ -23,17 +23,13 @@ class PokeFusion(commands.Cog):
     async def pokefuse(self, ctx, name1, name2):
         """Searches for pokemons.."""
         await datacheck()
-        # checks if pokemon exists in the database
         # Check Poke 1
         veri = await VerifyName(names, name1)
         if veri == False:
-            return await ctx.send(
-                f"The pokemon {name1} does not exist, Please type it again. Check Pkmn1"
-            )
+            return await ctx.send(f"The pokemon {name1} does not exist, Please type it again.")
         else:
             id1 = 666
-            # Initial check
-            # print(f"The ID of the Pokemon {name1} is {id1}")
+            # Initial check, WILL Get replaced anyways
         try:
             # We Assign the ID based on Name
             id1 = await GetID(names, name1)
@@ -41,33 +37,27 @@ class PokeFusion(commands.Cog):
             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
 
         else:
-            # print(f"After checking, The ID of the Pokemon {name1} is {id1}")
             # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
             # END Check Poke 1
 
             # Check Poke 2
             veri = await VerifyName(names, name2)
         if veri == False:
-            return await ctx.send(
-                f"The pokemon {name2} does not exist, Please type it again. Check Pkmn2"
-            )
+            return await ctx.send(f"The pokemon {name2} does not exist, Please type it again.")
         else:
             id2 = 666
-            # Initial check
-            # print(f"The ID of the Pokemon {name2} is {id2}")
         try:
             # We Assign the ID based on Name
             id2 = await GetID(names, name2)
         except ValueError:
             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name2}")
-            # return f"Error: Failed to retrieve the ID for the pokemon {name}"
+
         else:
-            # print(f"After checking, The ID of the Pokemon {name2} is {id2}")
             # UNUSED url2 = f"https://images.alexonsager.net/pokemon/{id1}"
             # END Check Poke 2
 
             mixed = await mix_names(name1, name2)
-            name3 = f"{mixed}"  # Pending, create method to fuse names
+            name3 = f"{mixed}"
 
             try:
                 url3 = f"https://images.alexonsager.net/pokemon/fused/{id2}/{id2}.{id1}.png"
@@ -77,7 +67,7 @@ class PokeFusion(commands.Cog):
             em = discord.Embed(description=f"{name1.title()} + {name2.title()} = {name3.title()}")
             em.title = "GEN 1 - Pokemon Fusion"
             em.color = discord.Color(8599000)
-            #            em.footer = "Try it with !pokefuse <Pkmn1> <pkmn2>"
+            # em.footer = "Try it with !pokefuse <Pkmn1> <pkmn2>"
             em.timestamp = datetime.now()
             em.set_image(url=url3)
             await ctx.send(embed=em)
