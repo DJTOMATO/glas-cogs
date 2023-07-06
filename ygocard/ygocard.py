@@ -26,11 +26,14 @@ class YgoCard(commands.Cog):
     __version__ = "1.0.0"
 
     @commands.bot_has_permissions(attach_files=True)
-    # @commands.cooldown(1, 10, commands.BucketType.user) Until cog is totally working
-    @commands.command(aliases=["ygocard"], cooldown_after_parsing=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["ygo"], cooldown_after_parsing=True)
     # Thanks Kowlin! <3
-    async def cardme(self, ctx, member: discord.Member, skill_text: Optional[str]) -> str:
+    async def cardme(
+        self, ctx: commands.Context, member: discord.Member, skill_text: Optional[str]
+    ) -> str:
         """Make a ygocard..."""
+        """Example: !cardme @Glas "This is a test skill"""
         if not member:
             member = ctx.author
         # Thanks Kowlin! <3
@@ -42,8 +45,7 @@ class YgoCard(commands.Cog):
             raise ValueError("Error: Skill Text cannot be longer than 193 characters")
         if len(skill_text) < 3:
             skill_text = "You didn't set a card description! Silly~"
-        aa = str(member.nick)
-
+        aa = str(member.display_name)  # thanks sravan_krishna!
         card_name = await self.sanitize_string(aa)
         a = str(member.top_role)
         highest_role_name = await self.sanitize_string(a)

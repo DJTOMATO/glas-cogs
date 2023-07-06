@@ -48,6 +48,7 @@
 ### Active Cogs
 |     Name     |                       Description                        |            Author            |            d.py2 Compatible            |
 |:------------:|----------------------------------------------------------|:----------------------------:|:----------------------------:|
+|  Ygocard   | Generate Yu-Gi-Oh Cards from users!  |            Glas             |✅|
 |  Pokefuse   | Fusions Gen1 Pokemons  |            Glas             |✅|
 |  Movietar        | Make videos with avatars! (+10 vids!)|            Glas       |✅|
 |  Watamelon   | Posts a random Watamelon image*  |            Kuro             |✅|
