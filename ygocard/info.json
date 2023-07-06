@@ -1,7 +1,7 @@
 {
     "name": "Yu-Gi-Oh Card maker!",
     "short": "Makes a yugioh card.",
-    "description": "Card making.",
+    "description": "Custom Yu-gi-oh cards generator",
     "install_msg": "Thanks for installing `ygocard` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["image", "Yu-gi-oh", "meme", "fun"],
