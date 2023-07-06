@@ -1,0 +1,13 @@
+{
+    "name": "Yu-Gi-Oh Card maker!",
+    "short": "Makes a yugioh card.",
+    "description": "Card making.",
+    "install_msg": "Thanks for installing `ygocard` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["image", "Yu-gi-oh", "meme", "fun"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
