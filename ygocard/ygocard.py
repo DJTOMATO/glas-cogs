@@ -47,6 +47,9 @@ class YgoCard(commands.Cog):
             return await ctx.send(f"Error: The attack value must be a number between 1 and 9.")
         if type(deff) is not int:
             return await ctx.send(f"Error: The defense value must be a number between 1 and 9.")
+        # debugging
+        #return await ctx.send(f"the atk is {atk}")
+        #return await ctx.send(f"the def is {deff}")
         # Thanks Kowlin! <3
         if skill_text is not None:
             pass
