@@ -11,6 +11,7 @@ import textwrap
 from .functions import *
 from .functions import FuzzyMember
 import regex as re
+from typing import Optional
 
 
 class YgoCard(commands.Cog):
@@ -27,18 +28,23 @@ class YgoCard(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user) Until cog is totally working
     @commands.command(aliases=["ygocard"], cooldown_after_parsing=True)
-    async def cardme(self, ctx: commands.Context, member: discord.Member = None, *args):
+    # Thanks Kowlin! <3
+    async def cardme(self, ctx, member: discord.Member, skill_text: Optional[str]) -> str:
         """Make a ygocard..."""
         if not member:
             member = ctx.author
-
-        # skill_text = args (The plan?)
-        skill_text = " ".join(args)
+        # Thanks Kowlin! <3
+        if skill_text is not None:
+            pass
+        else:
+            skill_text = "You didn't set a card description! Silly~"
         if len(skill_text) > 193:
             raise ValueError("Error: Skill Text cannot be longer than 193 characters")
-        if len(skill_text) < 5:
+        if len(skill_text) < 3:
             skill_text = "You didn't set a card description! Silly~"
-        card_name = str(member.nick)
+        aa = str(member.nick)
+
+        card_name = await self.sanitize_string(aa)
         a = str(member.top_role)
         highest_role_name = await self.sanitize_string(a)
         b = str(ctx.guild.name)
