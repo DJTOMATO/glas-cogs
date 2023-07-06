@@ -9,6 +9,8 @@ import random
 import functools
 import textwrap
 from .functions import *
+from .functions import FuzzyMember
+import regex as re
 
 
 class YgoCard(commands.Cog):
@@ -25,19 +27,22 @@ class YgoCard(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user) Until cog is totally working
     @commands.command(aliases=["ygocard"], cooldown_after_parsing=True)
-    async def cardme(self, ctx: commands.Context, member: discord.Member = commands.Author):
+    async def cardme(self, ctx: commands.Context, member: discord.Member = None, *args):
         """Make a ygocard..."""
         if not member:
             member = ctx.author
 
         # skill_text = args (The plan?)
-        skill_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ornare turpis libero, ac dictum ante placerat sed. Ut luctus lorem vitae nulla imperdiet euismod."
+        skill_text = " ".join(args)
         if len(skill_text) > 193:
             raise ValueError("Error: Skill Text cannot be longer than 193 characters")
-
-        highest_role_name = await sanitize_string(str(member.top_role))
+        if len(skill_text) < 5:
+            skill_text = "You didn't set a card description! Silly~"
         card_name = str(member.nick)
-        server_name = await sanitize_string(str(ctx.guild.name))
+        a = str(member.top_role)
+        highest_role_name = await self.sanitize_string(a)
+        b = str(ctx.guild.name)
+        server_name = await self.sanitize_string(b)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(
@@ -58,6 +63,10 @@ class YgoCard(commands.Cog):
         else:
             return image
 
+    async def sanitize_string(self, input_string):
+        sanitized_string = re.sub(r"[^a-zA-Z\s]", "", input_string)
+        return sanitized_string
+
     async def get_avatar(self, member: discord.abc.User):
         avatar = BytesIO()
         display_avatar: discord.Asset = member.display_avatar.replace(
@@ -74,7 +83,7 @@ class YgoCard(commands.Cog):
 
     # Thanks Phen!
     def gen_card(self, ctx, member_avatar, top_role, skill, card_name, server_name):
-        member_avatar = self.bytes_to_image(member_avatar, 315)
+        member_avatar = self.bytes_to_image(member_avatar, 325)
         # base canvas
         im = Image.new("RGBA", (420, 610), None)
         border_list = [

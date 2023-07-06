@@ -58,11 +58,6 @@ class FuzzyMember(MemberConverter):
         return member
 
 
-async def sanitize_string(input_string):
-    sanitized_string = re.sub(r"[^a-zA-Z\s]", "", input_string)
-    return sanitized_string
-
-
 async def Fixer(a):
     try:
         n = a
