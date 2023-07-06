@@ -27,13 +27,13 @@ class YgoCard(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["ygo"], cooldown_after_parsing=True)
-    # Thanks Kowlin! <3
-    async def cardme(
-        self, ctx: commands.Context, member: discord.Member, skill_text: Optional[str]
-    ) -> str:
+    @commands.command(aliases=["yugi"], cooldown_after_parsing=True)
+    # Thanks Kowlin! <3 & AAA3A
+    async def ygo(
+        self, ctx: commands.Context, member: discord.Member, *, skill_text: Optional[str]
+    ):
         """Make a ygocard..."""
-        """Example: !cardme @Glas "This is a test skill"""
+        """Example: !cardme @Glas This is a test skill"""
         if not member:
             member = ctx.author
         # Thanks Kowlin! <3
@@ -72,7 +72,7 @@ class YgoCard(commands.Cog):
             return image
 
     async def sanitize_string(self, input_string):
-        sanitized_string = re.sub(r"[^a-zA-Z\s]", "", input_string)
+        sanitized_string = re.sub(r"[^a-zA-Záéíóú\s]", "", input_string)  # [^a-zA-Z\s]
         return sanitized_string
 
     async def get_avatar(self, member: discord.abc.User):
