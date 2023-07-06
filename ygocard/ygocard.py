@@ -1,6 +1,7 @@
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
+from redbot.core.dev_commands import async_compile
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import asyncio
@@ -42,7 +43,7 @@ class YgoCard(commands.Cog):
         else:
             skill_text = "You didn't set a card description! Silly~"
         if len(skill_text) > 193:
-            raise ValueError("Error: Skill Text cannot be longer than 193 characters")
+            return await ctx.send(f"Error: Skill Text cannot be longer than 193 characters")
         if len(skill_text) < 3:
             skill_text = "You didn't set a card description! Silly~"
         aa = str(member.display_name)  # thanks sravan_krishna!
