@@ -9,9 +9,8 @@ import discord
 import random
 import functools
 import textwrap
-from .functions import *
-from .functions import FuzzyMember
 import regex as re
+import typing
 from typing import Optional
 
 
@@ -27,16 +26,27 @@ class YgoCard(commands.Cog):
     __version__ = "1.0.0"
 
     @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=["yugi"], cooldown_after_parsing=True)
     # Thanks Kowlin! <3 & AAA3A
+    # async def ygo(self, ctx: commands.Context, member: discord.Member, *, skill_text: Optional[str]):
     async def ygo(
-        self, ctx: commands.Context, member: discord.Member, *, skill_text: Optional[str]
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        atk: typing.Optional[commands.Range[int, 1, 8]] = 0,
+        deff: typing.Optional[commands.Range[int, 1, 8]] = 0,
+        *,
+        skill_text: Optional[str],
     ):
         """Make a ygocard..."""
         """Example: !cardme @Glas This is a test skill"""
         if not member:
             member = ctx.author
+        if type(atk) is not int:
+            return await ctx.send(f"Error: The attack value must be a number between 1 and 9.")
+        if type(deff) is not int:
+            return await ctx.send(f"Error: The defense value must be a number between 1 and 9.")
         # Thanks Kowlin! <3
         if skill_text is not None:
             pass
@@ -55,7 +65,15 @@ class YgoCard(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(
-                self.gen_card, ctx, avatar, highest_role_name, skill_text, card_name, server_name
+                self.gen_card,
+                ctx,
+                avatar,
+                highest_role_name,
+                skill_text,
+                card_name,
+                server_name,
+                atk,
+                deff,
             )
             image = await self.generate_image(task)
         if isinstance(image, str):
@@ -91,7 +109,7 @@ class YgoCard(commands.Cog):
         return image
 
     # Thanks Phen!
-    def gen_card(self, ctx, member_avatar, top_role, skill, card_name, server_name):
+    def gen_card(self, ctx, member_avatar, top_role, skill, card_name, server_name, atk, deff):
         member_avatar = self.bytes_to_image(member_avatar, 325)
         # base canvas
         im = Image.new("RGBA", (420, 610), None)
@@ -107,7 +125,12 @@ class YgoCard(commands.Cog):
             "Token.png",
             "Trap.png",
         ]
-        border = random.choice(border_list)
+        nonmonstercards = ["Skill.png", "Spell.png", "Trap.png"]
+        if atk == 0 or deff == 0:
+            border = random.choice(nonmonstercards)
+        else:
+            border = random.choice(border_list)
+
         cardmask = Image.open(f"{bundled_data_path(self)}/border/{border}", mode="r").convert(
             "RGBA"
         )
@@ -126,6 +149,7 @@ class YgoCard(commands.Cog):
             "Water.png",
             "Wind.png",
         ]
+
         # random item from list
 
         attribute = random.choice(attribute_list)
@@ -154,11 +178,13 @@ class YgoCard(commands.Cog):
             font = ImageFont.truetype(
                 f"{bundled_data_path(self)}/fonts/CrimsonText-Regular.ttf", 18
             )
-            atk = random.randint(1, 8) * 1000
-            deff = str(random.randint(1, 8) * 1000)
+            # atk = random.randint(1, 8) * 1000
+            atkk = atk * 1000
+            deffe = deff * 1000
+            # deff = str(random.randint(1, 8) * 1000)
 
-            draw.text((265, 551), f"{atk}", font=font, fill="#000")
-            draw.text((350, 551), f"{deff}", font=font, fill="#000")
+            draw.text((265, 551), f"{atkk}", font=font, fill="#000")
+            draw.text((350, 551), f"{deffe}", font=font, fill="#000")
 
         # draw card skill
         skillfont = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/Amiri-Regular.ttf", 16)
