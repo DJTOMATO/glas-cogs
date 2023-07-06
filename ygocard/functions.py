@@ -27,7 +27,7 @@ from rapidfuzz import process
 from redbot.core import commands
 from redbot.core.commands import BadArgument, MemberConverter
 from unidecode import unidecode
-
+import regex as re
 
 
 # original converter from https://github.com/TrustyJAID/Trusty-cogs/blob/master/serverstats/converters.py#L19
@@ -57,90 +57,10 @@ class FuzzyMember(MemberConverter):
             member = sorted_result[0][0]
         return member
 
-#Someday we'll use this
-async def datacheck(rarity, name, level, layout, atk, defe, serial, copyright, id, attribute):
-    rarity = Fixer(rarity)
-    # Name Length Check
-    if name.length > 15:
-        pass
-    else:
-        raise ValueError(
-            f"Error: The foil must be one of the following: \n - Normal \n - Gold \n - Platinum "
-        )
-    # Level Check
-    if level >= 0 and level <= 13:
-        pass
-    else:
-        raise ValueError(f"Error: The card level must be between 0 and 13")
-    layout = FixerC(layout)
-    # layout Check
-    accepted_layout = {
-        "Normal",
-        "Effect",
-        "Fusion",
-        "Synchro",
-        "Xyz",
-        "Link",
-        "Ritual",
-        "Spell",
-        "Trap",
-        "Token",
-    }
-    if layout not in accepted_layout:
-        raise ValueError(
-            f"Error: The cardtype must be one of the following: \n - Normal \n - Effect \n - Fusion \n - Synchro \n - Xyz \n - Link \n - Ritual \n - Spell \n - Trap \n - Token"
-        )
-    # Attribute check
-    accepted_attribute = {
-        "Dark",
-        "Earth",
-        "Fire",
-        "Light",
-        "Water",
-        "Wind",
-        "Divine",
-        "Spell",
-        "Trap",
-    }
-    if attribute not in accepted_attribute:  # Ty Flame
-        raise ValueError(
-            f"Error: The attribute must be one of the following: 'Dark', 'Earth', 'Fire','Light', 'Water','Wind', 'Divine', 'Spell', 'Trap'"
-        )
-    # SetID Check
-    if setid.length > 60:
-        pass
-    else:
-        raise ValueError(f"Error: The setid must be smaller than 60 characters ")
-    # CreatureType Check
-    if creaturetype.length > 34:
-        pass
-    else:
-        raise ValueError(f"Error: The creaturetype must be smaller than 34 characters ")
-    # Description Check
-    if desc.length > 305:
-        pass
-    else:
-        raise ValueError(f"Error: The creaturetype must be smaller than 305 characters ")
-    # ATK & DEF Check
-    if atk < 9999:
-        pass
-    else:
-        raise ValueError(f"Error: The Atk must be smaller than 9999")
-    if defe < 9999:
-        pass
-    else:
-        raise ValueError(f"Error: The Def must be smaller than 9999")
-    # PWD Check
-    if pwd.length > 9:
-        pass
-    else:
-        raise ValueError(f"Error: The password must be smaller than 9 characters ")
-    # Creator Check
-    if creator.length > 33:
-        pass
-    else:
-        raise ValueError(f"Error: The creator must be smaller than 33 characters ")
-    # If all goes ok, create the card url
+
+async def sanitize_string(input_string):
+    sanitized_string = re.sub(r"[^a-zA-Z\s]", "", input_string)
+    return sanitized_string
 
 
 async def Fixer(a):

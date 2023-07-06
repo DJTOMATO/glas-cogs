@@ -15,6 +15,7 @@ from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
 import textwrap
+import re
 
 
 class YgoCard(commands.Cog):
@@ -35,21 +36,23 @@ class YgoCard(commands.Cog):
         """Make a ygocard..."""
         if not member:
             member = ctx.author
-        skill_text = args
+            
+        #skill_text = args (The plan?)
+        skill_text = "This card will summon an idiot who tries to code without understanding basic concepts such as dpy. still he has to resort to a bot to fix his lame code. how awful can he be right? un belieavble"
 
+        server_name = await sanitize_string(str(ctx.guild.name))
+
+        leng = len(skill_text)
+        if leng > 193:
+            raise ValueError("Error: Skill Text cannot be longer than 193 characters")
+        toclean = member.top_role
+        highest_role_name = await sanitize_string(str(toclean))
+
+        card_name = str(member.nick)
         async with ctx.typing():
-            # get role of user whoever's target or not
-            # member = ctx.guild.get_member(member)
-            # if member is not None and member.roles:
-            #    highest_role_name = member.top_role.name
-            highest_role_name = "Manually set cuz i don't get dpy"
-            skill_text = "This card will summon an idiot who tries to code without understanding basic concepts such as dpy. still he has to resort to a bot to fix his lame code. how awful can he be right? un belieavble"
-            if skill_text.length > 193:
-                raise ValueError("Error: Skill Text cannot be longer than 193 characters")
-            card_name = "idk how to obtain this"
             avatar = await self.get_avatar(member)
             task = functools.partial(
-                self.gen_card, ctx, avatar, highest_role_name, skill_text, card_name
+                self.gen_card, ctx, avatar, highest_role_name, skill_text, card_name, server_name
             )
             image = await self.generate_image(task)
         if isinstance(image, str):
@@ -74,18 +77,13 @@ class YgoCard(commands.Cog):
         await display_avatar.save(avatar, seek_begin=True)
         return avatar
 
-    # async def get_role(self, ctx, member: discord.abc.User):
-    #     member = ctx.guild.get_member(client.user.id)
-    #     top_role = member.top_role
-    #     return top_role
-
     @staticmethod
     def bytes_to_image(image: BytesIO, size: int):
         image = Image.open(image).convert("RGBA")
         image = image.resize((size, size), Image.LANCZOS)
         return image
-
-    def gen_card(self, ctx, member_avatar, top_role, skill, card_name):
+    # Thanks Phen!
+    def gen_card(self, ctx, member_avatar, top_role, skill, card_name, server_name):
         member_avatar = self.bytes_to_image(member_avatar, 315)
         # base canvas
         im = Image.new("RGBA", (420, 610), None)
@@ -100,7 +98,6 @@ class YgoCard(commands.Cog):
             "Synchro.png",
             "Token.png",
             "Trap.png",
-            "Xyz.png",
         ]
         border = random.choice(border_list)
         cardmask = Image.open(f"{bundled_data_path(self)}/border/{border}", mode="r").convert(
@@ -136,16 +133,18 @@ class YgoCard(commands.Cog):
         )
         count = 0
         pos = 0
-        #adding stars
+        # adding stars
         while stars > count:
             im.paste(star_img, (43 + pos, 73), star_img)
             pos = pos + 29
             count = count + 1
         # adding random atk and def
-        #Theres no need to write atk/def if the card is not a monster
+        # Theres no need to write atk/def if the card is not a monster
         nonmonstercards = ["Skill.png", "Spell.png", "Trap.png"]
         if border not in nonmonstercards:
-            font = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/CrimsonText-Regular.ttf", 18)
+            font = ImageFont.truetype(
+                f"{bundled_data_path(self)}/fonts/CrimsonText-Regular.ttf", 18
+            )
             atk = random.randint(1, 8) * 1000
             deff = str(random.randint(1, 8) * 1000)
             draw = ImageDraw.Draw(im)
@@ -168,8 +167,13 @@ class YgoCard(commands.Cog):
         namefont = ImageFont.truetype(
             f"{bundled_data_path(self)}/fonts/Matrix-Regular-Small-Caps.otf", 32
         )
-        draw.text((32, 34), f"[{card_name}]", font=namefont, fill="#000")
+        draw.text((32, 34), f"{card_name}", font=namefont, fill="#000")
 
+        # draw serial(servername)
+        serverfont = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/Matrix-Book.ttf", 14)
+        draw.text(
+            (26, 583), f"Card made at: {server_name}", font=serverfont, fill="#000", align="left"
+        )
         # ending
         cardmask.close()
         member_avatar.close()
