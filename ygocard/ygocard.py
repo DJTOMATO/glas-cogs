@@ -59,7 +59,8 @@ class YgoCard(commands.Cog):
             return await ctx.send(f"Error: Skill Text cannot be longer than 193 characters")
         if len(skill_text) < 3:
             skill_text = "You didn't set a card description! Silly~"
-        aa = str(member.display_name)  # thanks sravan_krishna!
+        # thanks sravan_krishna!
+        aa = str(member.display_name)  # it's not a bug, it's a feature! until next red update
         card_name = await self.sanitize_string(aa)
         a = str(member.top_role)
         highest_role_name = await self.sanitize_string(a)
@@ -94,7 +95,7 @@ class YgoCard(commands.Cog):
             return image
 
     async def sanitize_string(self, input_string):
-        sanitized_string = re.sub(r"[^a-zA-Záéíóú\s]", "", input_string)  # [^a-zA-Z\s]
+        sanitized_string = re.sub(r"[^a-zA-Záéíóú\s]+", "", input_string)
         return sanitized_string
 
     async def get_avatar(self, member: discord.abc.User):
