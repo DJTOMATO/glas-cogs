@@ -1,21 +1,14 @@
-import asyncio
-from email.mime import image
-from typing import Literal, Optional
-import aiohttp
-import discord
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
-from .functions import *
-from .functions import FuzzyMember
-import random
-import functools
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
-from redbot.core.utils.chat_formatting import pagify
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFont
+import asyncio
+import discord
+import random
+import functools
 import textwrap
-import re
+from .functions import *
 
 
 class YgoCard(commands.Cog):
@@ -30,25 +23,21 @@ class YgoCard(commands.Cog):
     __version__ = "1.0.0"
 
     @commands.bot_has_permissions(attach_files=True)
-    # @commands.cooldown(1, 10, commands.BucketType.user)
+    # @commands.cooldown(1, 10, commands.BucketType.user) Until cog is totally working
     @commands.command(aliases=["ygocard"], cooldown_after_parsing=True)
-    async def cardme(self, ctx: commands.Context, member: discord.Member = commands.Author, *args):
+    async def cardme(self, ctx: commands.Context, member: discord.Member = commands.Author):
         """Make a ygocard..."""
         if not member:
             member = ctx.author
-            
-        #skill_text = args (The plan?)
-        skill_text = "This card will summon an idiot who tries to code without understanding basic concepts such as dpy. still he has to resort to a bot to fix his lame code. how awful can he be right? un belieavble"
 
-        server_name = await sanitize_string(str(ctx.guild.name))
-
-        leng = len(skill_text)
-        if leng > 193:
+        # skill_text = args (The plan?)
+        skill_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ornare turpis libero, ac dictum ante placerat sed. Ut luctus lorem vitae nulla imperdiet euismod."
+        if len(skill_text) > 193:
             raise ValueError("Error: Skill Text cannot be longer than 193 characters")
-        toclean = member.top_role
-        highest_role_name = await sanitize_string(str(toclean))
 
+        highest_role_name = await sanitize_string(str(member.top_role))
         card_name = str(member.nick)
+        server_name = await sanitize_string(str(ctx.guild.name))
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(
@@ -82,6 +71,7 @@ class YgoCard(commands.Cog):
         image = Image.open(image).convert("RGBA")
         image = image.resize((size, size), Image.LANCZOS)
         return image
+
     # Thanks Phen!
     def gen_card(self, ctx, member_avatar, top_role, skill, card_name, server_name):
         member_avatar = self.bytes_to_image(member_avatar, 315)
@@ -141,17 +131,17 @@ class YgoCard(commands.Cog):
         # adding random atk and def
         # Theres no need to write atk/def if the card is not a monster
         nonmonstercards = ["Skill.png", "Spell.png", "Trap.png"]
+        draw = ImageDraw.Draw(im)
         if border not in nonmonstercards:
             font = ImageFont.truetype(
                 f"{bundled_data_path(self)}/fonts/CrimsonText-Regular.ttf", 18
             )
             atk = random.randint(1, 8) * 1000
             deff = str(random.randint(1, 8) * 1000)
-            draw = ImageDraw.Draw(im)
+
             draw.text((265, 551), f"{atk}", font=font, fill="#000")
             draw.text((350, 551), f"{deff}", font=font, fill="#000")
-        else:
-            pass
+
         # draw card skill
         skillfont = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/Amiri-Regular.ttf", 16)
         # Previous method, might work worse than current one
