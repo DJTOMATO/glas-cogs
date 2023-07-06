@@ -48,8 +48,8 @@ class YgoCard(commands.Cog):
         if type(deff) is not int:
             return await ctx.send(f"Error: The defense value must be a number between 1 and 9.")
         # debugging
-        #return await ctx.send(f"the atk is {atk}")
-        #return await ctx.send(f"the def is {deff}")
+        # ctx.send(f"the atk is {atk}")
+        # ctx.send(f"the def is {deff}")
         # Thanks Kowlin! <3
         if skill_text is not None:
             pass
@@ -122,11 +122,8 @@ class YgoCard(commands.Cog):
             "Fusion.png",
             "Normal.png",
             "Ritual.png",
-            "Skill.png",
-            "Spell.png",
             "Synchro.png",
             "Token.png",
-            "Trap.png",
         ]
         nonmonstercards = ["Skill.png", "Spell.png", "Trap.png"]
         if atk == 0 or deff == 0:
