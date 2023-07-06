@@ -57,7 +57,7 @@ class FuzzyMember(MemberConverter):
             member = sorted_result[0][0]
         return member
 
-
+#Someday we'll use this
 async def datacheck(rarity, name, level, layout, atk, defe, serial, copyright, id, attribute):
     rarity = Fixer(rarity)
     # Name Length Check

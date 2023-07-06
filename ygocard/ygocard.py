@@ -14,11 +14,7 @@ from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
-
-
-# Thanks MAX <3
-async def __init__(self, red: Red):
-    self.bot = red
+import textwrap
 
 
 class YgoCard(commands.Cog):
@@ -26,28 +22,35 @@ class YgoCard(commands.Cog):
     Creates YGO Card
     """
 
-    __version__ = "1.0.0"
-
+    # Thanks MAX <3
     def __init__(self, bot: Red) -> None:
         self.bot = bot
 
-    async def cog_unload(self):
-        await self.session.close()
+    __version__ = "1.0.0"
 
     @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    # @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["ygocard"], cooldown_after_parsing=True)
-    async def cardme(self, ctx: commands.Context, member: discord.Member = commands.Author):
+    async def cardme(self, ctx: commands.Context, member: discord.Member = commands.Author, *args):
         """Make a ygocard..."""
         if not member:
             member = ctx.author
+        skill_text = args
 
         async with ctx.typing():
             # get role of user whoever's target or not
-            user = await ctx.guild.get_member(member)
-            top_role = user.top_role.name
+            # member = ctx.guild.get_member(member)
+            # if member is not None and member.roles:
+            #    highest_role_name = member.top_role.name
+            highest_role_name = "Manually set cuz i don't get dpy"
+            skill_text = "This card will summon an idiot who tries to code without understanding basic concepts such as dpy. still he has to resort to a bot to fix his lame code. how awful can he be right? un belieavble"
+            if skill_text.length > 193:
+                raise ValueError("Error: Skill Text cannot be longer than 193 characters")
+            card_name = "idk how to obtain this"
             avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_card, ctx, avatar, top_role)
+            task = functools.partial(
+                self.gen_card, ctx, avatar, highest_role_name, skill_text, card_name
+            )
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -82,7 +85,7 @@ class YgoCard(commands.Cog):
         image = image.resize((size, size), Image.LANCZOS)
         return image
 
-    def gen_card(self, ctx, member_avatar, top_role):
+    def gen_card(self, ctx, member_avatar, top_role, skill, card_name):
         member_avatar = self.bytes_to_image(member_avatar, 315)
         # base canvas
         im = Image.new("RGBA", (420, 610), None)
@@ -90,7 +93,6 @@ class YgoCard(commands.Cog):
             "DarkSynchro.png",
             "Effect.png",
             "Fusion.png",
-            "Link.png",
             "Normal.png",
             "Ritual.png",
             "Skill.png",
@@ -134,31 +136,40 @@ class YgoCard(commands.Cog):
         )
         count = 0
         pos = 0
+        #adding stars
         while stars > count:
             im.paste(star_img, (43 + pos, 73), star_img)
             pos = pos + 29
             count = count + 1
         # adding random atk and def
-        # use a truetype font
-        try:
-            font = ImageFont.truetype(
-                f"{bundled_data_path(self)}/fonts/CrimsonText-Regular.ttf", 18
-            )
+        #Theres no need to write atk/def if the card is not a monster
+        nonmonstercards = ["Skill.png", "Spell.png", "Trap.png"]
+        if border not in nonmonstercards:
+            font = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/CrimsonText-Regular.ttf", 18)
+            atk = random.randint(1, 8) * 1000
+            deff = str(random.randint(1, 8) * 1000)
+            draw = ImageDraw.Draw(im)
+            draw.text((265, 551), f"{atk}", font=font, fill="#000")
+            draw.text((350, 551), f"{deff}", font=font, fill="#000")
+        else:
+            pass
+        # draw card skill
+        skillfont = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/Amiri-Regular.ttf", 16)
+        # Previous method, might work worse than current one
+        # draw.text((345, 551), f"[{skill}]", font=skillfont, fill="#000", align = "right")
+        lines = textwrap.wrap(skill, width=50)
+        draw.multiline_text((35, 475), "\n".join(lines), font=skillfont, fill="#000", spacing=0)
 
-        except ValueError:
-            raise ValueError("Error: Algo pasó con {ValueError}")
-
-        atk = random.randint(1, 8) * 1000
-        deff = str(random.randint(1, 8) * 1000)
-        draw = ImageDraw.Draw(im)
-        draw.text((265, 551), f"{atk}", font=font, fill="#000")
-        draw.text((350, 551), f"{deff}", font=font, fill="#000")
         # draw user higest role (type)
-
         rolefont = ImageFont.truetype(f"{bundled_data_path(self)}/fonts/SpectralSC-Bold.ttf", 18)
+        draw.text((35, 454), f"[{top_role}]", font=rolefont, fill="#000")
 
-        draw.text((35, 458), f"[{top_role}]", font=rolefont, fill="#000")
-        # im = im._image
+        # draw card(username)
+        namefont = ImageFont.truetype(
+            f"{bundled_data_path(self)}/fonts/Matrix-Regular-Small-Caps.otf", 32
+        )
+        draw.text((32, 34), f"[{card_name}]", font=namefont, fill="#000")
+
         # ending
         cardmask.close()
         member_avatar.close()
@@ -170,55 +181,3 @@ class YgoCard(commands.Cog):
         _file = discord.File(fp, "card.png")
         fp.close()
         return _file
-
-
-# class YgoCard(commands.Cog):
-#     """
-#     Creates YGO Card
-#     """
-
-#     @commands.command()
-#     async def ygo(
-#         self,
-#         ctx,
-#         foil,
-#         cardtype,
-#         name,
-#         level,
-#         attribute,
-#         setid,
-#         creaturetype,
-#         desc,
-#         atk,
-#         defe,
-#         pwd,
-#         creator,
-#         sticker,
-#     ):
-#         """Searches for pokemons.."""
-#         await datacheck(foil, cardtype, name, level,attribute,        setid,
-#         creaturetype,
-#         desc,
-#         atk,
-#         defe,
-#         pwd,
-#         creator,
-#         sticker,)
-#         # Check Poke 1
-#         veri = await VerifyName(names, name1)
-#         if veri == False:
-#             return await ctx.send(f"The pokemon {name1} does not exist, Please type it again.")
-#         else:
-#             id1 = 666
-#             # Initial check, WILL Get replaced anyways
-#         try:
-#             # We Assign the ID based on Name
-#             id1 = await GetID(names, name1)
-#         except ValueError:
-#             raise ValueError("Error: Failed to retrieve the ID for the pokemon {name}")
-#             em = discord.Embed(description=f"{name1.title()} + {name2.title()} = {name3.title()}")
-#             em.title = "Here is your card"
-#             em.color = discord.Color(8599000)
-#             em.timestamp = datetime.now()
-#             em.set_image(url=url3)
-#             await ctx.send(embed=em)
