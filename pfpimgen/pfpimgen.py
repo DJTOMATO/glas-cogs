@@ -30,7 +30,8 @@ from typing import Literal, Optional
 
 import aiohttp
 import discord
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import numpy as np
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
@@ -749,6 +750,23 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_amigo, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def sus(self, ctx, *, member: FuzzyMember = None):
+        """You're among us..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_sus, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -1809,5 +1827,40 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "didyou.png")
+        fp.close()
+        return _file
+
+    def gen_sus(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 350)
+
+        im = Image.new("RGBA", (589, 758), None)
+        im.paste(member_avatar, (225, 40), member_avatar)
+        body = Image.open(f"{bundled_data_path(self)}/sus/sus_mask.png", mode="r").convert("RGBA")
+        faceplate = Image.open(f"{bundled_data_path(self)}/sus/sus_mask_2.png", mode="r").convert(
+            "RGBA"
+        )
+        mask = (
+            Image.open(f"{bundled_data_path(self)}/sus/sus_mask_6.png")
+            .convert("L")
+            .resize(body.size)
+        )
+        im2 = Image.composite(im, faceplate, mask)
+        im.paste(im2)
+        # im.paste(body)
+        # border = (0, -30, 30, 20)  # left, top, right, bottom
+        # MA = ImageOps.crop(member_avatar, border)
+        # im.paste(member_avatar, (225, 40), member_avatar)
+        im.paste(body, (0, 0), body)
+        im.paste(faceplate, (0, 0), faceplate)
+
+        body.close()
+        faceplate.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "sus.png")
         fp.close()
         return _file

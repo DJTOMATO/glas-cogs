@@ -34,8 +34,8 @@ class YgoCard(commands.Cog):
         self,
         ctx: commands.Context,
         member: discord.Member,
-        atk: typing.Optional[commands.Range[int, 1, 8]] = 0,
-        deff: typing.Optional[commands.Range[int, 1, 8]] = 0,
+        atk: typing.Optional[commands.Range[int, 1, 9]] = 0,
+        deff: typing.Optional[commands.Range[int, 1, 9]] = 0,
         *,
         skill_text: Optional[str],
     ):
