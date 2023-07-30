@@ -1921,7 +1921,7 @@ class PfpImgen(commands.Cog):
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (600, 600), None)
+        im = Image.new("RGBA", (625, 352), None)
         billmask = Image.open(
             f"{bundled_data_path(self)}/bill/bill.png", mode="r"
         ).convert("RGBA")
