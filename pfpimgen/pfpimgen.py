@@ -1961,7 +1961,7 @@ class PfpImgen(commands.Cog):
     
     
     def gen_clownoffice(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 220)
+        member_avatar = self.bytes_to_image(member_avatar, 225)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
@@ -1973,7 +1973,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (20, 190), member_avatar)
+        im.paste(member_avatar, (18, 190), member_avatar)
         im.paste(clownmask, (0, 0), clownmask)
         clownmask.close()
         member_avatar.close()
