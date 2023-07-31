@@ -442,21 +442,6 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def clowno(self, ctx, *, member: FuzzyMember = None):
-        """Clown Office."""
-        member = member or ctx.author
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_clownoffice, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
     async def shutup(
         self,
         ctx,
@@ -816,6 +801,23 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_bill, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+            
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def clowno(self, ctx, *, member: FuzzyMember = None):
+        """You become a clown..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_clownoffice, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
