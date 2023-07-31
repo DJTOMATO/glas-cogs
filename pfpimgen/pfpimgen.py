@@ -1964,7 +1964,7 @@ class PfpImgen(commands.Cog):
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (661, 645), None)
-        billmask = Image.open(
+        clownoffice = Image.open(
             f"{bundled_data_path(self)}/clown/clown_mask.png", mode="r"
         ).convert("RGBA")
 
@@ -1972,8 +1972,8 @@ class PfpImgen(commands.Cog):
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (20, 0), member_avatar)
-        im.paste(billmask, (0, 0), billmask)
-        billmask.close()
+        im.paste(clownoffice, (0, 0), clownoffice)
+        clownoffice.close()
         member_avatar.close()
 
         fp = BytesIO()
