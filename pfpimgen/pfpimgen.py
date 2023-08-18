@@ -882,7 +882,7 @@ class PfpImgen(commands.Cog):
     @staticmethod
     def bytes_to_image(image: BytesIO, size: int):
         image = Image.open(image).convert("RGBA")
-        image = image.resize((size, size), Image.ANTIALIAS)
+        image = image.resize((size, size), Image.LANCZOS)
         return image
 
     def gen_neko(self, ctx, member_avatar):
