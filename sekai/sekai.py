@@ -15,9 +15,10 @@ from typing import Optional
 
 
 class Sekai(commands.Cog):
-    """
-    Creates Sekai Sticker
-    """
+    """Creates Sekai Sticker"""
+    """Only emu available for now."""
+    """Cog in development, so bear me the bugs"""
+    
 
     # Thanks MAX <3
     def __init__(self, bot: Red) -> None:
