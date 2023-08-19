@@ -15,9 +15,9 @@ from typing import Optional
 
 
 class Sekai(commands.Cog):
-    """Creates Sekai Sticker"""
-    """Only emu available for now."""
-    """Cog in development, so bear me the bugs"""
+    """Creates Sekai Sticker
+    Only emu available for now.
+    Cog in development, so bear me the bugs"""
     
 
     # Thanks MAX <3
@@ -43,10 +43,10 @@ class Sekai(commands.Cog):
         spacesize: typing.Optional[commands.Range[int, 1, 10]] = 0,
         rotate: typing.Optional[commands.Range[int, 1, 360]] = 0,
     ):
-        """Make a Sekai sticker"""
-        """Only emu available for now."""
-        """Cog in development, so bear me the bugs"""
-        """Example: ``!sekai emu 13 "Wonderhoy!" 25 50 30``"""
+        """Make a Sekai sticker
+        Only emu available for now.
+        Cog in development, so bear me the bugs
+        Example: ``!sekai emu 13 "Wonderhoy!" 25 50 30``"""
         #await ctx.send(
         #    f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
         #)
