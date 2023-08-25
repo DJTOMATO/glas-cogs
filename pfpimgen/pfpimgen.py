@@ -2052,7 +2052,7 @@ class PfpImgen(commands.Cog):
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (672, 658), None)
-        bamygfmaskwmask = Image.open(f"{bundled_data_path(self)}/mygf/mygf_mask.png", mode="r").convert(
+        mygfmask = Image.open(f"{bundled_data_path(self)}/mygf/mygf_mask.png", mode="r").convert(
             "RGBA"
         )
 
