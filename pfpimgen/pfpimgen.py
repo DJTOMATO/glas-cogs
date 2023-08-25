@@ -2047,7 +2047,7 @@ class PfpImgen(commands.Cog):
         return _file
     
     def gen_mygf(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 290)
+        member_avatar = self.bytes_to_image(member_avatar, 305)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
@@ -2059,7 +2059,7 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (41, 46), member_avatar)
+        im.paste(member_avatar, (39, 40), member_avatar)
         im.paste(mygfmask, (0, 0), mygfmask)
         mygfmask.close()
         member_avatar.close()
