@@ -2102,8 +2102,8 @@ class PfpImgen(commands.Cog):
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
-        im.paste(member_avatar, (50, 30), member_avatar)
-        im.paste(chupallamask, (0, 0), chupallamask)
+        im.paste(member_avatar, (0, 0), member_avatar)
+        im.paste(chupallamask, (70, 50), chupallamask)
         chupallamask.close()
         member_avatar.close()
 
