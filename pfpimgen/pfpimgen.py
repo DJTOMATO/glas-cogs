@@ -2101,15 +2101,24 @@ class PfpImgen(commands.Cog):
         banderamask = Image.open(f"{bundled_data_path(self)}/chupalla/fondo_mask.png", mode="r").convert(
             "RGBA"
         )
-
+        wine = Image.open(f"{bundled_data_path(self)}/chupalla/wine.png", mode="r").convert(
+            "RGBA"
+        )
+        empanada = Image.open(f"{bundled_data_path(self)}/chupalla/empanada.png", mode="r").convert(
+            "RGBA"
+        )
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (0, 0), member_avatar)
-        im.paste(chupallamask, (100, 40), chupallamask)
-        im.paste(banderamask, (0, 0), banderamask)
+        im.paste(chupallamask, (100, 25), chupallamask)
+        im.paste(banderamask, (130, 400), banderamask)
+        im.paste(wine, (0, 250), wine)
+        im.paste(empanada, (300, 250), empanada)
+        empanada.close()
         chupallamask.close()
         banderamask.close()
+        wine.close()
         member_avatar.close()
 
         fp = BytesIO()
