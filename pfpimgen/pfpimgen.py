@@ -2090,12 +2090,15 @@ class PfpImgen(commands.Cog):
         return _file
     
     def gen_chupalla(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 301)
+        member_avatar = self.bytes_to_image(member_avatar, 501)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (301, 301), None)
+        im = Image.new("RGBA", (501, 501), None)
         chupallamask = Image.open(f"{bundled_data_path(self)}/chupalla/chupalla_mask.png", mode="r").convert(
+            "RGBA"
+        )
+        banderamask = Image.open(f"{bundled_data_path(self)}/chupalla/fondo_mask.png", mode="r").convert(
             "RGBA"
         )
 
@@ -2103,8 +2106,10 @@ class PfpImgen(commands.Cog):
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         im.paste(member_avatar, (0, 0), member_avatar)
-        im.paste(chupallamask, (70, 50), chupallamask)
+        im.paste(chupallamask, (100, 40), chupallamask)
+        im.paste(banderamask, (0, 0), banderamask)
         chupallamask.close()
+        banderamask.close()
         member_avatar.close()
 
         fp = BytesIO()
