@@ -6,10 +6,13 @@
     "disabled": false,
     "hidden": false,
     "install_msg": "Thanks for installing this cog! Please report any issues here: https://github.com/dualmoon/Cogs.v3/issues. This cog comes with bundled data! Specifically, a library of images that are used as the actors in the generated comics.",
+    "min_python_version": [
+        3,
+        7,
+        0
+    ],
     "name": "weeedcog",
     "requirements": ["pillow"],
     "short": "Create comics from channel messages",
     "tags": []
-    ,
-    "min_bot_version": "3.5.0"
 }
