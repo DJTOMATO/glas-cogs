@@ -84,6 +84,23 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["ameto"], cooldown_after_parsing=True)
+    async def dj(self, ctx, *, member: FuzzyMember = None):
+        """Make a DJ..."""
+        if not member:
+            member = ctx.author
+        username = member.display_name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_ameto, ctx, avatar, username)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+            
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["youu"], cooldown_after_parsing=True)
     async def you(self, ctx, *, member: FuzzyMember = None):
         """Make a you avatar..."""
@@ -2126,5 +2143,44 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "chupalla.png")
+        fp.close()
+        return _file
+    
+    def gen_ameto(self, ctx, member_avatar, username):
+        member_avatar = self.bytes_to_image(member_avatar, 600)
+        
+        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (915, 907), None)
+        ametomask = Image.open(f"{bundled_data_path(self)}/ameto/ameto_mask.png", mode="r").convert(
+            "RGBA"
+        )
+        im.paste(member_avatar, (150, 0), member_avatar)
+        im.paste(ametomask, (0, 0), ametomask)
+        ametomask.close()
+        member_avatar.close()
+        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        text = username
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/Magistral-Cond-W08-Bold.ttf", 60)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        canvas.text(
+            (330, 653),
+            text,
+            font=font,
+            fill=(255, 255, 255),
+            align="left",
+            stroke_width=3,
+            stroke_fill=(255, 29, 80),
+        )
+
+
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "ameto.png")
         fp.close()
         return _file
