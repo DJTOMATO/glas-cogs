@@ -6,9 +6,8 @@
     "install_msg": "Thanks for installing noargs!",
     "author": ["Glas"],
     "required_cogs": {},
-    "requirements": [""],
     "tags": [
-        "repost"
+        "repost","noargs"
     ],
     
     "min_bot_version": "3.5.0",
