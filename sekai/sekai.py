@@ -23,6 +23,12 @@ characters = [
         "color": "86cecb",
     },
     {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+    # Placeholders
+    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
 ]
 
 
@@ -59,13 +65,22 @@ class CharacterDropdown(discord.ui.Select):
             # Embed updates
             self.embed.title = selected_character["label"]
             self.embed.description = selected_character["description"]
+            # Color Choser
             color = selected_character["color"]
+            # Color
             self.embed.color = discord.Color(int(color, 16))
             self.embed.set_image(url=f"attachment://{selected_character['image_path']}")
+
+            # self.embed.set_image(selected_character_image) <= An error occurred: Embed.set_image() takes 1 positional argument but 2 were given
+
+            # Interaction Update?
             await interaction.response.edit_message(embed=self.embed, view=self.view)
-            await self.message.edit(embed=self.embed)
-            await interaction.followup.send(file=selected_character_image, embed=self.embed)
+            # Edit message?
+            await self.message.edit(embed=self.embed, view=self.view)
+            # Replies as new message after dropdown is chosen??
+            # await interaction.followup.send(file=selected_character_image, embed=self.embed)
         except Exception as e:
+            # Error report on the initial view/embed
             self.embed.description = f"An error occurred: {e}"
             await interaction.response.edit_message(embed=self.embed, view=self.view)
         except discord.errors.InteractionResponded:
@@ -98,7 +113,7 @@ class Sekai(commands.Cog):
         if self.message is None:
             self.message = await ctx.send(embed=self.embed, view=view)
         else:
-            await self.message.edit(embed=self.embed, view=view)
+            await self.message.edit(embed=self.embed, view=self.view)
 
     # Create sticker command
     @commands.bot_has_permissions(attach_files=True)
