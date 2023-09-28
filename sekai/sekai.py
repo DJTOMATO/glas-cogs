@@ -1,36 +1,109 @@
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
-from redbot.core.dev_commands import async_compile
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import asyncio
 import discord
-import random
 import functools
 import textwrap
 import regex as re
 import typing
 from typing import Optional
+from discord.ui import Select, View
+from discord import SelectOption
+
+# Character list, will get updated
+characters = [
+    {"label": "Emu Otori", "description": "えむ 鳳", "image_path": "emu-01.png", "color": "ffc0cb"},
+    {
+        "label": "Miku Hatsune",
+        "description": "ミク 初音",
+        "image_path": "miku-01.png",
+        "color": "86cecb",
+    },
+    {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+]
 
 
+# Dropdown Selector
+class CharacterDropdown(discord.ui.Select):
+    def __init__(self, characters, embed, message):
+        select_options = [
+            discord.SelectOption(label=character["label"], value=character["label"])
+            for character in characters
+        ]
+        super().__init__(placeholder="Select your Character...", options=select_options)
+        self.characters = characters
+        self.embed = embed
+        self.message = message
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            # Obtains Character
+            selected_character_value = interaction.data["values"][0]
+            selected_character = next(
+                (
+                    character
+                    for character in self.characters
+                    if character["label"] == selected_character_value
+                ),
+                None,
+            )
+            if selected_character is None:
+                return
+            # Grabs image for character
+            selected_character_image = discord.File(
+                f"{bundled_data_path(self)}/{selected_character['image_path']}"
+            )
+            # Embed updates
+            self.embed.title = selected_character["label"]
+            self.embed.description = selected_character["description"]
+            color = selected_character["color"]
+            self.embed.color = discord.Color(int(color, 16))
+            self.embed.set_image(url=f"attachment://{selected_character['image_path']}")
+            await interaction.response.edit_message(embed=self.embed, view=self.view)
+            await self.message.edit(embed=self.embed)
+            await interaction.followup.send(file=selected_character_image, embed=self.embed)
+        except Exception as e:
+            self.embed.description = f"An error occurred: {e}"
+            await interaction.response.edit_message(embed=self.embed, view=self.view)
+        except discord.errors.InteractionResponded:
+            pass
+
+
+# The view
+class CharacterView(discord.ui.View):
+    def __init__(self, characters, embed, message):
+        super().__init__()
+        self.add_item(CharacterDropdown(characters, embed, message))
+
+
+# The commands
 class Sekai(commands.Cog):
-    """Creates Sekai Sticker
-    Only emu available for now.
-    Cog in development, so bear me the bugs"""
-    
+    """Creates Sekai Sticker"""
 
-    # Thanks MAX <3
-    def __init__(self, bot: Red) -> None:
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.__version__ = "1.0.0"
+        self.message = None
+        self.embed = discord.Embed(
+            title="Sekai Stickers!", description="Select a character to view available stickers."
+        )
 
-    __version__ = "1.0.0"
+    # Show all available characters
+    @commands.hybrid_command()
+    async def characters(self, ctx):
+        view = CharacterView(characters, self.embed, self.message)
+        if self.message is None:
+            self.message = await ctx.send(embed=self.embed, view=view)
+        else:
+            await self.message.edit(embed=self.embed, view=view)
 
+    # Create sticker command
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.command(aliases=["wonderhoy"], cooldown_after_parsing=True)
-    # Thanks Kowlin! <3 & AAA3A
-    # async def ygo(self, ctx: commands.Context, member: discord.Member, *, skill_text: Optional[str]):
+    @commands.hybrid_command()
     async def sekai(
         self,
         ctx: commands.Context,
@@ -40,16 +113,14 @@ class Sekai(commands.Cog):
         textx: typing.Optional[commands.Range[str, 1, 300]] = 0,
         texty: typing.Optional[commands.Range[str, 1, 300]] = 0,
         fontsize: typing.Optional[commands.Range[int, 1, 80]] = 0,
-        spacesize: typing.Optional[commands.Range[int, 1, 10]] = 0,
-        rotate: typing.Optional[commands.Range[int, 1, 360]] = 0,
     ):
         """Make a Sekai sticker
         Only emu available for now.
         Cog in development, so bear me the bugs
         Example: ``!sekai emu 13 "Wonderhoy!" 25 50 30``"""
-        #await ctx.send(
-        #    f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
-        #)
+        await ctx.send(
+            f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
+        )
         async with ctx.typing():
             task = functools.partial(
                 self.gen_card,
@@ -60,8 +131,6 @@ class Sekai(commands.Cog):
                 textx,
                 texty,
                 fontsize,
-                spacesize,
-                rotate,
             )
             image = await self.generate_image(task)
         if isinstance(image, str):
@@ -111,9 +180,24 @@ class Sekai(commands.Cog):
         return image
 
     # Thanks Phen!
-    def gen_card(
-        self, ctx, character, chara_face, text, textx, texty, fontsize, spacesize, rotate
-    ):
+    def gen_card(self, ctx, character, chara_face, text, textx, texty, fontsize):
+        # Error preventer
+        arr = ["Emu", "Miku", "emu", "Miku"]
+        if character not in arr:
+            character = "emu"
+        if chara_face == 0:
+            chara_face = 1
+        if character == 0:
+            character = "emu"
+        if text == 0:
+            text = "You forgot a text!"
+        if textx == 0:
+            textx = 50
+        if texty == 0:
+            texty = 40
+        if fontsize == 0:
+            fontsize = 20
+
         # base canvas
         if chara_face < 10:
             chara_face = "0" + str(chara_face)
@@ -147,6 +231,6 @@ class Sekai(commands.Cog):
         im.save(fp, "PNG")
         fp.seek(0)
         im.close()
-        _file = discord.File(fp, "card.png")
+        _file = discord.File(fp, "Sticker.png")
         fp.close()
         return _file
