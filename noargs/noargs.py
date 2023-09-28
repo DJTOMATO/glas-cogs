@@ -15,7 +15,7 @@ class NoArgs(commands.Cog):
         self.config.register_guild(**default_guild_settings)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message_without_command(self, message):
         if not isinstance(message.channel, discord.TextChannel):
             return
 
