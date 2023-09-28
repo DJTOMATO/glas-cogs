@@ -25,43 +25,55 @@
 </div>
 
 ## Installation
+
 <!-- So you can copy and paste it one by one :D -->
+
 ```md
 [p]load downloader
 ```
+
 ```md
 [p]repo add glas-cogs https://github.com/djtomato/glas-cogs
 ```
+
 ```md
 [p]cog install glas-cogs <cog_name>
 ```
+
 ```md
 [p]load <installed_cog>
 ```
-***Note**: `[p] is your bot's prefix, so replace it!`
+
+**\*Note**: `[p] is your bot's prefix, so replace it!`
 
 ## Support
-**For support**, you can **find and ping me (dj_tomato) in [*#support_othercogs*](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
+
+**For support**, you can **find and ping me (dj_tomato) in [_#support_othercogs_](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
 
 ## Cogs List
 
 ### Active Cogs
-|     Name     |                       Description                        |            Author            |            d.py2 Compatible            |
-|:------------:|----------------------------------------------------------|:----------------------------:|:----------------------------:|
-|  Ygocard   | Generate Yu-Gi-Oh Cards from users!  |            Glas             |✅|
-|  Sekai   | Generate Project Sekai Stickers!  |            Glas             |✅|
-|  Pokefuse   | Fusions Gen1 Pokemons  |            Glas             |✅|
-|  Movietar        | Make videos with avatars! (+10 vids!)|            Glas       |✅|
-|  Watamelon   | Posts a random Watamelon image*  |            Kuro             |✅|
-|  PfpImgen        | Make images with avatars! (+23 new images!)                                       |            PhenoM4n4n       |✅|
-|  Youwouldnt        | You Wouldn't Steal a Car                                      |            Glas       |✅|
-|  Weeedcog        | comic cog, now with +1300 weeb images                                  |            dualmoon       |✅|
-|  Ogey   | Generates a random Ogey* |            Kuro             |✅|
-|  Fire        | New year fireworks                                        |            TrustyJaid       |✅|
 
-* (forked from Kuro-Cogs/Fumo)
+|    Name    | Description                                 |   Author   | d.py2 Compatible |
+| :--------: | ------------------------------------------- | :--------: | :--------------: |
+|  Ygocard   | Generate Yu-Gi-Oh Cards from users!         |    Glas    |        ✅        |
+|   NoArgs   | Cleans memes with ugly CDN arguments!       |    Glas    |        ✅        |
+|   Sekai    | Generate Project Sekai Stickers!            |    Glas    |        ✅        |
+|  Pokefuse  | Fusions Gen1 Pokemons                       |    Glas    |        ✅        |
+|  Movietar  | Make videos with avatars! (+10 vids!)       |    Glas    |        ✅        |
+| Watamelon  | Posts a random Watamelon image\*            |    Kuro    |        ✅        |
+|  PfpImgen  | Make images with avatars! (+23 new images!) | PhenoM4n4n |        ✅        |
+| Youwouldnt | You Wouldn't Steal a Car                    |    Glas    |        ✅        |
+|  Weeedcog  | comic cog, now with +1300 weeb images       |  dualmoon  |        ✅        |
+|    Ogey    | Generates a random Ogey\*                   |    Kuro    |        ✅        |
+|    Fire    | New year fireworks                          | TrustyJaid |        ✅        |
+
+- (forked from Kuro-Cogs/Fumo)
+
 ## Credits
+
 **Special Thanks** to:
+
 - [**Kuro**](https://github.com/Kuro-Rui/Kuro-Cogs) for making Fumo Cog, where I based Watamelon from and for making this awesome readme template
 - [**TrustyJaid**](https://github.com/TrustyJAID/Trusty-cogs/) for teaching me how to make a basic Cog.
 - [**npc203**](https://github.com/npc203/npc-cogs) for being a inspiration on Cog "making" (>) best son ever.

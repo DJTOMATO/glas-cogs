@@ -1,0 +1,18 @@
+{
+    "name": "NoArgs",
+    "short": "Deletes useless args from urls",
+    "description": "Deletes useless args from urls",
+    "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
+    "install_msg": "Thanks for installing noargs!",
+    "author": ["Glas"],
+    "required_cogs": {},
+    "requirements": [""],
+    "tags": [
+        "repost"
+    ],
+    
+    "min_bot_version": "3.5.0",
+    "hidden": false,
+    "disabled": false,
+    "type": "COG"
+}
