@@ -2205,8 +2205,8 @@ class PfpImgen(commands.Cog):
             f"{bundled_data_path(self)}/discord/discord_mask.png", mode="r"
         ).convert("RGBA")
 
-        im.paste(member_avatar, (523, 235), member_avatar)
         im.paste(discordmask, (0, 0), discordmask)
+        im.paste(member_avatar, (523, 235), member_avatar)
         discordmask.close()
         member_avatar.close()
 
