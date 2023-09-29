@@ -98,7 +98,24 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["discord"], cooldown_after_parsing=True)
+    async def cloudflare(self, ctx, *, member: FuzzyMember = None):
+        """Cloudflare someone!..."""
+        if not member:
+            member = ctx.author
+        username = member.display_name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_discord, ctx, avatar, username)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["youu"], cooldown_after_parsing=True)
@@ -789,7 +806,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -823,7 +840,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -840,7 +857,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -857,7 +874,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -891,7 +908,7 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-            
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -1978,15 +1995,17 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "sus.png")
         fp.close()
         return _file
-    
+
     def gen_sugoi(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 500)
 
         im = Image.new("RGBA", (500, 500), None)
         im.paste(member_avatar, (0, 0), member_avatar)
         head = Image.open(f"{bundled_data_path(self)}/serval/head.png", mode="r").convert("RGBA")
-        ribbon = Image.open(f"{bundled_data_path(self)}/serval/ribbon.png", mode="r").convert("RGBA")
-        
+        ribbon = Image.open(f"{bundled_data_path(self)}/serval/ribbon.png", mode="r").convert(
+            "RGBA"
+        )
+
         im.paste(head, (0, 0), head)
         im.paste(ribbon, (0, 0), ribbon)
         head.close()
@@ -2007,9 +2026,7 @@ class PfpImgen(commands.Cog):
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (625, 352), None)
-        billmask = Image.open(
-            f"{bundled_data_path(self)}/bill/bill.png", mode="r"
-        ).convert("RGBA")
+        billmask = Image.open(f"{bundled_data_path(self)}/bill/bill.png", mode="r").convert("RGBA")
 
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
@@ -2026,17 +2043,16 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "bill.png")
         fp.close()
         return _file
-    
-    
+
     def gen_clownoffice(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 225)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (661, 645), None)
-        clownmask = Image.open(f"{bundled_data_path(self)}/clown/clown_mask.png", mode="r").convert(
-            "RGBA"
-        )
+        clownmask = Image.open(
+            f"{bundled_data_path(self)}/clown/clown_mask.png", mode="r"
+        ).convert("RGBA")
 
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
@@ -2079,7 +2095,7 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "bau.png")
         fp.close()
         return _file
-    
+
     def gen_mygf(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 306)
 
@@ -2105,25 +2121,23 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "mygf.png")
         fp.close()
         return _file
-    
+
     def gen_chupalla(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 501)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (501, 501), None)
-        chupallamask = Image.open(f"{bundled_data_path(self)}/chupalla/chupalla_mask.png", mode="r").convert(
-            "RGBA"
-        )
-        banderamask = Image.open(f"{bundled_data_path(self)}/chupalla/fondo_mask.png", mode="r").convert(
-            "RGBA"
-        )
-        wine = Image.open(f"{bundled_data_path(self)}/chupalla/wine.png", mode="r").convert(
-            "RGBA"
-        )
-        empanada = Image.open(f"{bundled_data_path(self)}/chupalla/empanada.png", mode="r").convert(
-            "RGBA"
-        )
+        chupallamask = Image.open(
+            f"{bundled_data_path(self)}/chupalla/chupalla_mask.png", mode="r"
+        ).convert("RGBA")
+        banderamask = Image.open(
+            f"{bundled_data_path(self)}/chupalla/fondo_mask.png", mode="r"
+        ).convert("RGBA")
+        wine = Image.open(f"{bundled_data_path(self)}/chupalla/wine.png", mode="r").convert("RGBA")
+        empanada = Image.open(
+            f"{bundled_data_path(self)}/chupalla/empanada.png", mode="r"
+        ).convert("RGBA")
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
@@ -2145,16 +2159,16 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "chupalla.png")
         fp.close()
         return _file
-    
+
     def gen_ameto(self, ctx, member_avatar, username):
         member_avatar = self.bytes_to_image(member_avatar, 600)
-        
+
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
         im = Image.new("RGBA", (915, 907), None)
-        ametomask = Image.open(f"{bundled_data_path(self)}/ameto/ameto_mask.png", mode="r").convert(
-            "RGBA"
-        )
+        ametomask = Image.open(
+            f"{bundled_data_path(self)}/ameto/ameto_mask.png", mode="r"
+        ).convert("RGBA")
         im.paste(member_avatar, (150, 0), member_avatar)
         im.paste(ametomask, (0, 0), ametomask)
         ametomask.close()
@@ -2175,12 +2189,36 @@ class PfpImgen(commands.Cog):
             stroke_fill=(255, 29, 80),
         )
 
-
-
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "ameto.png")
+        fp.close()
+        return _file
+
+    def gen_discord(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 452)
+
+        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (1548, 1040), None)
+        discordmask = Image.open(
+            f"{bundled_data_path(self)}/discord/discord_mask_mask.png", mode="r"
+        ).convert("RGBA")
+
+        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+
+        im.paste(member_avatar, (523, 237), member_avatar)
+        im.paste(discordmask, (0, 0), discordmask)
+        discordmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "discord.png")
         fp.close()
         return _file
