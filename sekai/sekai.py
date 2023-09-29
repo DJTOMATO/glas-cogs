@@ -375,6 +375,7 @@ class Sekai(commands.Cog):
             "shiho",
             "shizuku",
             "tsukasa",
+            "airi",
         ]
 
         if character.lower() not in [name for name in arr]:
