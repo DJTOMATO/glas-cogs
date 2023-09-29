@@ -2198,14 +2198,14 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_discord(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 452)
+        member_avatar = self.bytes_to_image(member_avatar, 453)
 
         im = Image.new("RGBA", (1548, 1040), None)
         discordmask = Image.open(
             f"{bundled_data_path(self)}/discord/discord_mask.png", mode="r"
         ).convert("RGBA")
 
-        im.paste(member_avatar, (523, 237), member_avatar)
+        im.paste(member_avatar, (523, 235), member_avatar)
         im.paste(discordmask, (0, 0), discordmask)
         discordmask.close()
         member_avatar.close()
