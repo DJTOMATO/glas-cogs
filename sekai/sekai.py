@@ -15,20 +15,162 @@ from discord import SelectOption
 
 # Character list, will get updated
 characters = [
-    {"label": "Emu Otori", "description": "えむ 鳳", "image_path": "emu-01.png", "color": "ffc0cb"},
+    {
+        "label": "Airi Momoi",
+        "description": "愛莉 桃井",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157096390825103481/ari-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Akito Shinonome",
+        "description": "彰人 東雲",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157099741524533248/akito-01.png",
+        "color": "3e5981",
+    },
+    {
+        "label": "An Shiraishi",
+        "description": "杏 白石",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157100811780890674/an-01.png",
+        "color": "67AED4",
+    },
+    {
+        "label": "Emu Otori",
+        "description": "えむ 鳳",
+        "image_path": "https://cdn.discordapp.com/attachments/1157096154664796311/1157096231986790450/emu-01.png",
+        "color": "ffc0cb",
+    },
+    {
+        "label": "Ena Shinonome",
+        "description": "絵名 東雲",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157102189051904110/ena-01.png",
+        "color": "3a8d8d",
+    },
+    {
+        "label": "Haruka Kiritani",
+        "description": "桐谷 遥",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157102606427095140/haruka-01.png",
+        "color": "00b0ea",
+    },
+    {
+        "label": "Honami Mochizuki",
+        "description": "望月 穂波",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157107898355294258/honami-01.png",
+        "color": "00b0ea",
+    },
+    {
+        "label": "Ichika Hoshino",
+        "description": "星乃 一歌 ",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157103081713053706/ichika-01.png",
+        "color": "004680",
+    },
+    {
+        "label": "KAITO",
+        "description": "KAITO",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157103416468840448/kaito-01.png",
+        "color": "91bfcc",
+    },
+    {
+        "label": "Kanade Yoisaki",
+        "description": "宵崎 奏",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157108391118917652/kanade-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Kohane Azusawa",
+        "description": "小豆沢 こはね",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157103672564662283/kohane-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Len Kagamine",
+        "description": "鏡音 レン",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157105765732077660/len-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Luka Megurine",
+        "description": "巡音 ルカ",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157105978056134666/luka-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Mafuyu Asahina",
+        "description": "朝比奈 まふゆ",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157103672564662283/kohane-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "MEIKO",
+        "description": "MEIKO",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157108737945903164/meiko-01.png",
+        "color": "86cecb",
+    },
     {
         "label": "Miku Hatsune",
         "description": "ミク 初音",
-        "image_path": "miku-01.png",
+        "image_path": "https://cdn.discordapp.com/attachments/1157096154664796311/1157096311871508561/miku-01.png",
         "color": "86cecb",
     },
-    {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
-    # Placeholders
-    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
-    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
-    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
-    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
-    # {"label": "Airi Momoi", "description": "愛莉 桃井", "image_path": "ari-01.png", "color": "FF0000"},
+    {
+        "label": "Minori Hanasato",
+        "description": "花里 みのり",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157109076564647956/minori-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Mizuki Akiyama",
+        "description": "暁山 瑞希",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157109287898853448/mizuki-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Nene Kusanagi",
+        "description": "草薙 寧々",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157109308237025341/nene-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Rin Kagamine",
+        "description": "鏡音 リン",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110305038549132/rin-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Rui Kamishiro",
+        "description": "神代 類 ",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110362391445597/rui-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Saki Tenma",
+        "description": "天馬 咲希",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110525382107187/saki-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Shiho Hinomori",
+        "description": "日野森 志歩",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110605132603402/shiho-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Shizuku Hinomori",
+        "description": "日野森 雫",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110664360366090/shizuku-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Toya Aoyagi",
+        "description": "青柳 冬弥",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110742999375912/touya-01.png",
+        "color": "FF0000",
+    },
+    {
+        "label": "Tsukasa Tenma",
+        "description": "天馬 司",
+        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110757406802020/tsukasa-01.png",
+        "color": "FF0000",
+    },
 ]
 
 
@@ -46,7 +188,6 @@ class CharacterDropdown(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            # Obtains Character
             selected_character_value = interaction.data["values"][0]
             selected_character = next(
                 (
@@ -58,29 +199,19 @@ class CharacterDropdown(discord.ui.Select):
             )
             if selected_character is None:
                 return
-            # Grabs image for character
-            selected_character_image = discord.File(
-                f"{bundled_data_path(self)}/{selected_character['image_path']}"
-            )
-            # Embed updates
             self.embed.title = selected_character["label"]
             self.embed.description = selected_character["description"]
-            # Color Choser
+
             color = selected_character["color"]
-            # Color
             self.embed.color = discord.Color(int(color, 16))
-            self.embed.set_image(url=f"attachment://{selected_character['image_path']}")
-
-            # self.embed.set_image(selected_character_image) <= An error occurred: Embed.set_image() takes 1 positional argument but 2 were given
-
-            # Interaction Update?
+            self.embed.set_image(url=f"{selected_character['image_path']}")
+            self.embed.set_footer(
+                icon_url="https://bae.lena.moe/l9q3mnnat3i3.gif",
+                text="Originally made by Ayaka! Try it with !sekai",
+            )
             await interaction.response.edit_message(embed=self.embed, view=self.view)
-            # Edit message?
             await self.message.edit(embed=self.embed, view=self.view)
-            # Replies as new message after dropdown is chosen??
-            # await interaction.followup.send(file=selected_character_image, embed=self.embed)
         except Exception as e:
-            # Error report on the initial view/embed
             self.embed.description = f"An error occurred: {e}"
             await interaction.response.edit_message(embed=self.embed, view=self.view)
         except discord.errors.InteractionResponded:
@@ -110,10 +241,7 @@ class Sekai(commands.Cog):
     @commands.hybrid_command()
     async def characters(self, ctx):
         view = CharacterView(characters, self.embed, self.message)
-        if self.message is None:
-            self.message = await ctx.send(embed=self.embed, view=view)
-        else:
-            await self.message.edit(embed=self.embed, view=self.view)
+        self.message = await ctx.send(embed=self.embed, view=view)
 
     # Create sticker command
     @commands.bot_has_permissions(attach_files=True)
