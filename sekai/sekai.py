@@ -308,9 +308,9 @@ class Sekai(commands.Cog):
             # If no arguments are provided, send the command's help message
             await ctx.send_help(ctx.command)
         else:
-            await ctx.send(
-                f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
-            )
+            # await ctx.send(
+            #    f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
+            # )
             async with ctx.typing():
                 task = functools.partial(
                     self.gen_card,
