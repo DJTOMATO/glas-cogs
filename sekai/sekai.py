@@ -286,7 +286,7 @@ class Sekai(commands.Cog):
         ctx: commands.Context,
         character: commands.Range[str, 1, 8] = None,
         chara_face: commands.Range[int, 1, 20] = None,
-        text: typing.Optional[commands.Range[str, 1, 500]] = 0,
+        text: typing.Optional[str] = None,
         textx: typing.Optional[commands.Range[str, 1, 300]] = 0,
         texty: typing.Optional[commands.Range[str, 1, 300]] = 0,
         fontsize: typing.Optional[commands.Range[int, 1, 80]] = 0,
