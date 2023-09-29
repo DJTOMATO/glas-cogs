@@ -48,7 +48,7 @@
 
 ## Support
 
-**For support**, you can **find and ping me (dj_tomato) in [_#support_othercogs_](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
+**For support**, you can **find and ping me (dj*tomato) in [*#support*othercogs*](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
 
 ## Cogs List
 
@@ -56,15 +56,15 @@
 
 |    Name    | Description                                 |   Author   | d.py2 Compatible |
 | :--------: | ------------------------------------------- | :--------: | :--------------: |
+|   Sekai    | Generate Project Sekai Stickers!            |    Glas    |        ✅        |
 |  Ygocard   | Generate Yu-Gi-Oh Cards from users!         |    Glas    |        ✅        |
 |   NoArgs   | Cleans memes with ugly CDN arguments!       |    Glas    |        ✅        |
-|   Sekai    | Generate Project Sekai Stickers!            |    Glas    |        ✅        |
-|  Pokefuse  | Fusions Gen1 Pokemons                       |    Glas    |        ✅        |
-|  Movietar  | Make videos with avatars! (+10 vids!)       |    Glas    |        ✅        |
+|  Pokefuse  | Fusion Gen 1 Pokemon                        |    Glas    |        ✅        |
+|  Movietar  | Make videos with avatars!                   |    Glas    |        ✅        |
 | Watamelon  | Posts a random Watamelon image\*            |    Kuro    |        ✅        |
 |  PfpImgen  | Make images with avatars! (+23 new images!) | PhenoM4n4n |        ✅        |
-| Youwouldnt | You Wouldn't Steal a Car                    |    Glas    |        ✅        |
-|  Weeedcog  | comic cog, now with +1300 weeb images       |  dualmoon  |        ✅        |
+| Youwouldnt | You wouldn't steal a car                    |    Glas    |        ✅        |
+|  Weeedcog  | Comic cog, now with +1300 Weeb images       |  dualmoon  |        ✅        |
 |    Ogey    | Generates a random Ogey\*                   |    Kuro    |        ✅        |
 |    Fire    | New year fireworks                          | TrustyJaid |        ✅        |
 
@@ -79,4 +79,6 @@
 - [**npc203**](https://github.com/npc203/npc-cogs) for being a inspiration on Cog "making" (>) best son ever.
 - [**aikaterna**](https://github.com/aikaterna/aikaterna-cogs) for being an incredible and patient teacher. <3
 - [**AAA3A**](https://github.com/AAA3A-AAA3A/AAA3A-cogs) for aiding me with my spaghetti code past midnight. <3
+- [**Flame**](https://github.com/Flame442/FlameCogs) for teaching me night over night views and interactions!
+- [**Ayaka**](https://github.com/TheOriginalAyaka) for making Sekai stickers and inspiring me to make my own attempt!
 - **[Red Community](https://discord.gg/red)** for making the best Discord bot ever <3 Much love!.
