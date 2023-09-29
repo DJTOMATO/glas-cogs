@@ -2,7 +2,7 @@
     "author": [
         "luna"
     ],
-    "description": "Creates comics with random characters using a string of messages from a channel.",
+    "description": "Creates comics with random characters (+ 1300 new images) using a string of messages from a channel.",
     "disabled": false,
     "hidden": false,
     "install_msg": "Thanks for installing this cog! Please report any issues here: https://github.com/DJTOMATO/glas-cogs/issues. This cog comes with bundled data! Specifically, a library of images that are used as the actors in the generated comics.",

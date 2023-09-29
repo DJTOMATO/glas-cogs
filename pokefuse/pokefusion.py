@@ -26,7 +26,9 @@ class PokeFusion(commands.Cog):
         # Check Poke 1
         veri = await VerifyName(names, name1)
         if veri == False:
-            return await ctx.send(f"The pokemon {name1} does not exist, Please type it again.")
+            return await ctx.send(
+                f"The pokemon {name1} does not exist, Please type it again. \nRemember! Only Gen 1 Pokemons are available"
+            )
         else:
             id1 = 666
             # Initial check, WILL Get replaced anyways
@@ -43,7 +45,9 @@ class PokeFusion(commands.Cog):
             # Check Poke 2
             veri = await VerifyName(names, name2)
         if veri == False:
-            return await ctx.send(f"The pokemon {name2} does not exist, Please type it again.")
+            return await ctx.send(
+                f"The pokemon {name2} does not exist, Please type it again. \nRemember! Only Gen 1 Pokemons are available"
+            )
         else:
             id2 = 666
         try:
