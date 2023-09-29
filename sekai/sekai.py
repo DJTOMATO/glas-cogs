@@ -216,8 +216,6 @@ class CharacterDropdown(discord.ui.Select):
         self.characters = characters
         self.embed = embed
         self.message = message
-        # self.description = description
-        # self.color = color
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -260,7 +258,8 @@ class CharacterView(discord.ui.View):
 
 # The commands
 class Sekai(commands.Cog):
-    """Creates Sekai Sticker"""
+    """Creates Sekai Sticker
+    WONDERHOY"""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -293,13 +292,13 @@ class Sekai(commands.Cog):
         fontsize: typing.Optional[commands.Range[int, 1, 80]] = 0,
     ):
         """Make a Sekai sticker!
-        View all characters with `{ctx.prefix}characters`.
-        Simple Example:  f``{prefix}sekai emu 13 "Wonderhoy!"``
-        Ext Example: ``{prefix}sekai emu 13 "Wonderhoy!" 25 50 30``
+        View all characters with `[p]characters`.
+        Simple Example: ``[p]sekai emu 13 "Wonderhoy!"``
+        Ext Example: ``[p]sekai emu 13 "Wonderhoy!" 25 50 30``
         """
         if (
-            character == 0
-            and chara_face == 0
+            character == None
+            and chara_face == None
             and text == 0
             and textx == 0
             and texty == 0
