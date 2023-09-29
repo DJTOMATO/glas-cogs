@@ -418,6 +418,7 @@ class Sekai(commands.Cog):
         im = Image.new("RGBA", (widthh, height), None)
         colors = [
             {"name": "ari", "color": "FB8AAC"},
+            {"name": "airi", "color": "FB8AAC"},
             {"name": "akito", "color": "FF7722"},
             {"name": "an", "color": "00BADC"},
             {"name": "emu", "color": "FF66BB"},
@@ -459,7 +460,10 @@ class Sekai(commands.Cog):
         font = ImageFont.truetype(f"{bundled_data_path(self)}/ahoy.ttf", fontsize)
 
         # Calculate the maximum number of characters per line
-        max_chars_per_line = int((widthh - int(textx)) / fontsize) + 5
+        try:
+            max_chars_per_line = int((widthh - int(textx)) / fontsize) + 5
+        except ValueError:
+            return f'There was an error generating the sticker. \nDid you add "quotes" to the message?'
 
         # Wrap the text using textwrap module
         wrapped_text = textwrap.wrap(text, width=max_chars_per_line)
