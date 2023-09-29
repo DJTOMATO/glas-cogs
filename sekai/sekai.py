@@ -377,9 +377,11 @@ class Sekai(commands.Cog):
             "tsukasa",
             "airi",
         ]
-
-        if character.lower() not in [name for name in arr]:
-            character = "emu"
+        try:
+            if character.lower() not in [name for name in arr]:
+                character = "emu"
+        except AttributeError:
+            return f"Youre missing the sticker contents!. \n Type ``{ctx.prefix}help sekai`` for details"
         if chara_face == 0:
             chara_face = 1
         if character == 0:
