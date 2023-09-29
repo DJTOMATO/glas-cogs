@@ -378,7 +378,7 @@ class Sekai(commands.Cog):
             "tsukasa",
         ]
 
-        if character.lower() not in [name.lower() for name in arr]:
+        if character.lower() not in [name for name in arr]:
             character = "emu"
         if chara_face == 0:
             chara_face = 1
