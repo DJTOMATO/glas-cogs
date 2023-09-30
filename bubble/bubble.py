@@ -59,7 +59,9 @@ class BubbleCog(commands.Cog):
         # base canvas
         im = Image.new("RGBA", (420, 610), None)
 
-        cardmask = Image.open(f"{bundled_data_path(self)}/bubble.png", mode="r").convert("RGBA")
+        cardmask = Image.open(f"{bundled_data_path(self)}/bubble_mask.png", mode="r").convert(
+            "RGBA"
+        )
         # pasting the pfp
         im.paste(member_avatar, (51, 110), member_avatar)
 
