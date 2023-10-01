@@ -9,6 +9,7 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from redbot.core.data_manager import bundled_data_path
 import aiohttp
+from PIL import ImageChops
 
 
 class BubbleCog(commands.Cog):
@@ -80,30 +81,35 @@ class BubbleCog(commands.Cog):
         return image
 
     def gen_pic(self, ctx, avatar):
-        # base canvas
-        im = Image.new("RGBA", (512, 512), None)
-        cardmask = Image.open(f"{bundled_data_path(self)}/bubble_mask.png", mode="r").convert(
-            "RGBA"
-        )
-        # Resize cardmask to match the width of im
-        cardmask = cardmask.resize((im.width, im.height), Image.LANCZOS)
-        # Calculate the new position for the cardmask
-        mask_position = (0, -95)
-        # pasting the member avatar
-        avatar = self.bytes_to_image(avatar, 512)
-        im.paste(avatar, (0, 0))
+        # Load the bubble mask image
+        with Image.open(f"{bundled_data_path(self)}/bubble_mask.png") as cardmask:
+            cardmask = cardmask.convert("RGBA")
 
-        # pasting the cardmask as a mask
-        im.paste(cardmask, mask_position, mask=cardmask)
+            # Convert the avatar BytesIO object into a PIL.Image object
+            with Image.open(avatar) as avatar_img:
+                avatar_img = avatar_img.convert("RGBA")
 
-        # saving the final image
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
+                # Resize the bubble mask to match the size of the avatar image
+                cardmask = cardmask.resize(avatar_img.size, Image.LANCZOS)
 
-        # creating a Discord file object
-        _file = discord.File(fp, "card.png")
-        fp.close()
+                # Create a new image with transparent background
+                im = Image.new("RGBA", avatar_img.size, (0, 0, 0, 0))
 
-        return _file
+                # Calculate the new position for the bubble mask
+                mask_position = (0, -150)
+
+                # Invert the bubble mask
+                inverted_mask = ImageChops.invert(cardmask)
+
+                # Apply the inverted bubble mask as a mask on the new image
+                im.paste(avatar_img, (0, 0), mask=inverted_mask)
+
+                # Save the final image to a file
+                with BytesIO() as fp:
+                    im.save(fp, "PNG")
+                    fp.seek(0)
+
+                    # Create a Discord file object
+                    _file = discord.File(fp, "card.png")
+
+                return _file
