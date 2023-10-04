@@ -51,7 +51,8 @@ class BubbleCog(commands.Cog):
     @commands.command(aliases=["bubble"], cooldown_after_parsing=True)
     async def speech(self, ctx: commands.Context, member: discord.Member = None):
         """Make a Speech bubble..."""
-        """Example: !bubble @User"""
+        """Example: !bubble @User/username"""
+        """Use it without mention to grab last image/attachment in a channel."""
 
         if member:
             avatar = await self.get_avatar(member)
