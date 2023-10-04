@@ -827,6 +827,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def pretend(self, ctx, *, member: FuzzyMember = None):
+        """You become Essex..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_pretend, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def bill(self, ctx, *, member: FuzzyMember = None):
         """You become a billboard..."""
         if not member:
@@ -2215,5 +2232,35 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "discord.png")
+        fp.close()
+        return _file
+
+    def gen_pretend(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 350)
+
+        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (744, 609), None)
+        pretendmask = Image.open(
+            f"{bundled_data_path(self)}/pretend/pretend_mask.png", mode="r"
+        ).convert("RGBA")
+        blushmask = Image.open(
+            f"{bundled_data_path(self)}/pretend/blush_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (90, 107), member_avatar)
+
+        im.paste(blushmask, (126, 228), blushmask)
+        im.paste(pretendmask, (0, 0), pretendmask)
+
+        pretendmask.close()
+        blushmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "pretend.png")
         fp.close()
         return _file
