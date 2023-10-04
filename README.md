@@ -54,20 +54,20 @@
 
 ### Active Cogs
 
-|    Name    | Description                                         |                          Author                          | d.py2 Compatible |
-| :--------: | --------------------------------------------------- | :------------------------------------------------------: | :--------------: |
-|   Bubble   | Create the infamous bubble speech meme from a user! |                           Glas                           |        ✅        |
-|   Sekai    | Generate Project Sekai Stickers!                    |                           Glas                           |        ✅        |
-|  Ygocard   | Generate Yu-Gi-Oh Cards from users!                 |                           Glas                           |        ✅        |
-|   NoArgs   | Cleans memes with ugly CDN arguments!               |                           Glas                           |        ✅        |
-|  Pokefuse  | Fusion Gen 1 Pokemon                                |                           Glas                           |        ✅        |
-|  Movietar  | Make videos with avatars!                           |                           Glas                           |        ✅        |
-| Youwouldnt | You wouldn't steal a car                            |                           Glas                           |        ✅        |
-| Watamelon  | Posts a random Watamelon image\*                    |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
-|  PfpImgen  | Make images with avatars! (+23 new images!)         | [PhenoM4n4n](https://github.com/phenom4n4n/phen-cogs/)\* |        ✅        |
-|  Weeedcog  | Comic cog, now with +1300 Weeb images               |    [dualmoon](https://github.com/dualmoon/Cogs.v3)\*     |        ✅        |
-|    Ogey    | Generates a random Ogey\*                           |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
-|    Fire    | New year fireworks                                  | [TrustyJaid](https://github.com/TrustyJAID/Trusty-cogs/) |        ✅        |
+|    Name    | Description                                        |                          Author                          | d.py2 Compatible |
+| :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Bubble   | Create a bubble speech from users and attachments! |                           Glas                           |        ✅        |
+|   Sekai    | Generate Project Sekai Stickers!                   |                           Glas                           |        ✅        |
+|  Ygocard   | Generate Yu-Gi-Oh Cards from users!                |                           Glas                           |        ✅        |
+|   NoArgs   | Cleans memes with ugly CDN arguments!              |                           Glas                           |        ✅        |
+|  Pokefuse  | Fusion Gen 1 Pokemon                               |                           Glas                           |        ✅        |
+|  Movietar  | Make videos with avatars!                          |                           Glas                           |        ✅        |
+| Youwouldnt | You wouldn't steal a car                           |                           Glas                           |        ✅        |
+| Watamelon  | Posts a random Watamelon image\*                   |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
+|  PfpImgen  | Make images with avatars! (+23 new images!)        | [PhenoM4n4n](https://github.com/phenom4n4n/phen-cogs/)\* |        ✅        |
+|  Weeedcog  | Comic cog, now with +1300 Weeb images              |    [dualmoon](https://github.com/dualmoon/Cogs.v3)\*     |        ✅        |
+|    Ogey    | Generates a random Ogey\*                          |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
+|    Fire    | New year fireworks                                 | [TrustyJaid](https://github.com/TrustyJAID/Trusty-cogs/) |        ✅        |
 
 - \* (forked from)
 
