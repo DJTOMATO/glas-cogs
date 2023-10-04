@@ -25,8 +25,7 @@ class BubbleCog(commands.Cog):
         async for message in channel.history(limit=10):  # Adjust the limit as needed
             for attachment in message.attachments:
                 if any(
-                    ext in attachment.filename.lower()
-                    for ext in ("png", "jpg", "jpeg", "gif")
+                    ext in attachment.filename.lower() for ext in ("png", "jpg", "jpeg", "gif")
                 ):
                     return attachment.url
 
@@ -34,23 +33,20 @@ class BubbleCog(commands.Cog):
             for word in message.content.split():
                 if word.startswith(("http://", "https://")):
                     # Check if the URL contains a recognized image file extension
-                    if any(
-                        ext in word.lower() for ext in ("png", "jpg", "jpeg", "gif")
-                    ):
+                    if any(ext in word.lower() for ext in ("png", "jpg", "jpeg", "gif")):
                         return word
 
             # Check for a message containing "!bubble" and an image attachment
             if "!bubble" in message.content.lower() and message.attachments:
                 for attachment in message.attachments:
                     if any(
-                        ext in attachment.filename.lower()
-                        for ext in ("png", "jpg", "jpeg", "gif")
+                        ext in attachment.filename.lower() for ext in ("png", "jpg", "jpeg", "gif")
                     ):
                         return attachment.url
 
         return None
 
-    @commands.bot_has_permissions(attach_files=True)
+    @commands.bot_has_permissions(attach_files=True, manage_messages=True)  #
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=["bubble"], cooldown_after_parsing=True)
     async def speech(self, ctx: commands.Context, member: discord.Member = None):
@@ -78,6 +74,9 @@ class BubbleCog(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
+
+        # Delete the message of the user who called the command
+        await ctx.message.delete()
 
     async def generate_image(self, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
