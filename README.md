@@ -56,7 +56,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
-|   Stickbugged   | Get stick bugged lol with a new video! |                           [flare](https://github.com/flaree/Flare-Cogs)\*                            |     
+|   Stickbugged   | Get stick bugged lol with a new video! |                           [flare](https://github.com/flaree/Flare-Cogs)\*      |        ✅        |
 |   Bubble   | Create a bubble speech from users and attachments! |                           Glas                           |        ✅        |
 |   Sekai    | Generate Project Sekai Stickers!                   |                           Glas                           |        ✅        |
 |  Ygocard   | Generate Yu-Gi-Oh Cards from users!                |                           Glas                           |        ✅        |
