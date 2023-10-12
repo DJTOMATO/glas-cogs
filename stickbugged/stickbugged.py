@@ -80,8 +80,7 @@ class StickBugged(commands.Cog):
                 return await ctx.send("Timeout creating stickbug video.")
             except Exception as e:
                 log.exception("Error sending stick bugged video")
-                error_message = f"An error occurred during the creation of the stick bugged video: {str(e)}"
-                return await ctx.send(error_message)
+                return await ctx.send("You've forgot to mention someone silly.")
 
             fp = cog_data_path(self) / f"{ctx.message.id}stick.mp4"
             file = discord.File(str(fp), filename="stick.mp4")
