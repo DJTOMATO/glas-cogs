@@ -45,6 +45,8 @@ class StickBugged(commands.Cog):
             preset="superfast",
             verbose=False,
             logger=None,
+            codec="libx264",
+            audio_codec="aac",
             temp_audiofile=str(cog_data_path(self) / f"{id}stick.mp3"),
         )
         video.close()
