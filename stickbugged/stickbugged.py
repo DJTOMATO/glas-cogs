@@ -95,6 +95,7 @@ class StickBugged(commands.Cog):
                 return await ctx.send(error_message)
 
             fp = cog_data_path(self) / f"{ctx.message.id}stick2.mp4"
+            
             file = discord.File(str(fp), filename="stick2.mp4")
             try:
                 await ctx.send(files=[file])
