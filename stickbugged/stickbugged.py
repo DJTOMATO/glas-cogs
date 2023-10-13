@@ -85,8 +85,8 @@ class StickBugged(commands.Cog):
                 error_message = f"An error occurred during the creation of the stick bugged video: {str(e)} \n Try mentioning someone when using the command?"
                 return await ctx.send(error_message)
 
-            fp = cog_data_path(self) / f"{ctx.message.id}stick.mp4"
-            file = discord.File(str(fp), filename="stick.mp4")
+            fp = cog_data_path(self) / f"{ctx.message.id}stick2.mp4"
+            file = discord.File(str(fp), filename="stick.mp42")
             try:
                 await ctx.send(files=[file])
             except Exception as e:
