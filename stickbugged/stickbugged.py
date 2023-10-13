@@ -40,14 +40,14 @@ class StickBugged(commands.Cog):
         self._stickbug.lsd_scale = 0.35
         video = self._stickbug.video
         video.write_videofile(
-            str(cog_data_path(self)) + f"/{id}stick.mp4",
+            str(cog_data_path(self)) + f"/{id}stick2.mp4",
             threads=1,
             preset="superfast",
             verbose=False,
             logger=None,
             codec="libx264",
             audio_codec="aac",
-            temp_audiofile=str(cog_data_path(self) / f"{id}stick.mp4"),
+            temp_audiofile=str(cog_data_path(self) / f"{id}stick3.mp4"),
         )
         video.close()
         return
