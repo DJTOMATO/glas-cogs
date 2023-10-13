@@ -47,7 +47,7 @@ class StickBugged(commands.Cog):
             logger=None,
             codec="libx264",
             audio_codec="aac",
-            temp_audiofile=str(cog_data_path(self) / f"{id}stick.mp3"),
+            temp_audiofile=str(cog_data_path(self) / f"{id}stick.aac"),
         )
         video.close()
         return
