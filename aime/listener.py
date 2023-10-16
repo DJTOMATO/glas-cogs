@@ -25,12 +25,9 @@ class Listener(commands.Cog):
 
         # Schedule the image_check and process_images tasks
         self.image_check.start()
-        self.process_images.start()
-
 
     def cog_unload(self):
         self.image_check.cancel()
-        self.process_images.cancel()
 
     def load_linked_users_data(self):
         # Access the linked_users_data from the configuration
@@ -62,8 +59,6 @@ class Listener(commands.Cog):
         # Start the tasks when the bot is ready
         if not self.image_check.is_running():
             self.image_check.start()
-        if not self.process_images.is_running():
-            self.process_images.start()
 
     @commands.command()
     @commands.mod()
@@ -120,7 +115,7 @@ class Listener(commands.Cog):
             await ctx.send("Please set the image channel first using the set_channel command.")
         else:
             await ctx.send("Forcing image check...")
-            await self.process_images(ctx, channel_id)
+            await self.image_check()
 
     @tasks.loop(seconds=30)
     async def image_check(self):
@@ -140,22 +135,14 @@ class Listener(commands.Cog):
                 if filename not in self.posted_images and current_time - self.last_post_time >= self.rate_limit:
                     await self.post_image(channel, file_path, filename)
                     self.last_post_time = current_time
-    
-    @tasks.loop(seconds=30)
-    async def process_images(self):
-        current_time = time.time()
-
-        for filename in os.listdir(self.watch_folder):
-            if filename.endswith(('.jpg', '.jpeg', '.png', '.gif')):
-                file_path = os.path.join(self.watch_folder, filename)
-                await self.post_image(self.bot.get_channel(await self.config.channel_id()), file_path, filename)
-                self.last_post_time = current_time
+                    self.posted_images.add(filename)  # Add the filename to the set to avoid reposting
 
     async def post_image(self, channel, file_path, filename):
         linked_users_data = await self.config.linked_users_data()
 
         if filename in self.posted_images:
             return
+
 
         parts = filename.split("_")
         if len(parts) < 1:
@@ -189,6 +176,7 @@ class Listener(commands.Cog):
             shutil.move(file_path, new_path)
         except Exception as e:
             await channel.send(f"Failed to move the image to oldimages folder: {e}")
+
 
 
 
