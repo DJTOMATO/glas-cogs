@@ -1,0 +1,13 @@
+{
+    "name": "Artemis Image Poster",
+    "short": "For Aime Servers, do not use",
+    "description": "For Aime Servers, useless if you don't know it",
+    "install_msg": "Ogey",
+    "author": ["Glas"],
+    "tags": ["aime", "artemis"],
+    "hidden": true,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
