@@ -5,13 +5,13 @@ import shutil
 from redbot.core import Config, commands
 from discord.ext.commands import has_permissions
 import time
-
+import asyncio
 
 class Listener(commands.Cog):
     """Artemis Image Poster Service"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
-        self.watch_folder = 'REPLACEME'
+        self.watch_folder = '/mnt/hdd/data/artemis/images/'
         self.config = Config.get_conf(self, identifier="Artemis")
         self.config.register_global(channel_id=None)
         self.config.register_user(linked_users_data={})
@@ -24,7 +24,7 @@ class Listener(commands.Cog):
         self.bot.loop.create_task(self.load_linked_users_data())
 
         # Schedule the image_check and process_images tasks
-        self.image_check.start()
+
 
     def cog_unload(self):
         self.image_check.cancel()
@@ -40,7 +40,7 @@ class Listener(commands.Cog):
 
     async def load_linked_users_on_ready(self):
         # Load linked users when the bot is ready
-        await self.bot.wait_until_ready()
+        await self.bot.wait_until_red_ready()
         linked_users = self.linked_users
         if linked_users is None:
             linked_users = {}
@@ -48,7 +48,11 @@ class Listener(commands.Cog):
 
     async def cog_load(self):
         # Load linked users when the bot is ready
-        await self.bot.wait_until_ready()
+        asyncio.create_task(self.wait_for_bot_ready())
+
+
+    async def wait_for_bot_ready(self):
+        await self.bot.wait_until_red_ready()
         linked_users = self.linked_users
         if linked_users is None:
             linked_users = {}
@@ -169,7 +173,7 @@ class Listener(commands.Cog):
         await channel.send(file=_file)
 
         # Move the posted image to the oldimages folder
-        old_images_folder = 'REPLACEME'
+        old_images_folder = '/mnt/hdd/data/artemis/oldimages/'
         new_path = os.path.join(old_images_folder, filename)
 
         try:
