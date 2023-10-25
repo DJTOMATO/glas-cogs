@@ -96,7 +96,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
-    async def heart(self, ctx, member: FuzzyMember = None):
+    async def heart(self, ctx, member: FuzzyMember = commands.Author):
         """Make a heartlocket, my beloved"""
         zip_template = f"{bundled_data_path(self) / 'templates' / 'heart-locket.zip'}"
         gif_output = cog_data_path(self) / "animations" / f"animation_{member.id}.gif"
@@ -104,7 +104,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
-    async def flag(self, ctx, member: FuzzyMember = None):
+    async def flag(self, ctx, member: FuzzyMember = commands.Author):
         """The best flag in the world"""
         zip_template = f"{bundled_data_path(self) / 'templates' / 'flag.zip'}"
 
@@ -115,7 +115,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
-    async def billboard(self, ctx, member: FuzzyMember = None):
+    async def billboard(self, ctx, member: FuzzyMember = commands.Author):
         """Don't miss it!"""
         zip_template = f"{bundled_data_path(self) / 'templates' / 'billboard-cityscape.zip'}"
 
@@ -180,3 +180,11 @@ class MakeSweet(commands.Cog):
     def cog_load(self):
         # Clean up when the cog is loaded initially
         self.cleanup_cog_data()
+        # Check and grant execute permissions to the reanimator script
+        reanimator_path = data_manager.bundled_data_path(self) / "reanimator"
+        self.check_and_grant_permissions(reanimator_path)
+
+    def check_and_grant_permissions(self, reanimator_path):
+        if not os.access(reanimator_path, os.X_OK):
+            # If the script doesn't have execute permissions, add them
+            os.chmod(reanimator_path, 0o755)  # Add execute permissions (rwx for owner, rx for group and others)
