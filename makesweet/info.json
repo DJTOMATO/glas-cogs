@@ -1,0 +1,13 @@
+{
+    "name": "MakeSweet!",
+    "short": "Generates awesome gifs!",
+    "description": "Generates awesome gifs!",
+    "install_msg": "Thanks for installing `makesweet` cog! Keep in mind you need to compile ``reanimator``by yourself! The version I include is not guaranteed to work on your machine https://github.com/paulfitz/makesweet/tree/master/src ",
+    "author": ["Glas"],
+    "tags": ["image", "heart", "meme"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
