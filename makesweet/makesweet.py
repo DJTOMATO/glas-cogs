@@ -23,7 +23,7 @@ class MakeSweet(commands.Cog):
        
         # If Heartlocked is used, create the text to be used as second image
         if "heart-locket.zip" in zip_template:
-            text_image = self.create_text_image(f"    {user.name} \n my beloved")
+            text_image = self.create_text_image(f"    {user.name} \n   my beloved")
             temp_text_dir = data_manager.cog_data_path(self) / "text_images"
             temp_text_dir.mkdir(parents=True, exist_ok=True)  # Create the directory if it doesn't exist
 
