@@ -926,26 +926,26 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def petpet(self, ctx: commands.Context, member: FuzzyMember = None):
-        """petpet someone"""
-        member = member or ctx.author
-        async with ctx.typing():
-            params = {"avatar": member.display_avatar.replace(format="png").url}
-            url = "https://api.popcat.xyz/pet"
-            async with self.session.get(url, params=params) as resp:
-                if resp.status != 200:
-                    return await ctx.send(
-                        "An error occurred while generating this image. Try again later."
-                    )
-                image = await resp.read()
-            fp = BytesIO(image)
-            fp.seek(0)
-            file = discord.File(fp, "petpet.gif")
-            fp.close()
-        await ctx.send(file=file)
+    # @commands.bot_has_permissions(attach_files=True)
+    # @commands.cooldown(1, 10, commands.BucketType.user)
+    # @commands.command(cooldown_after_parsing=True)
+    # async def petpet(self, ctx: commands.Context, member: FuzzyMember = None):
+    #     """petpet someone"""
+    #     member = member or ctx.author
+    #     async with ctx.typing():
+    #         params = {"avatar": member.display_avatar.replace(format="png").url}
+    #         url = "https://api.popcat.xyz/pet"
+    #         async with self.session.get(url, params=params) as resp:
+    #             if resp.status != 200:
+    #                 return await ctx.send(
+    #                     "An error occurred while generating this image. Try again later."
+    #                 )
+    #             image = await resp.read()
+    #         fp = BytesIO(image)
+    #         fp.seek(0)
+    #         file = discord.File(fp, "petpet.gif")
+    #         fp.close()
+    #     await ctx.send(file=file)
 
     async def generate_image(self, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)
