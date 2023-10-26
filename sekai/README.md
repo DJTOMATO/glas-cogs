@@ -2,7 +2,7 @@
 
 Creates Sekai Sticker<br/>WONDERHOY
 
-https://bae.lena.moe/0KL3pT3ioAIA.png
+![Wonderhoy!](https://bae.lena.moe/0KL3pT3ioAIA.png)
 
 # characters (Hybrid Command)
  - Usage: `[p]characters `
