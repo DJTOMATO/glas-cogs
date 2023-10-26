@@ -11,7 +11,7 @@
         "stickbugged"
     ],
     "requirements": [
-        "git+https://github.com/DJTOMATO/get-stick-bugged-lol"
+        "git+https://github.com/DJTOMATO/get-stick-bugged-lol", "Pillow==9.5.0"
     ],
     "min_bot_version": "3.5.0",
     "hidden": false
