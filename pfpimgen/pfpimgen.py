@@ -30,7 +30,7 @@ from typing import Literal, Optional
 
 import aiohttp
 import discord
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
 import numpy as np
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -943,6 +943,23 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def honesty(self, ctx, *, member: FuzzyMember = None):
+        """Quite incredible..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_honesty, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     # @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user)
     # @commands.command(cooldown_after_parsing=True)
@@ -1385,6 +1402,53 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "idiot.png")
         fp.close()
         return _file
+    
+
+
+    # Your function definition
+    def gen_honesty(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 400)
+        member_avatar = member_avatar.resize((200, 800))
+        im = Image.new("RGBA", (645, 341), None)
+        im2 = Image.new("RGBA", (645, 341), None)
+        
+        step1 = Image.open(
+            f"{bundled_data_path(self)}/honesty/frame_0.png", mode="r"
+        ).convert("RGBA")
+        
+        step2 = Image.open(
+            f"{bundled_data_path(self)}/honesty/frame_1.png", mode="r"
+        ).convert("RGBA")
+        
+        im.paste(step1, (0, 0), step1)
+        im.paste(member_avatar, (450, -300), member_avatar)
+
+        im2.paste(step1, (0, 0), step1)
+        im2.paste(member_avatar, (450, -300), member_avatar)
+        im2.paste(step2, (0, 0), step2)
+
+        # Create a list of frames
+        frames = [im, im2]
+
+        # Create a BytesIO object to hold the GIF
+        gif_data = BytesIO()
+
+        # Create a GIF from the frames
+        frames[0].save(
+            gif_data,
+            save_all=True,
+            append_images=frames[1:],
+            format="GIF",
+            duration=50,  # Adjust the duration (in milliseconds) as needed
+            loop=0  # Set loop to 0 for an infinite loop
+        )
+
+        gif_data.seek(0)
+
+        _file = discord.File(gif_data, "honesty.gif")
+
+        return _file
+
 
     def gen_you(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 130)
