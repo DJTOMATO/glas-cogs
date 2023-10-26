@@ -946,14 +946,14 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def honesty(self, ctx, *, member: FuzzyMember = None):
+    async def honestly(self, ctx, *, member: FuzzyMember = None):
         """Quite incredible..."""
         if not member:
             member = ctx.author
 
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_honesty, ctx, avatar)
+            task = functools.partial(self.gen_honestly, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -1406,7 +1406,7 @@ class PfpImgen(commands.Cog):
 
 
     # Your function definition
-    def gen_honesty(self, ctx, member_avatar):
+    def gen_honestly(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 400)
         member_avatar = member_avatar.resize((200, 800))
         im = Image.new("RGBA", (645, 341), None)
