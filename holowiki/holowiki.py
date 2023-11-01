@@ -216,13 +216,11 @@ class HoloWiki(commands.Cog):
                 label=label,
                 custom_id=f"image_button_{count}",
             )
-            button.callback = lambda i, u=image[1], e=emb: self.callback_wrapper(self, i, u, e)
+            button.callback = lambda i, u=image[1], e=emb: callback(self, i, u, e)
             count += 1
             view.add_item(button)
         await ctx.send(embed=emb, view=view)
 
-    async def callback_wrapper(ctx, self, i, u, e):
-        await callback(self, i, u, e) if await callback(self, i, u, e) else await ctx.send(error=e)
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)

@@ -28,7 +28,7 @@ async def on_error(self, interaction, error, item):
 async def callback(self, interaction: discord.Interaction, image_url: str, embed: discord.Embed):
     emb = embed
     emb.set_image(url=image_url)
-    await interaction.message.edit(embed=emb)
+    await interaction.response.edit_message(embed=emb)
     
 
 def cleanhtml(raw_html):
