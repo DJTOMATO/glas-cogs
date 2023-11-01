@@ -1,16 +1,15 @@
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
-import aiohttp
+#Cool Kids don't use request
+import aiohttp 
+#Thanks Flame!
 import discord
 from redbot.core import commands
 from redbot.core import commands, data_manager
 from .functions import search, import_json_file, callback, get_emoji_by_iurl, extract_label, on_error
-
 import logging
-
-
 import re
-
+#rrat
 class YourView(discord.ui.View):
     def __init__(self):
         super().__init__()
@@ -216,6 +215,7 @@ class HoloWiki(commands.Cog):
                 label=label,
                 custom_id=f"image_button_{count}",
             )
+            #Thanks Flame!
             button.callback = lambda i, u=image[1], e=emb: callback(self, i, u, e)
             count += 1
             view.add_item(button)
