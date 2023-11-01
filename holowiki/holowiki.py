@@ -100,11 +100,8 @@ class HoloWiki(commands.Cog):
                     elif key == "Age" and "years old" not in td_element.text:
                         value = "Unknown"
                     elif key == "Birthday":
-                        if '[3]' in td_element.text:
-                            td_element = soup.select_one("#mw-content-text > div.mw-parser-output > table.infobox > tbody > tr:nth-child(17) > td")
-                            value = td_element.text
-                            #stripe [3] from value
-                            value = value.replace('[3]', '')
+                        hashtag = td_element.text
+                        value = re.sub(r'\[\d+\]', '', td_element.text)
 
                     elif key == "Twitter Spaces":
                         hashtag = td_element.find("a").text.strip()
@@ -150,7 +147,9 @@ class HoloWiki(commands.Cog):
             url=entry['url'],
         )
         emb.add_field(name='Japanese Name', value=data['Japanese Name'])
-        emb.add_field(name='Debut Date', value=data['Debut Date'])
+
+        if 'Debut Date' in data:
+            emb.add_field(name='Debut Date', value=data.get('Debut Date', 'N/A'))
         if 'Member of' in data:
             emb.add_field(name='Member of', value=data.get('Member of', 'N/A'))
         if 'Fan Name' in data:
@@ -197,9 +196,13 @@ class HoloWiki(commands.Cog):
                     elif '_Signature' in image['src']:
                         i = "https:" + image['src']
                         images.append(i)
-                    elif '_YouTube_Profile_Picture' in image['src']:
+                    elif '_YouTube_Profile_Picture' in image['src'] and 'DOVA-SYNDROME' not in image['src']:
                         i = "https:" + image['src']
                         images.append(i)
+                    elif 'Yagoo' in image['src']:
+                        i = "https:" + image['src']
+                        images.append(i)
+
 
         
         baseimage = images[0]
@@ -247,15 +250,15 @@ class HoloWiki(commands.Cog):
             resultlist = "- " + "\n- ".join(names)
             number = len(result)
             await ctx.send(f"{number} __results found, try again with a more precise name__: \n {resultlist} \n\n **Remember you can see the whole list typing** ``!hololist``")
-        if len(result) == 0:
-            
+        if len(result) == 0: 
             await ctx.send("No results found, try again with a more precise name.")
-        entry = result[0]
-        
-        iurl = entry['url'].replace("https://hololive.wiki/wiki/", "")
-        
-        url = entry['url']
-        await self.parse(ctx, entry, url, iurl)
+        else:   
+            entry = result[0]
+            
+            iurl = entry['url'].replace("https://hololive.wiki/wiki/", "")
+            
+            url = entry['url']
+            await self.parse(ctx, entry, url, iurl)
 
 
     @commands.command()

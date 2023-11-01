@@ -51,6 +51,9 @@ async def extract_label(self, url):
     elif '3D Model' in file_name:
         label = '3D Model'
         number = re.search(r'(\d+)(?=[\d]*\.(png|jpg))', file_name)
+    elif 'Yagoo' in file_name:
+        label = 'Yagoo'
+        number = re.search(r'(\d+)(?=[\d]*\.(png|jpg))', file_name)
     elif 'Signature' in file_name:
         label = 'Signature'
         number = None
