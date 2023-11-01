@@ -28,6 +28,7 @@ async def on_error(self, interaction, error, item):
 async def callback(self, interaction: discord.Interaction, image_url: str, embed: discord.Embed):
     emb = embed
     emb.set_image(url=image_url)
+    #Thanks Flame!!
     await interaction.response.edit_message(embed=emb)
     
 
@@ -40,7 +41,7 @@ async def extract_label(self, url):
   
     file_name = url.split('/')[-1]
     file_name = file_name.replace('_', ' ')
-    
+
     if 'Portrait' in file_name and 'Portrait 3D' not in file_name:
         label = 'Portrait'
         number = re.search(r'(\d+)(?=[\d]*\.(png|jpg))', file_name)
@@ -55,6 +56,9 @@ async def extract_label(self, url):
         number = None
     elif 'Alternative' in file_name:
         label = 'Alternative Costume'
+        number = None
+    elif 'YouTube Profile Picture' in file_name:
+        label = 'YouTube Profile Picture'
         number = None
     else:
         label = None

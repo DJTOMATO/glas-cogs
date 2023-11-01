@@ -99,7 +99,13 @@ class HoloWiki(commands.Cog):
                         value = f"{hashtag}"
                     elif key == "Age" and "years old" not in td_element.text:
                         value = "Unknown"
-                    
+                    elif key == "Birthday":
+                        if '[3]' in td_element.text:
+                            td_element = soup.select_one("#mw-content-text > div.mw-parser-output > table.infobox > tbody > tr:nth-child(17) > td")
+                            value = td_element.text
+                            #stripe [3] from value
+                            value = value.replace('[3]', '')
+
                     elif key == "Twitter Spaces":
                         hashtag = td_element.find("a").text.strip()
                         value = f"[{hashtag}](https://twitter.com/hashtag/{hashtag})"
@@ -112,7 +118,7 @@ class HoloWiki(commands.Cog):
                     elif key == "English":
                         if 'cite_note' in td_element.text:
                             td_element = soup.select_one("#mw-content-text > div.mw-parser-output > table.infobox > tbody > tr:nth-child(35) > td")
-                            await ctx.send(td_element)
+                            #await ctx.send(td_element)
                             value = td_element
                         else:
                             value = f"[{hashtag}](https://twitter.com/hashtag/{hashtag})"
@@ -145,15 +151,20 @@ class HoloWiki(commands.Cog):
         )
         emb.add_field(name='Japanese Name', value=data['Japanese Name'])
         emb.add_field(name='Debut Date', value=data['Debut Date'])
-        emb.add_field(name='Member of', value=data['Member of'])
-        emb.add_field(name='Fan Name', value=data['Fan Name'])
+        if 'Member of' in data:
+            emb.add_field(name='Member of', value=data.get('Member of', 'N/A'))
+        if 'Fan Name' in data:
+            emb.add_field(name='Fan Name', value=data.get('Fan Name', 'N/A'))
+        
         emb.add_field(name='Birthday', value=data['Birthday'])
         if 'Age' in data:
             emb.add_field(name='Age', value=data['Age'])
         else:
             emb.add_field(name='Age', value="Unknown")
-        emb.add_field(name='Height', value=data['Height'])
-        emb.add_field(name='Nicknames', value=data['English'])
+        if 'Height' in data:
+            emb.add_field(name='Height', value=data.get('Height', 'N/A'))
+        if 'English' in data:
+            emb.add_field(name='Nicknames', value=data.get('English', 'N/A'))
         values = []
         if 'Twitter' in data:
             values.append(data['Twitter'])
@@ -186,8 +197,11 @@ class HoloWiki(commands.Cog):
                     elif '_Signature' in image['src']:
                         i = "https:" + image['src']
                         images.append(i)
+                    elif '_YouTube_Profile_Picture' in image['src']:
+                        i = "https:" + image['src']
+                        images.append(i)
 
-            
+        
         baseimage = images[0]
         pattern = r'\/(\d+)px'
         fixedimages = []
@@ -227,6 +241,15 @@ class HoloWiki(commands.Cog):
     async def holo(self, ctx, chuuba):
         """Search a VTuber"""
         result = search(self.chuubas, chuuba)
+
+        if len(result) > 1:
+            names = [item['Name'] for item in result]
+            resultlist = "- " + "\n- ".join(names)
+            number = len(result)
+            await ctx.send(f"{number} __results found, try again with a more precise name__: \n {resultlist} \n\n **Remember you can see the whole list typing** ``!hololist``")
+        if len(result) == 0:
+            
+            await ctx.send("No results found, try again with a more precise name.")
         entry = result[0]
         
         iurl = entry['url'].replace("https://hololive.wiki/wiki/", "")
