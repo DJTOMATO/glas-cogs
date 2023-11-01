@@ -1,0 +1,622 @@
+[{
+        "Name": "Tokino Sora",
+        "Category": "Hololive 0th gen",
+        "url": "https://hololive.wiki/wiki/Tokino_Sora",
+        "emoji": "\ud83d\udc3b "
+    }, {
+        "Name": "Roboco",
+        "Category": "Hololive 0th gen",
+        "url": "https://hololive.wiki/wiki/Roboco",
+        "emoji": "\ud83e\udd16 "
+    }, {
+        "Name": "Sakura Miko",
+        "Category": "Hololive 0th gen",
+        "url": "https://hololive.wiki/wiki/Sakura_Miko",
+        "emoji": "\ud83c\udf38 "
+    }, {
+        "Name": "Hoshimachi Suisei",
+        "Category": "Hololive 0th gen",
+        "url": "https://hololive.wiki/wiki/Hoshimachi_Suisei",
+        "emoji": "\u2604\ufe0f "
+    }, {
+        "Name": "AZKi",
+        "Category": "Hololive 0th gen",
+        "url": "https://hololive.wiki/wiki/AZKi",
+        "emoji": "\u2692\ufe0f "
+    }, {
+        "Name": "Yozora Mel",
+        "Category": "Hololive 1st gen",
+        "url": "https://hololive.wiki/wiki/Yozora_Mel",
+        "emoji": "\ud83c\udf1f "
+    }, {
+        "Name": "Shirakami Fubuki",
+        "Category": "Hololive 1st gen",
+        "url": "https://hololive.wiki/wiki/Shirakami_Fubuki",
+        "emoji": "\ud83c\udf3d "
+    }, {
+        "Name": "Natsuiro Matsuri",
+        "Category": "Hololive 1st gen",
+        "url": "https://hololive.wiki/wiki/Natsuiro_Matsuri",
+        "emoji": "\ud83c\udfee "
+    }, {
+        "Name": "Aki Rosenthal",
+        "Category": "Hololive 1st gen",
+        "url": "https://hololive.wiki/wiki/Aki_Rosenthal",
+        "emoji": "\ud83c\udf4e "
+    }, {
+        "Name": "Akai Haato",
+        "Category": "Hololive 1st gen",
+        "url": "https://hololive.wiki/wiki/Akai_Haato",
+        "emoji": "\u1F525"
+    }, {
+        "Name": "Minato Aqua",
+        "Category": "Hololive 2nd gen",
+        "url": "https://hololive.wiki/wiki/Minato_Aqua",
+        "emoji": "\u2693 "
+    }, {
+        "Name": "Murasaki Shion",
+        "Category": "Hololive 2nd gen",
+        "url": "https://hololive.wiki/wiki/Murasaki_Shion",
+        "emoji": "\ud83c\udf19 "
+    }, {
+        "Name": "Nakiri Ayame",
+        "Category": "Hololive 2nd gen",
+        "url": "https://hololive.wiki/wiki/Nakiri_Ayame",
+        "emoji": "\ud83d\ude08 "
+    }, {
+        "Name": "Yuzuki Choco",
+        "Category": "Hololive 2nd gen",
+        "url": "https://hololive.wiki/wiki/Yuzuki_Choco",
+        "emoji": "\ud83d\udc8b "
+    }, {
+        "Name": "Oozora Subaru",
+        "Category": "Hololive 2nd gen",
+        "url": "https://hololive.wiki/wiki/Oozora_Subaru",
+        "emoji": "\ud83d\ude91 "
+    }, {
+        "Name": "Shirakami Fubuki",
+        "Category": "Hololive Gamers",
+        "url": "https://hololive.wiki/wiki/Shirakami_Fubuki",
+        "emoji": "\ud83c\udf3d "
+    }, {
+        "Name": "Ookami Mio",
+        "Category": "Hololive Gamers",
+        "url": "https://hololive.wiki/wiki/Ookami_Mio",
+        "emoji": "\ud83c\udf32 "
+    }, {
+        "Name": "Nekomata Okayu",
+        "Category": "Hololive Gamers",
+        "url": "https://hololive.wiki/wiki/Nekomata_Okayu",
+        "emoji": "\ud83c\udf59 "
+    }, {
+        "Name": "Inugami Korone",
+        "Category": "Hololive Gamers",
+        "url": "https://hololive.wiki/wiki/Inugami_Korone",
+        "emoji": "\ud83e\udd50 "
+    }, {
+        "Name": "Usada Pekora",
+        "Category": "Hololive 3rd gen",
+        "url": "https://hololive.wiki/wiki/Usada_Pekora",
+        "emoji": "\ud83d\udc6f "
+    }, {
+        "Name": "Shiranui Flare",
+        "Category": "Hololive 3rd gen",
+        "url": "https://hololive.wiki/wiki/Shiranui_Flare",
+        "emoji": "\ud83d\udd25 "
+    }, {
+        "Name": "Shirogane Noel",
+        "Category": "Hololive 3rd gen",
+        "url": "https://hololive.wiki/wiki/Shirogane_Noel",
+        "emoji": "\u2694\ufe0f "
+    }, {
+        "Name": "Houshou Marine",
+        "Category": "Hololive 3rd gen",
+        "url": "https://hololive.wiki/wiki/Houshou_Marine",
+        "emoji": "\ud83c\udff4\u200d\u2620\ufe0f "
+    }, {
+        "Name": "Amane Kanata",
+        "Category": "Hololive 4th gen",
+        "url": "https://hololive.wiki/wiki/Amane_Kanata",
+        "emoji": "\ud83d\udcab "
+    }, {
+        "Name": "Tsunomaki Watame",
+        "Category": "Hololive 4th gen",
+        "url": "https://hololive.wiki/wiki/Tsunomaki_Watame",
+        "emoji": "\ud83d\udc0f "
+    }, {
+        "Name": "Tokoyami Towa",
+        "Category": "Hololive 4th gen",
+        "url": "https://hololive.wiki/wiki/Tokoyami_Towa",
+        "emoji": "\ud83d\udc7e "
+    }, {
+        "Name": "Himemori Luna",
+        "Category": "Hololive 4th gen",
+        "url": "https://hololive.wiki/wiki/Himemori_Luna",
+        "emoji": "\ud83c\udf6c "
+    }, {
+        "Name": "Yukihana Lamy",
+        "Category": "Hololive 5th gen",
+        "url": "https://hololive.wiki/wiki/Yukihana_Lamy",
+        "emoji": "\u2603\ufe0f "
+    }, {
+        "Name": "Momosuzu Nene",
+        "Category": "Hololive 5th gen",
+        "url": "https://hololive.wiki/wiki/Momosuzu_Nene",
+        "emoji": "\ud83c\udf51\ud83e\udd5f"
+    }, {
+        "Name": "Shishiro Botan",
+        "Category": "Hololive 5th gen",
+        "url": "https://hololive.wiki/wiki/Shishiro_Botan",
+        "emoji": "\u264c "
+    }, {
+        "Name": "Omaru Polka",
+        "Category": "Hololive 5th gen",
+        "url": "https://hololive.wiki/wiki/Omaru_Polka",
+        "emoji": "\ud83c\udfaa "
+    }, {
+        "Name": "La+ Darknesss",
+        "Category": "Hololive 6th gen",
+        "url": "https://hololive.wiki/wiki/La%2B_Darknesss",
+        "emoji": "\ud83d\udef8 \ud83d\udc9c "
+    }, {
+        "Name": "Takane Lui",
+        "Category": "Hololive 6th gen",
+        "url": "https://hololive.wiki/wiki/Takane_Lui",
+        "emoji": "\ud83e\udd40 "
+    }, {
+        "Name": "Hakui Koyori",
+        "Category": "Hololive 6th gen",
+        "url": "https://hololive.wiki/wiki/Hakui_Koyori",
+        "emoji": "\ud83e\uddea "
+    }, {
+        "Name": "Sakamata Chloe",
+        "Category": "Hololive 6th gen",
+        "url": "https://hololive.wiki/wiki/Sakamata_Chloe",
+        "emoji": "\ud83c\udfa3 "
+    }, {
+        "Name": "Kazama Iroha",
+        "Category": "Hololive 6th gen",
+        "url": "https://hololive.wiki/wiki/Kazama_Iroha",
+        "emoji": "\ud83c\udf43 "
+    }, {
+        "Name": "Hanasaki Miyabi",
+        "Category": "Holostars 1st gen",
+        "url": "https://hololive.wiki/wiki/Hanasaki_Miyabi",
+        "emoji": "\ud83c\udf3a "
+    }, {
+        "Name": "Kanade Izuru",
+        "Category": "Holostars 1st gen",
+        "url": "https://hololive.wiki/wiki/Kanade_Izuru",
+        "emoji": "\ud83c\udfb8 "
+    }, {
+        "Name": "Arurandeisu",
+        "Category": "Holostars 1st gen",
+        "url": "https://hololive.wiki/wiki/Arurandeisu",
+        "emoji": "\ud83c\udf55 "
+    }, {
+        "Name": "Rikkaroid",
+        "Category": "Holostars 1st gen",
+        "url": "https://hololive.wiki/wiki/Rikkaroid",
+        "emoji": "\u2699\ufe0f "
+    }, {
+        "Name": "Astel Leda",
+        "Category": "Holostars 2nd gen",
+        "url": "https://hololive.wiki/wiki/Astel_Leda",
+        "emoji": "\ud83c\udfad "
+    }, {
+        "Name": "Kishido Temma",
+        "Category": "Holostars 2nd gen",
+        "url": "https://hololive.wiki/wiki/Kishido_Temma",
+        "emoji": "\ud83e\udd94\ud83d\udca8 "
+    }, {
+        "Name": "Yukoku Roberu",
+        "Category": "Holostars 2nd gen",
+        "url": "https://hololive.wiki/wiki/Yukoku_Roberu",
+        "emoji": "\ud83c\udf77 "
+    }, {
+        "Name": "Kageyama Shien",
+        "Category": "Holostars 3rd gen",
+        "url": "https://hololive.wiki/wiki/Kageyama_Shien",
+        "emoji": "\ud83d\udfe3 "
+    }, {
+        "Name": "Aragami Oga",
+        "Category": "Holostars 3rd gen",
+        "url": "https://hololive.wiki/wiki/Aragami_Oga",
+        "emoji": "\ud83d\udc03 "
+    }, {
+        "Name": "Yatogami Fuma",
+        "Category": "Holostars UPROAR!!",
+        "url": "https://hololive.wiki/wiki/Yatogami_Fuma",
+        "emoji": "\ud83e\udd9d "
+    }, {
+        "Name": "Utsugi Uyu",
+        "Category": "Holostars UPROAR!!",
+        "url": "https://hololive.wiki/wiki/Utsugi_Uyu",
+        "emoji": "\ud83c\udccf "
+    }, {
+        "Name": "Hizaki Gamma",
+        "Category": "Holostars UPROAR!!",
+        "url": "https://hololive.wiki/wiki/Hizaki_Gamma",
+        "emoji": "\ud83d\udd8c "
+    }, {
+        "Name": "Minase Rio",
+        "Category": "Holostars UPROAR!!",
+        "url": "https://hololive.wiki/wiki/Minase_Rio",
+        "emoji": "\ud83d\udd6f "
+    }, {
+        "Name": "Ayunda Risu",
+        "Category": "Hololive ID 1st gen",
+        "url": "https://hololive.wiki/wiki/Ayunda_Risu",
+        "emoji": "\ud83d\udc3f "
+    }, {
+        "Name": "Moona Hoshinova",
+        "Category": "Hololive ID 1st gen",
+        "url": "https://hololive.wiki/wiki/Moona_Hoshinova",
+        "emoji": "\ud83d\udd2e "
+    }, {
+        "Name": "Airani Iofifteen",
+        "Category": "Hololive ID 1st gen",
+        "url": "https://hololive.wiki/wiki/Airani_Iofifteen",
+        "emoji": "\ud83c\udfa8 "
+    }, {
+        "Name": "Kureiji Ollie",
+        "Category": "Hololive ID 2nd gen",
+        "url": "https://hololive.wiki/wiki/Kureiji_Ollie",
+        "emoji": "\ud83e\udddf\u200d\u2640\ufe0f"
+    }, {
+        "Name": "Anya Melfissa",
+        "Category": "Hololive ID 2nd gen",
+        "url": "https://hololive.wiki/wiki/Anya_Melfissa",
+        "emoji": "\ud83c\udf42 "
+    }, {
+        "Name": "Pavolia Reine",
+        "Category": "Hololive ID 2nd gen",
+        "url": "https://hololive.wiki/wiki/Pavolia_Reine",
+        "emoji": "\ud83e\udd9a"
+    }, {
+        "Name": "Vestia Zeta",
+        "Category": "Hololive ID 3rd gen",
+        "url": "https://hololive.wiki/wiki/Vestia_Zeta",
+        "emoji": "\ud83d\udcdc "
+    }, {
+        "Name": "Kaela Kovalskia",
+        "Category": "Hololive ID 3rd gen",
+        "url": "https://hololive.wiki/wiki/Kaela_Kovalskia",
+        "emoji": "\ud83d\udd28 "
+    }, {
+        "Name": "Kobo Kanaeru",
+        "Category": "Hololive ID 3rd gen",
+        "url": "https://hololive.wiki/wiki/Kobo_Kanaeru",
+        "emoji": "\u2614 "
+    }, {
+        "Name": "Mori Calliope",
+        "Category": "Hololive EN -Myth-",
+        "url": "https://hololive.wiki/wiki/Mori_Calliope",
+        "emoji": "\ud83d\udc80"
+    }, {
+        "Name": "Takanashi Kiara",
+        "Category": "Hololive EN -Myth-",
+        "url": "https://hololive.wiki/wiki/Takanashi_Kiara",
+        "emoji": "\ud83d\udc14"
+    }, {
+        "Name": "Ninomae Ina'nis",
+        "Category": "Hololive EN -Myth-",
+        "url": "https://hololive.wiki/wiki/Ninomae_Ina%27nis",
+        "emoji": "\ud83d\udc19"
+    }, {
+        "Name": "Gawr Gura",
+        "Category": "Hololive EN -Myth-",
+        "url": "https://hololive.wiki/wiki/Gawr_Gura",
+        "emoji": "\ud83d\udd31"
+    }, {
+        "Name": "Watson Amelia",
+        "Category": "Hololive EN -Myth-",
+        "url": "https://hololive.wiki/wiki/Watson_Amelia",
+        "emoji": "\ud83d\udd0e \ud83d\udd0d"
+    }, {
+        "Name": "IRyS",
+        "Category": "Hololive EN -Promise-",
+        "url": "https://hololive.wiki/wiki/IRyS",
+        "emoji": "\ud83d\udc8e"
+    }, {
+        "Name": "Ceres Fauna",
+        "Category": "Hololive EN -Promise-",
+        "url": "https://hololive.wiki/wiki/Ceres_Fauna",
+        "emoji": "\ud83c\udf3f "
+    }, {
+        "Name": "Ouro Kronii",
+        "Category": "Hololive EN -Promise-",
+        "url": "https://hololive.wiki/wiki/Ouro_Kronii",
+        "emoji": "\u231b "
+    }, {
+        "Name": "Nanashi Mumei",
+        "Category": "Hololive EN -Promise-",
+        "url": "https://hololive.wiki/wiki/Nanashi_Mumei",
+        "emoji": "\ud83e\udeb6\ud83e\udd89"
+    }, {
+        "Name": "Hakos Baelz",
+        "Category": "Hololive EN -Promise-",
+        "url": "https://hololive.wiki/wiki/Hakos_Baelz",
+        "emoji": "\ud83c\udfb2 "
+    }, {
+        "Name": "Shiori Novella",
+        "Category": "Hololive EN -Advent-",
+        "url": "https://hololive.wiki/wiki/Shiori_Novella",
+        "emoji": "\ud83d\udc41\u200d\ud83d\udde8 "
+    }, {
+        "Name": "Koseki Bijou",
+        "Category": "Hololive EN -Advent-",
+        "url": "https://hololive.wiki/wiki/Koseki_Bijou",
+        "emoji": "\ud83d\uddff "
+    }, {
+        "Name": "Nerissa Ravencroft",
+        "Category": "Hololive EN -Advent-",
+        "url": "https://hololive.wiki/wiki/Nerissa_Ravencroft",
+        "emoji": "\ud83c\udfbc "
+    }, {
+        "Name": "Fuwawa Abyssgard",
+        "Category": "Hololive EN -Advent-",
+        "url": "https://hololive.wiki/wiki/Fuwawa_Abyssgard",
+        "emoji": "\ud83d\udc3e "
+    }, {
+        "Name": "Mococo Abyssgard",
+        "Category": "Hololive EN -Advent-",
+        "url": "https://hololive.wiki/wiki/Mococo_Abyssgard",
+        "emoji": "\ud83d\udc3e "
+    }, {
+        "Name": "Regis Altare",
+        "Category": "Holostars EN -Tempus-",
+        "url": "https://hololive.wiki/wiki/Regis_Altare",
+        "emoji": "\ud83c\udf87 "
+    }, {
+        "Name": "Axel Syrios",
+        "Category": "Holostars EN -Tempus-",
+        "url": "https://hololive.wiki/wiki/Axel_Syrios",
+        "emoji": "\u26d3\ufe0f "
+    }, {
+        "Name": "Gavis Bettel",
+        "Category": "Holostars EN -Tempus-",
+        "url": "https://hololive.wiki/wiki/Gavis_Bettel",
+        "emoji": "\ud83c\udfa9"
+    }, {
+        "Name": "Machina X Flayon",
+        "Category": "Holostars EN -Tempus-",
+        "url": "https://hololive.wiki/wiki/Machina_X_Flayon",
+        "emoji": "\ud83e\udeab"
+    }, {
+        "Name": "Banzoin Hakka",
+        "Category": "Holostars EN -Tempus-",
+        "url": "https://hololive.wiki/wiki/Banzoin_Hakka",
+        "emoji": "\ud83d\udd05"
+    }, {
+        "Name": "Josuiji Shinri",
+        "Category": "Holostars EN -Tempus-",
+        "url": "https://hololive.wiki/wiki/Josuiji_Shinri",
+        "emoji": "\ud83c\udff9"
+    }, {
+        "Name": "Hiodoshi Ao",
+        "Category": "Hololive DEV_IS ReGLOSS",
+        "url": "https://hololive.wiki/wiki/Hiodoshi_Ao",
+        "emoji": "\ud83d\udd8b\ufe0f "
+    }, {
+        "Name": "Otonose Kanade",
+        "Category": "Hololive DEV_IS ReGLOSS",
+        "url": "https://hololive.wiki/wiki/Otonose_Kanade",
+        "emoji": "\ud83c\udfb9\u2728 "
+    }, {
+        "Name": "Ichijou Ririka",
+        "Category": "Hololive DEV_IS ReGLOSS",
+        "url": "https://hololive.wiki/wiki/Ichijou_Ririka",
+        "emoji": "\ud83c\udf03 "
+    }, {
+        "Name": "Juufuutei Raden",
+        "Category": "Hololive DEV_IS ReGLOSS",
+        "url": "https://hololive.wiki/wiki/Juufuutei_Raden",
+        "emoji": "\ud83d\udc1a "
+    }, {
+        "Name": "Todoroki Hajime",
+        "Category": "Hololive DEV_IS ReGLOSS",
+        "url": "https://hololive.wiki/wiki/Todoroki_Hajime",
+        "emoji": "\ud83d\udc27\u26a1\ufe0f "
+    }, {
+        "Name": "YAGOO",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/YAGOO",
+        "emoji": ""
+    }, {
+        "Name": "Y\u016bjin A",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/Y%C5%ABjin_A",
+        "emoji": "\ud83d\udc53 "
+    }, {
+        "Name": "Enma",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/Enma",
+        "emoji": ""
+    }, {
+        "Name": "Jenma",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/Jenma",
+        "emoji": ""
+    }, {
+        "Name": "J-chad",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/J-chad",
+        "emoji": ""
+    }, {
+        "Name": "Henma",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/Henma",
+        "emoji": ""
+    }, {
+        "Name": "Harusaki Nodoka",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/Harusaki_Nodoka",
+        "emoji": "\ud83d\udcdd "
+    }, {
+        "Name": "M-chan",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/M-chan",
+        "emoji": ""
+    }, {
+        "Name": "Omega\u03b1",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/Omega%CE%B1",
+        "emoji": ""
+    }, {
+        "Name": "T-chan",
+        "Category": "Staff",
+        "url": "https://hololive.wiki/wiki/T-chan",
+        "emoji": ""
+    }, {
+        "Name": "Kagami Kira",
+        "Category": "OG/Alumni",
+        "url": "https://hololive.wiki/wiki/Kagami_Kira",
+        "emoji": "\ud83d\udc99 "
+    }, {
+        "Name": "Kiryu Coco",
+        "Category": "OG/Alumni",
+        "url": "https://hololive.wiki/wiki/Kiryu_Coco",
+        "emoji": "\ud83d\udc09 "
+    }, {
+        "Name": "Tsukumo Sana",
+        "Category": "OG/Alumni",
+        "url": "https://hololive.wiki/wiki/Tsukumo_Sana",
+        "emoji": "\ud83e\ude90 "
+    }, {
+        "Name": "Magni Dezmond",
+        "Category": "OG/Alumni",
+        "url": "https://hololive.wiki/wiki/Magni_Dezmond",
+        "emoji": "\ud83e\udde4 "
+    }, {
+        "Name": "Noir Vesper",
+        "Category": "OG/Alumni",
+        "url": "https://hololive.wiki/wiki/Noir_Vesper",
+        "emoji": "\ud83d\udcd7 "
+    }, {
+        "Name": "Ayamy",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Ayamy",
+        "emoji": ""
+    }, {
+        "Name": "Nagishiro Mito",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Nagishiro_Mito",
+        "emoji": ""
+    }, {
+        "Name": "rariemonn",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Rariemonn",
+        "emoji": ""
+    }, {
+        "Name": "Kagura Nana",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Kagura_Nana",
+        "emoji": "\ud83c\udf36\ufe0f"
+    }, {
+        "Name": "Shigure Ui",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Shigure_Ui",
+        "emoji": "\ud83c\udf02 "
+    }, {
+        "Name": "Yatsurugi",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Yatsurugi",
+        "emoji": ""
+    }, {
+        "Name": "lack",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Lack",
+        "emoji": "\u2615 "
+    }, {
+        "Name": "rurudo",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Rurudo",
+        "emoji": ""
+    }, {
+        "Name": "Nishizawa 5mm",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Nishizawa_5mm",
+        "emoji": ""
+    }, {
+        "Name": "Tomari",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Tomari",
+        "emoji": ""
+    }, {
+        "Name": "klaeia",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Klaeia",
+        "emoji": "\ud83c\udf40"
+    }, {
+        "Name": "Pochimaru",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Pochimaru",
+        "emoji": ""
+    }, {
+        "Name": "Aoi Nabi",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Aoi_Nabi",
+        "emoji": "\ud83e\udd8b"
+    }, {
+        "Name": "Yaman",
+        "Category": "others",
+        "url": "https://hololive.wiki/wiki/Yaman**",
+        "emoji": ""
+    }, {
+        "Name": "Hitomi Chris",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Hitomi_Chris",
+        "emoji": "\ud83c\udf30"
+    }, {
+        "Name": "Yakushiji Suzaku",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Yakushiji_Suzaku",
+        "emoji": "\ud83d\udc8a"
+    }, {
+        "Name": "Tsukishita Kaoru",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Tsukishita_Kaoru",
+        "emoji": "\ud83d\udc85 "
+    }, {
+        "Name": "Mano Aloe",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Mano_Aloe",
+        "emoji": "\ud83d\udc45 "
+    }, {
+        "Name": "Civia",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Civia",
+        "emoji": "\ud83c\udf19 \ud83e\udd84 "
+    }, {
+        "Name": "Artia",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Artia",
+        "emoji": "\u2744\ufe0f "
+    }, {
+        "Name": "Spade Echo",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Spade_Echo",
+        "emoji": "\ud83c\udf51 \u2660\ufe0f "
+    }, {
+        "Name": "Doris",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Doris",
+        "emoji": "\ud83d\udc1f "
+    }, {
+        "Name": "Yogiri",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Yogiri",
+        "emoji": "\ud83c\udf7c \ud83c\udfb8 "
+    }, {
+        "Name": "Rosalyn",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Rosalyn",
+        "emoji": "\ud83d\udcd6 "
+    }, {
+        "Name": "Uruha Rushia",
+        "Category": "Former Members",
+        "url": "https://hololive.wiki/wiki/Uruha_Rushia",
+        "emoji": "\ud83e\udd8b "
+    }
+]

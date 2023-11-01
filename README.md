@@ -56,6 +56,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
 |   MakeSweet   | Create amazing gifs with an avatar! |                           Glas                           |        ✅        |
 |   Stickbugged   | Get stick bugged lol with a new video! |                           [flare](https://github.com/flaree/Flare-Cogs)\*      |        ✅        |
 |   Bubble   | Create a bubble speech from users and attachments! |                           Glas                           |        ✅        |

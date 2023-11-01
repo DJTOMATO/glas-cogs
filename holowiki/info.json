@@ -1,0 +1,14 @@
+{
+    "name": "Hololive Wiki!",
+    "short": "Obtains data from Hololive.wiki!",
+    "description": "Hololive Wiki!",
+    "install_msg": "Thanks for installing `holowiki` cog!",
+    "author": ["Glas"],
+    "tags": ["Hololive", "Wiki", "Info"],
+    "hidden": false,
+    "disabled": false,
+    "requirements": ["unidecode"],
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
