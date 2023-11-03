@@ -141,12 +141,20 @@ class HoloWiki(commands.Cog):
             pree = get_emoji_by_iurl(self, iurl)    
         except:
             pree = ""
+        if 'English Name' in data:
+            title = data['English Name']
+        elif 'Japanese Name' in data:
+            title = data['Japanese Name']
+        else:
+            title = 'Report to dev error'
         emb = discord.Embed(
-            title=data['English Name'] + ' ' + pree,
-            description = f"**{data['greet']}** \n\n{data['bio']}",
+            title=title + ' ' + pree,
+            description=f"**{data['greet']}**\n\n{data['bio']}",
             url=entry['url'],
         )
-        emb.add_field(name='Japanese Name', value=data['Japanese Name'])
+        #if Japanese Name add otherwise don't
+        if 'Japanese Name' in data:
+            emb.add_field(name='Japanese Name', value=data['Japanese Name'])
 
         if 'Debut Date' in data:
             emb.add_field(name='Debut Date', value=data.get('Debut Date', 'N/A'))
@@ -154,8 +162,8 @@ class HoloWiki(commands.Cog):
             emb.add_field(name='Member of', value=data.get('Member of', 'N/A'))
         if 'Fan Name' in data:
             emb.add_field(name='Fan Name', value=data.get('Fan Name', 'N/A'))
-        
-        emb.add_field(name='Birthday', value=data['Birthday'])
+        if 'Birthday Name' in data:
+            emb.add_field(name='Birthday', value=data['Birthday'])
         if 'Age' in data:
             emb.add_field(name='Age', value=data['Age'])
         else:
@@ -199,6 +207,9 @@ class HoloWiki(commands.Cog):
                     elif '_YouTube_Profile_Picture' in image['src'] and 'DOVA-SYNDROME' not in image['src']:
                         i = "https:" + image['src']
                         images.append(i)
+                    elif '_Twitter_Profile_Picture' in image['src'] and 'DOVA-SYNDROME' not in image['src']:
+                        i = "https:" + image['src']
+                        images.append(i)
                     elif 'Yagoo' in image['src']:
                         i = "https:" + image['src']
                         images.append(i)
@@ -206,6 +217,11 @@ class HoloWiki(commands.Cog):
 
         
         baseimage = images[0]
+        if len(images) > 0:
+            baseimage = images[0]
+        else:
+            # Handle the case when the images list is empty
+            baseimage = "https://bae.lena.moe/H5qlcnEjgsma.png" 
         pattern = r'\/(\d+)px'
         fixedimages = []
 
@@ -222,20 +238,21 @@ class HoloWiki(commands.Cog):
         view = YourView()
         style = discord.ButtonStyle.gray
         count = 0
-
-        for image in enumerate(images):
-            style = discord.ButtonStyle.gray
-            label = image[1]
-            label = await extract_label(self, image[1])
-            button = discord.ui.Button(
-                style=style,
-                label=label,
-                custom_id=f"image_button_{count}",
-            )
-            #Thanks Flame!
-            button.callback = lambda i, u=image[1], e=emb: callback(self, i, u, e)
-            count += 1
-            view.add_item(button)
+        #if image none don't do below
+        if len(images) == 0:
+            for image in enumerate(images):
+                style = discord.ButtonStyle.gray
+                label = image[1]
+                label = await extract_label(self, image[1])
+                button = discord.ui.Button(
+                    style=style,
+                    label=label,
+                    custom_id=f"image_button_{count}",
+                )
+                #Thanks Flame!
+                button.callback = lambda i, u=image[1], e=emb: callback(self, i, u, e)
+                count += 1
+                view.add_item(button)
         await ctx.send(embed=emb, view=view)
 
 
