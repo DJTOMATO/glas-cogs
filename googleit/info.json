@@ -1,0 +1,13 @@
+{
+    "name": "Google it!",
+    "short": "For people who asks dumb questions.",
+    "description": "Alternate version of core lmgtfy",
+    "install_msg": "Thanks for installing `googleit` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["google", "lmgtfy", "fun"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
