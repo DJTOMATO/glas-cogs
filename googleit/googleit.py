@@ -11,7 +11,7 @@ class GoogleCog(commands.Cog):
         self.lmgtfy_endpoint = "https://lmgtfy.lena.moe"
 
     @commands.command()
-    async def googleit(self, ctx, option: str = None, *, value: str = None):
+    async def googleit(self, ctx, option: str = None, value: str = None, *args: str):
         """
         Google it!
 
