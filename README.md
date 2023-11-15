@@ -67,6 +67,7 @@
 |  Pokefuse  | Fusion Gen 1 Pokemon                               |                           Glas                           |        ✅        |
 |  Movietar  | Make videos with avatars!                          |                           Glas                           |        ✅        |
 | Youwouldnt | You wouldn't steal a car                           |                           Glas                           |        ✅        |
+| Anime  | Get info about anime characters, shows, staff, studio and so much more                           |                           TheDiscordHistorian                           |        ✅        |
 | Watamelon  | Posts a random Watamelon image\*                   |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
 |  PfpImgen  | Make images with avatars! (+23 new images!)        | [PhenoM4n4n](https://github.com/phenom4n4n/phen-cogs/)\* |        ✅        |
 |  Weeedcog  | Comic cog, now with +1300 Weeb images              |    [dualmoon](https://github.com/dualmoon/Cogs.v3)\*     |        ✅        |

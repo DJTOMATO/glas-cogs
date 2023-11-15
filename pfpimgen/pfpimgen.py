@@ -572,6 +572,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def kowone(self, ctx, *, member: FuzzyMember = None):
+        """Korone......"""
+        if not member:
+            member = ctx.author
+        username = member.display_name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_kowone, ctx, avatar, username)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def funado(self, ctx, *, member: FuzzyMember = None):
         """Estoy funado..."""
         if not member:
@@ -2341,6 +2358,45 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "discord.png")
         fp.close()
         return _file
+
+    def gen_kowone(self, ctx, member_avatar, username):
+        member_avatar = self.bytes_to_image(member_avatar, 260)
+
+        im = Image.new("RGBA", (244, 260), None)
+        kowonemask = Image.open(
+            f"{bundled_data_path(self)}/kowone/korone_mask.png", mode="r"
+        ).convert("RGBA")
+
+        
+        im.paste(member_avatar, (0, 0), member_avatar)
+        im.paste(kowonemask, (0, 0), kowonemask)
+        kowonemask.close()
+        member_avatar.close()
+        # text
+        text = username
+        text = text.lower()
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/Calibri.ttf", 25)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        canvas.text(
+            ((im.width - text_width) / 2, 223),
+            text,
+            font=font,
+            fill=(0, 0, 0),
+            align="center",
+            stroke_width=0,
+            stroke_fill=(0, 0, 0),
+        )
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "discord.png")
+        fp.close()
+        return _file
+
+
+
 
     def gen_pretend(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 350)
