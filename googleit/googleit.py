@@ -48,9 +48,13 @@ class GoogleCog(commands.Cog):
         em.set_image(url=random.choice(images))
         await ctx.send(embed=em)
 
+    @commands.command(name="set_endpoint")
+    @commands.is_owner()
     async def _set_endpoint(self, ctx, endpoint_value):
         self.lmgtfy_endpoint = endpoint_value
         await ctx.send(f"LMGTFY endpoint set to: {endpoint_value}")
 
+    @commands.command(name="show_endpoint")
+    @commands.is_owner()
     async def _display_endpoint(self, ctx):
         await ctx.send(f"Current LMGTFY endpoint: {self.lmgtfy_endpoint}")
