@@ -58,3 +58,4 @@ class GoogleCog(commands.Cog):
     @commands.is_owner()
     async def _display_endpoint(self, ctx):
         await ctx.send(f"Current LMGTFY endpoint: {self.lmgtfy_endpoint}")
+        await ctx.send(f"https://cog-creators.github.io/lmgtfy/search?q={search_terms}&btnK=Google+Search")
