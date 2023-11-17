@@ -8,7 +8,7 @@ import urllib.parse
 class GoogleCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.lmgtfy_endpoint = "https://lmgtfy.lena.moe"
+        self.lmgtfy_endpoint = "https://cog-creators.github.io"
 
     @commands.command()
     async def googleit(self, ctx, option: str = None, value: str = None, *args: str):
@@ -58,4 +58,3 @@ class GoogleCog(commands.Cog):
     @commands.is_owner()
     async def _display_endpoint(self, ctx):
         await ctx.send(f"Current LMGTFY endpoint: {self.lmgtfy_endpoint}")
-        await ctx.send(f"https://cog-creators.github.io/lmgtfy/search?q={search_terms}&btnK=Google+Search")
