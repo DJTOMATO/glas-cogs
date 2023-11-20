@@ -111,7 +111,7 @@ class Artemis(commands.Cog):
             await ctx.send("Invalid access code. Please check and try again.")
 
     @tasks.loop(seconds=30)
-    async def image_post_task(self, ctx):
+    async def image_post_task(self):
         print("Checking for images...")
         channel_id = await self.config.channel_id()
         if channel_id is None:
@@ -129,9 +129,7 @@ class Artemis(commands.Cog):
                     and current_time - self.last_post_time >= self.rate_limit
                 ):
                     channel_id = await self.config.channel_id()
-                    await self.listener_functions.process_image(
-                        self, ctx, channel_id, filename
-                    )
+                    await self.process_image(channel_id, filename)
                     self.last_post_time = current_time
                     self.posted_images.add(filename)
 
@@ -248,6 +246,77 @@ class Artemis(commands.Cog):
         else:
             await ctx.send("Forcing image check...")
             await self.image_post_task(self)
+
+    async def process_image(self, channel_id, filename):
+        channel = self.bot.get_channel(channel_id)
+        self.log.warning(f"Processing image for channel ID: {channel_id}")
+
+        if not channel_id:
+            self.log.warning(f"Channel not found for channel_id: {channel_id}")
+            return
+
+        current_time = time.time()
+
+        parts = filename.split("_")
+        if len(parts) < 1:
+            self.log.warning(f"Invalid filename: {filename}")
+            return
+
+        user_id_str = parts[0]
+        user_id = int(user_id_str)
+        self.log.warning(f"User ID extracted from filename: {user_id}")
+
+        user_mention = None
+
+        linked_users_data = (
+            self.linked_users
+        )  # Assuming linked_users is a list of tuples
+
+        self.log.warning("Linked Users:")
+        for discord_id, linked_user_id, access_code in linked_users_data:
+            self.log.warning(
+                f"Discord ID: {discord_id}, Linked User ID: {linked_user_id}, Access Code: {access_code}"
+            )
+
+        self.log.warning(f"Processing image for user ID: {user_id}")
+
+        for discord_id, linked_user_id, access_code in linked_users_data:
+            if user_id == linked_user_id:
+                user_mention = f"<@{discord_id}>"
+                break
+        self
+        if user_mention is None:
+            self.log.warning(
+                f"User ID: {user_id_str} is unlinked! Link it with `!link access_code/aime.txt`"
+            )
+            # doesn't work
+            await channel.send(
+                f"User ID: {user_id_str} is unlinked! Link it with `!link access_code/aime.txt`"
+            )
+        else:
+            self.log.warning(
+                f"Processing image for user ID: {user_id} associated with Discord ID: {discord_id}"
+            )
+            # doesn't work either
+            # both worked when they were in artemis.py
+            await channel.send(f"Score by {user_mention}:")
+
+        file_path = os.path.join(self.watch_folder, filename)
+        with open(file_path, "rb") as image_file:
+            _file = discord.File(image_file, filename=filename)
+
+        await channel.send(file=_file)
+
+        # Move the posted image to the oldimages folder
+
+        new_path = os.path.join(self.old_images_folder, filename)
+
+        try:
+            shutil.move(file_path, new_path)
+            self.log.warning(f"Image moved to oldimages: {filename}")
+        except Exception as e:
+            self.log.warning(f"Failed to move the image to oldimages folder: {e}")
+            await ctx.send(f"Failed to move the image to oldimages folder: {e}")
 
     async def cog_unload(self):
         # Stop the task when the cog is reloaded or unloaded
