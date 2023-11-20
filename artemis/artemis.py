@@ -37,9 +37,7 @@ class Artemis(commands.Cog):
         self.config.register_global(
             old_images_folder=self.DEFAULT_FOLDERS["old_images_folder"]
         )
-        self.config.register_global(db_config=self.DEFAULT_DB_CONFIG.copy())
-        self.db_config = self.config.db_config
-
+        self.config.register_global(db_config=self.DEFAULT_DB_CONFIG)
         self.watch_folder = self.config.watch_folder
         self.old_images_folder = self.config.old_images_folder
 
@@ -53,17 +51,12 @@ class Artemis(commands.Cog):
 
     @commands.Cog.listener()
     async def initialize(self):
-        # Load linked users from the bot's config
         linked_users_data = await self.config.linked_users()
         self.linked_users = linked_users_data or []
 
-        # Load database info from the bot's config
-        db_config_data = (
-            await self.config.db_config.all()
-        )  # Use .all() to get the entire dictionary
+        db_config_data = await self.config.db_config.all()
         self.db_config = db_config_data or self.DEFAULT_DB_CONFIG.copy()
 
-        # Load folder info from the bot's config
         watch_folder_data = await self.config.watch_folder()
         self.watch_folder = watch_folder_data or self.DEFAULT_FOLDERS["watch_folder"]
 
@@ -72,15 +65,11 @@ class Artemis(commands.Cog):
             old_images_folder_data or self.DEFAULT_FOLDERS["old_images_folder"]
         )
 
-        # Make sure linked_users is a list of tuples
-        # if not all(isinstance(user_data, tuple) for user_data in self.linked_users):
-        #    self.linked_users = []
-        #    await self.config.linked_users.set([])
+        channel_id = await self.config.channel_id()
+        self.channel_id = channel_id
 
-        # Check if you're loading users correctly
+        self.log.warning(f"Loaded set_channel: {self.channel_id}")
         self.log.warning(f"Loaded linked users: {self.linked_users}")
-
-        # Check if you're loading database info and folders correctly
         self.log.warning(f"Loaded db_config: {self.db_config}")
         self.log.warning(f"Loaded watch_folder: {self.watch_folder}")
         self.log.warning(f"Loaded old_images_folder: {self.old_images_folder}")
@@ -379,16 +368,18 @@ class Artemis(commands.Cog):
 
     @commands.command()
     @commands.is_owner()  # Only allow the bot owner to set the database config
-    async def set_db_config(
-        self, ctx, host=None, user=None, port=None, password=None, db=None
-    ):
+    async def set_db_config(self, ctx, host, user, port, password, db):
         """Set the database configuration."""
-        self.db_config["host"] = host
-        self.db_config["user"] = user
-        self.db_config["port"] = int(port)
-        self.db_config["password"] = password
-        self.db_config["db"] = db
 
+        db_config = {
+            "host": host,
+            "user": user,
+            "port": int(port),
+            "password": password,
+            "db": db,
+        }
+        await self.config.db_config.set(db_config)
+        await ctx.send(self.db_config)
         await ctx.send("Database configuration set successfully.")
 
     @commands.command()
@@ -402,11 +393,8 @@ class Artemis(commands.Cog):
     @commands.is_owner()  # Only allow the bot owner to set the folders
     async def set_folders(self, ctx, watch_folder=None, old_images_folder=None):
         """Set the watch and old images folders."""
-        if watch_folder is not None:
-            self.watch_folder = watch_folder
-        if old_images_folder is not None:
-            self.old_images_folder = old_images_folder
-
+        await self.config.watch_folder.set(watch_folder)
+        await self.config.old_images_folder.set(old_images_folder)
         await ctx.send("Folders set successfully.")
 
     @commands.command()
@@ -429,16 +417,20 @@ class Artemis(commands.Cog):
         old_images_folder = await self.config.old_images_folder()
         linked_users = await self.config.linked_users()
         db_config = await self.config.db_config()
-
+        post_channel = await self.config.channel_id()
         # Prepare the message with the current configuration values
         message = (
-            f"Current Configuration:\n"
+            "Current Configuration:\n"
             f"Watch Folder: {watch_folder}\n"
+            f"Post Channel: {post_channel}\n"
             f"Linked Users: {linked_users}\n"
             f"Database Config: {db_config}\n"
             f"Old Images Folder: {old_images_folder}"
         )
 
-        # Send the message via DM
-        await user.send(message)
-        await ctx.send("Check your DMs for the current configuration.")
+        try:
+            # Send the message via DM
+            await user.send(message)
+            await ctx.send("Check your DMs for the current configuration.")
+        except Exception as e:
+            await ctx.send(f"Error sending DM: {e}")
