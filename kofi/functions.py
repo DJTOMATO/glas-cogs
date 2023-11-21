@@ -61,7 +61,9 @@ async def scraper(url):
     profile_image = soup.select_one("#profilePicture")
     if profile_image:
         scraped_data["Profile Image URL"] = profile_image["src"]
-
+    # if empty replace by default https://ko-fi.com/img/anon2.png
+    else:
+        scraped_data["Profile Image URL"] = "https://ko-fi.com/img/anon2.png"
     # Cover Image URL
     # Find the div element with id="profile-header"
     profile_header_div = soup.find("div", id="profile-header")
