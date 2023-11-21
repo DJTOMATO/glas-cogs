@@ -56,6 +56,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Kofi   | Show target info and goals in Ko-fi! |                           Glas                           |        ✅        |
 |   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
 |   GoogleIt   | LMGTFY your users dumb questions! |                           Glas                           |        ✅        |
 |   MakeSweet   | Create amazing gifs with an avatar! |                           Glas                           |        ✅        |
