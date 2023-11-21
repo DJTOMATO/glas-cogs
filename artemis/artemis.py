@@ -112,7 +112,7 @@ class Artemis(commands.Cog):
 
     @tasks.loop(seconds=30)
     async def image_post_task(self):
-        self.log.warning("Checking for images...")
+        # self.log.warning("Checking for images...")
         channel_id = await self.config.channel_id()
         if channel_id is None:
             return
@@ -133,8 +133,8 @@ class Artemis(commands.Cog):
                     self.last_post_time = current_time
                     print(f"Found image: {filename}")
                     self.posted_images.add(filename)
-        self.log.warning(f"Finished searching images, results: {self.posted_images}")
-        self.log.warning("Starting again in 30 seconds..")
+        # self.log.warning(f"Finished searching images, results: {self.posted_images}")
+        # self.log.warning("Starting again in 30 seconds..")
         # clean posted_images
         self.posted_images.clear()
 
