@@ -56,7 +56,7 @@ class Kofi(commands.Cog):
         c = results.get("Goal Title", "No Title Found")
 
         embed.set_author(
-            name=f"Ko-fi for: {name}",
+            name=f"Ko-fi for {name}",
             url=kofi_url,
             icon_url=results.get(
                 "Profile Image URL",
@@ -65,7 +65,7 @@ class Kofi(commands.Cog):
         )
         pro = results.get("Current Percentage", "No Percentage Found")
         gres = results.get("Of Goal Total", "No Goal Total Found")
-        embed.title = f"Current Goal: {c} \n{pro} of {gres}"
+        embed.title = f"Current Goal: {c} \n -- {pro}{gres}! --"
         embed.url = kofi_url
 
         embed.description = results.get("Goal Description", "No Description Found")
