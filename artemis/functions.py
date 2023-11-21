@@ -115,6 +115,10 @@ class ListenerFunctions:
         embed.set_thumbnail(url=avatar_url)
         await ctx.send(embed=embed)
 
+    async def get_conn_config(self):
+        # Retrieve database configuration
+        return await self.config.db_config()
+
     async def send_user_data_embed(self, ctx, result, game_type):
         embed = discord.Embed(title=f"Lena Network - {game_type} Info", color=0x7289DA)
 
@@ -307,15 +311,18 @@ class ListenerFunctions:
         else:
             await ctx.send("You are not linked to another user.")
             return
+        # Retrieve database configuration
+        db_config = await self.get_conn_config()
 
-        connection = await aiomysql.connect(**self.db_config)
+        # Establish a database connection
+        connection = await aiomysql.connect(**db_config)
         async with connection.cursor() as cursor:
             query = f"SELECT * FROM ongeki_profile_data WHERE user = {user_id};"
             await cursor.execute(query)
             result = await cursor.fetchone()
 
         if result:
-            await self.listener_functions.send_user_data_embed_ong(ctx, result, "ONG")
+            await self.send_user_data_embed_ong(ctx, result, "ONG")
 
         else:
             await ctx.send("No data found for this user.")
@@ -333,8 +340,11 @@ class ListenerFunctions:
         else:
             await ctx.send("You are not linked to another user.")
             return
+        # Retrieve database configuration
+        db_config = await self.get_conn_config()
 
-        connection = await aiomysql.connect(**self.db_config)
+        # Establish a database connection
+        connection = await aiomysql.connect(**db_config)
         async with connection.cursor() as cursor:
             query = f"SELECT * FROM chuni_profile_data WHERE user = {user_id};"
             await cursor.execute(query)
@@ -360,14 +370,18 @@ class ListenerFunctions:
             await ctx.send("You are not linked to another user.")
             return
 
-        connection = await aiomysql.connect(**self.db_config)
+        # Retrieve database configuration
+        db_config = await self.get_conn_config()
+
+        # Establish a database connection
+        connection = await aiomysql.connect(**db_config)
         async with connection.cursor() as cursor:
             query = f"SELECT * FROM diva_profile WHERE user = {user_id};"
             await cursor.execute(query)
             result = await cursor.fetchone()
 
         if result:
-            await self.listener_functions.send_user_data_embed(ctx, result, "Diva")
+            await self.send_user_data_embed(ctx, result, "Diva")
         else:
             await ctx.send("No data found for this user.")
 
@@ -390,7 +404,11 @@ class ListenerFunctions:
             return
 
         # Establish a database connection
-        connection = await aiomysql.connect(**self.db_config)
+        # Retrieve database configuration
+        db_config = await self.get_conn_config()
+
+        # Establish a database connection
+        connection = await aiomysql.connect(**db_config)
         async with connection.cursor() as cursor:
             # Create and execute the SQL query to fetch mai data
             query = f"SELECT * FROM mai2_profile_detail WHERE user = {user_id};"
@@ -399,7 +417,7 @@ class ListenerFunctions:
 
         # Check if data was found
         if result:
-            await self.listener_functions.send_user_data_embed_mai(ctx, result, "Mai")
+            await self.send_user_data_embed_mai(ctx, result, "Mai")
 
         else:
             await ctx.send("No data found for this user.")

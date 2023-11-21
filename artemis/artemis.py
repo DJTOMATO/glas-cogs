@@ -112,7 +112,7 @@ class Artemis(commands.Cog):
 
     @tasks.loop(seconds=30)
     async def image_post_task(self):
-        print("Checking for images...")
+        self.log.warning("Checking for images...")
         channel_id = await self.config.channel_id()
         if channel_id is None:
             return
@@ -131,7 +131,12 @@ class Artemis(commands.Cog):
                     channel_id = await self.config.channel_id()
                     await self.process_image(channel_id, filename)
                     self.last_post_time = current_time
+                    print(f"Found image: {filename}")
                     self.posted_images.add(filename)
+        self.log.warning(f"Finished searching images, results: {self.posted_images}")
+        self.log.warning("Starting again in 30 seconds..")
+        # clean posted_images
+        self.posted_images.clear()
 
     @image_post_task.before_loop
     async def before_image_post_task(self):
@@ -316,7 +321,7 @@ class Artemis(commands.Cog):
             self.log.warning(f"Image moved to oldimages: {filename}")
         except Exception as e:
             self.log.warning(f"Failed to move the image to oldimages folder: {e}")
-            await ctx.send(f"Failed to move the image to oldimages folder: {e}")
+            await channel.send(f"Failed to move the image to oldimages folder: {e}")
 
     async def cog_unload(self):
         # Stop the task when the cog is reloaded or unloaded
@@ -325,15 +330,20 @@ class Artemis(commands.Cog):
 
     @commands.command()
     async def mai(self, ctx):
+        """Returns MaiMai Data for the linked user"""
         await self.listener_functions.maii(ctx)
 
     @commands.command()
     async def diva(self, ctx):
+        """Returns Diva Data for the linked user"""
         await self.listener_functions.divaa(ctx)
 
+    @commands.command()
     async def ong(self, ctx):
+        """Returns Ongeki Data for the linked user"""
         await self.listener_functions.ongg(ctx)
 
     @commands.command()
     async def chuni(self, ctx):
+        """Returns Chunithm Data for the linked user"""
         await self.listener_functions.chunii(ctx)
