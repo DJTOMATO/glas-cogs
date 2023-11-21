@@ -48,6 +48,8 @@
 
 ## Support
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F2F6RDZ1A)
+
 **For support**, you can **find and ping me (dj_tomato) in [_#support_othercogs_](https://discord.com/channels/240154543684321280/240212783503900673) on [Red - Cog Support](https://discord.gg/GET4DVk)**
 
 ## Cogs List
