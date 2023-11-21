@@ -14,7 +14,7 @@ import re
 class Kofi(commands.Cog):
     """Ko-fi Commands"""
 
-    """Support your favourite user!"""
+    """Support your favourite bot/server!"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -29,7 +29,10 @@ class Kofi(commands.Cog):
     # Set Kofi URL
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
-    async def seturl(self, ctx, url):
+    async def setkofi(self, ctx, url):
+        """
+        Set's the Kofi URL for the bot/server
+        """
         await self.config.kofi_url.set(url)
         await ctx.send(f"Kofi URL set to {url}")
 
@@ -38,6 +41,9 @@ class Kofi(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def kofi(self, ctx):
+        """
+        Posts ko-fi for Bot/Server
+        """
         kofi_url = await self.config.kofi_url()
 
         if kofi_url is None:
