@@ -54,21 +54,34 @@ class Kofi(commands.Cog):
         name = results.get("Ko-fi User", "No Ko-fi User Found")
         embed = discord.Embed()
         c = results.get("Goal Title", "No Title Found")
+        iurl = results.get(
+            "Profile Image URL",
+            "https://ko-fi.com/img/anon2.png",
+        )
+        # if iurl not proper url then replace by default https://ko-fi.com/img/anon2.png
+        # Check if iurl is a proper URL
+        if not iurl.startswith("http://") and not iurl.startswith("https://"):
+            iurl = "https://ko-fi.com/img/anon2.png"
 
         embed.set_author(
             name=f"Ko-fi for {name}",
             url=kofi_url,
-            icon_url=results.get(
-                "Profile Image URL",
-                "https://cdn.discordapp.com/attachments/861428239012069416/1176614114613788842/logey.png",
-            ),
-        )
-        pro = results.get("Current Percentage", "No Percentage Found")
-        gres = results.get("Of Goal Total", "No Goal Total Found")
-        embed.title = f"Current Goal: {c} \n -- {pro}{gres}! --"
-        embed.url = kofi_url
+            icon_url=iurl,
+        ),
 
-        embed.description = results.get("Goal Description", "No Description Found")
+        pro = results.get("Current Percentage", "No")
+        gres = results.get("Of Goal Total", "Ne")
+        # if pro = No and gres = Ne then
+        if pro == "No" and gres == "Ne":
+            embed.title = f"Check out it's Ko-fi!"
+        else:
+            embed.title = f"Current Goal: {c} \n -- {pro}{gres}! --"
+        embed.url = kofi_url
+        desc = results.get("Goal Description", "None")
+        if desc == "None":
+            embed.description = ""
+        else:
+            embed.description = results.get("Goal Description", "No Description Found")
 
         about = results.get("About User", "No About User Found")
         amount = results.get("Ko-fi Received", "0")
@@ -76,13 +89,19 @@ class Kofi(commands.Cog):
             name="About User",
             value=f"{about} \n\n __So far, this user has received {amount} Ko-fi!__",
         )
-
-        embed.set_image(
-            url=results.get(
-                "Profile Banner URL",
-                "https://cdn.discordapp.com/attachments/861428239012069416/1176614114613788842/logey.png",
-            )
+        image = results.get(
+            "Profile Banner URL",
+            "None",
         )
+        if image == "None":
+            pass
+        else:
+            embed.set_image(
+                url=results.get(
+                    "Profile Banner URL",
+                    "https://cdn.discordapp.com/attachments/861428239012069416/1176614114613788842/logey.png",
+                )
+            )
 
         button = discord.ui.Button(label=f"❤️ Support {name} on Ko-fi!", url=kofi_url)
 
