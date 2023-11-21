@@ -47,7 +47,7 @@ class Kofi(commands.Cog):
         kofi_url = await self.config.kofi_url()
 
         if kofi_url is None:
-            await ctx.send("Kofi URL is not set. Use the `!seturl` command to set it.")
+            await ctx.send("Kofi URL is not set. Use the `!setkofi` command to set it.")
             return
         results = await scraper(kofi_url)
 
