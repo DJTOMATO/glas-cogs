@@ -28,6 +28,7 @@ class Kofi(commands.Cog):
 
     # Set Kofi URL
     @commands.command()
+    @commands.is_owner()
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def setkofi(self, ctx, url):
         """
