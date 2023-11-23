@@ -878,6 +878,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def taiko(self, ctx, *, member: FuzzyMember = None):
+        """Taiko..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_taiko, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def bill(self, ctx, *, member: FuzzyMember = None):
         """You become a billboard..."""
         if not member:
@@ -2396,6 +2413,34 @@ class PfpImgen(commands.Cog):
         return _file
 
 
+    def gen_taiko(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 650)
+
+        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (1282, 752), None)
+        taiko_mask = Image.open(
+            f"{bundled_data_path(self)}/taiko/taiko_mask.png", mode="r"
+        ).convert("RGBA")
+
+
+        im.paste(member_avatar, (325, 150), member_avatar)
+
+
+        im.paste(taiko_mask, (0, 0), taiko_mask)
+
+        taiko_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "taiko.png")
+        fp.close()
+        return _file
+
 
 
     def gen_pretend(self, ctx, member_avatar):
@@ -2411,7 +2456,7 @@ class PfpImgen(commands.Cog):
             f"{bundled_data_path(self)}/pretend/blush_mask.png", mode="r"
         ).convert("RGBA")
 
-        im.paste(member_avatar, (90, 107), member_avatar)
+        im.paste(member_avatar, (90, 80), member_avatar)
 
         im.paste(blushmask, (126, 228), blushmask)
         im.paste(pretendmask, (0, 0), pretendmask)
