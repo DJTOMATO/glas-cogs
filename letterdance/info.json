@@ -1,0 +1,14 @@
+{
+    "name": "Letterdance",
+    "short": "Letter Dance Animation!",
+    "description": "Create animations by combining dancing letter GIFs horizontally.",
+    "install_msg": "Thanks for installing `Letterdance` cog!",
+    "author": ["Glas"],
+    "tags": ["meme", "gif", "letterdance"],
+    "hidden": false,
+    "disabled": false,
+    "requirements": ["Pillow", "imageio"],
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
