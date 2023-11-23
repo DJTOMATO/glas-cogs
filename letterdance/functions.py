@@ -9,6 +9,7 @@ import os
 from redbot.core.data_manager import bundled_data_path
 import tempfile
 
+
 class LetterDance:
     """
     Class to create a dance animation by combining letter GIFs horizontally.
@@ -107,19 +108,19 @@ class LetterDance:
 
         combined_width += "".join(self.letters).count(" ") * max_width
 
-        print("Max Width: " + str(max_width))
-        print("Max Height: " + str(max_height))
-        print("Max Duration: " + str(max_duration))
-        print("Max Frame Count: " + str(max_frame_count))
+        # print("Max Width: " + str(max_width))
+        # print("Max Height: " + str(max_height))
+        # print("Max Duration: " + str(max_duration))
+        # print("Max Frame Count: " + str(max_frame_count))
 
-        print("\n--RENDERING--\n")
+        # print("\n--RENDERING--\n")
 
         frames = []
 
         for i in range(max_frame_count):
             frame_buffer = Image.new("RGBA", (combined_width, max_height))
             x_offset = 0
-            print("Frame: " + str(i) + "/" + str(max_frame_count))
+            # print("Frame: " + str(i) + "/" + str(max_frame_count))
 
             for letter in self.letters:
                 try:
@@ -127,10 +128,9 @@ class LetterDance:
                         x_offset += max_width
                         continue
                     if letter == "?":
-                       letter = "qm"
+                        letter = "qm"
 
-
-                    syspath = f"{bundled_data_path(self)}"      
+                    syspath = f"{bundled_data_path(self)}"
                     gif = imageio.get_reader(os.path.join(syspath, letter + ".gif"))
                     frame = gif.get_data(i)
 
@@ -150,7 +150,7 @@ class LetterDance:
                     x_offset += frame_image.width
 
                 except (IndexError, EOFError):
-                    print("Error: " + letter + ".gif")
+                    # print("Error: " + letter + ".gif")
                     pass
 
             frames.append(frame_buffer.copy())
@@ -163,10 +163,7 @@ class LetterDance:
                 append_images=frames[1:],
                 duration=max_duration,
                 loop=0,
-                disposal=2
+                disposal=2,
             )
 
-        return temp_file.name  
-
-
-
+        return temp_file.name

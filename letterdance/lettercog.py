@@ -28,14 +28,17 @@ class LetterCog(commands.Cog):
     ):
         """
         Creates a letterdance gif
+        Invalid characters will be ommited!
         """
         # discord.utils.escape_mentions on phrase
 
         if Phrase is None:
             await ctx.send("Please provide a valid phrase.")
             return
-        if len(Phrase) > 40:
-            await ctx.send("Phrase must be less than 40 characters long.")
+        if len(Phrase) > 25:
+            await ctx.send(
+                "Phrase must be less than 25 characters long (Including spaces).\nOtherwise it won't display on Discord!"
+            )
             return
         message = self.clean(Phrase)
 
