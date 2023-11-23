@@ -27,7 +27,7 @@ from email.mime import image
 import functools
 from io import BytesIO
 from typing import Literal, Optional
-
+import random
 import aiohttp
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
@@ -2414,25 +2414,20 @@ class PfpImgen(commands.Cog):
 
 
     def gen_taiko(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 650)
+        member_avatar = self.bytes_to_image(member_avatar, 480)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (1282, 752), None)
+        im = Image.new("RGBA", (960, 540), None)
+        r = random.randint(1, 3)
         taiko_mask = Image.open(
-            f"{bundled_data_path(self)}/taiko/taiko_mask.png", mode="r"
+            f"{bundled_data_path(self)}/taiko/taiko_mask_{r}.png", mode="r"
         ).convert("RGBA")
 
-
-        im.paste(member_avatar, (325, 150), member_avatar)
-
-
+        im.paste(member_avatar, (240, 90), member_avatar)
         im.paste(taiko_mask, (0, 0), taiko_mask)
-
         taiko_mask.close()
-
         member_avatar.close()
-
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
