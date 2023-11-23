@@ -58,7 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
-|   Letterdance   | Create animations by combining dancing letter GIFs horizontally! |                           Glas                           |    
+|   Letterdance   | Create GIFs by combining dancing letters horizontally! |                           Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
 |   Kofi   | Show target info and goals in Ko-fi! |                           Glas                           |        ✅        |
 |   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
 |   GoogleIt   | LMGTFY your users dumb questions! |                           Glas                           |        ✅        |

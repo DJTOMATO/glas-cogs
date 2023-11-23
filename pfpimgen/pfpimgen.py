@@ -319,6 +319,23 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
+   
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["emiko"], cooldown_after_parsing=True)
+    async def elite(self, ctx, *, member: FuzzyMember = None):
+        """Elite Miko!..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_elite, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -1111,6 +1128,38 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "ogey.png")
         fp.close()
         return _file
+
+    def gen_elite(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 180)
+        # base canvas
+        im = Image.new("RGBA", (799, 555), None)
+        # ogey = Image.open(f"{bundled_data_path(self)}/ogey/ogey.png", mode="r").convert("RGBA")
+        elitemask = Image.open(f"{bundled_data_path(self)}/elitemath/elite_mask.png", mode="r").convert(
+            "RGBA"
+        )
+        eliteeyes = Image.open(f"{bundled_data_path(self)}/elitemath/elite_eyes.png", mode="r").convert(
+            "RGBA"
+        )
+        # im.paste(ogey, (0, 0), ogey)
+
+        # pasting the pfp
+        im.paste(elitemask, (0, 0), elitemask)
+        im.paste(member_avatar, (570, 320), member_avatar)
+        
+        #im.paste(eliteeyes, (592, 405), eliteeyes)
+        
+        eliteeyes.close()
+        elitemask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "elitemiko.png")
+        fp.close()
+        return _file
+
 
     def gen_doctor(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 160)
