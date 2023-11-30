@@ -222,6 +222,24 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["playbetter"], cooldown_after_parsing=True)
+    async def better(self, ctx, *, member: FuzzyMember = None):
+        """Play better games..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_better, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["liar"], cooldown_after_parsing=True)
     async def lies(self, ctx, *, member: FuzzyMember = None):
         """Don't believe his lies..."""
@@ -2383,6 +2401,45 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "bau.png")
         fp.close()
         return _file
+    
+    def gen_better(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 340)
+
+        member_avatar = member_avatar.rotate(15, Image.NEAREST, expand=1)
+        
+        im = Image.new("RGBA", (465, 500), None)
+        better_mask = Image.open(
+            f"{bundled_data_path(self)}/better/better_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (30, 40), member_avatar)
+        im.paste(better_mask, (0, 0), better_mask)
+        
+        better_mask.close()
+        member_avatar.close()
+        # make im transparent by making white areas transparent
+        im = im.convert("RGBA")
+        data = im.getdata()
+
+        new_data = []
+        for item in data:
+            if item[:3] == (255, 255, 255):
+                new_data.append((255, 255, 255, 0))
+            else:
+                new_data.append(item)
+
+        im.putdata(new_data)
+
+        fp = BytesIO() 
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "playbettergames.png")
+        fp.close()
+        return _file
+
+
+
 
     def gen_mygf(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 306)
