@@ -11,7 +11,7 @@ class WebScraper:
         self.base_url = "https://gg.deals/games/?title="
         self.log = logging.getLogger("glas.glas-cogs.ggdeals-scraper")
 
-    async def scrape(self, gamename):
+    async def scrape(self, ctx, gamename):
         async with aiohttp.ClientSession() as session:
             gamename = gamename.rstrip().replace(" ", "+")
             url = f"{self.base_url}{gamename}"
@@ -44,10 +44,7 @@ class WebScraper:
                         # Extract "Compare Prices" URL
 
                         compare_prices_url = self.extract_compare_prices_url(target_div)
-                        # self.log.warning(f"Before replacement: {compare_prices_url}")
-
                         compare_prices_url = compare_prices_url.replace("%7D", "}")
-                        # self.log.warning(f"After replacement: {compare_prices_url}")
 
                         formatted_data["Compare Prices URL"] = compare_prices_url
 
@@ -55,15 +52,22 @@ class WebScraper:
                         all_deals_details = await self.scrape_compare_prices_url(
                             compare_prices_url
                         )
+
                         scraped_game_info = await self.scrape_game_info(
                             compare_prices_url
                         )
 
+                        if scraped_game_info is None:
+                            # If scraped_game_info is None, raise a custom exception
+                            raise ValueError("No information available for this game.")
+
+                        # Log only when there is valid information
+                        self.log.warning(
+                            f"Scraped game information: {scraped_game_info}"
+                        )
                         return formatted_data, all_deals_details, scraped_game_info
                     else:
-                        self.log.warning(
-                            f"Target div not found on the page. - Report to Dev"
-                        )
+                        a = "nnothing lol"
 
                 else:
                     self.log.warning(
@@ -167,7 +171,7 @@ class WebScraper:
 
                     for deal in deals:
                         deal_details = await self.extract_deal_details(deal)
-                        # self.log.warning(f"test: {deal_details}")
+
                         all_deal_details.append(deal_details)
 
                     return all_deal_details
@@ -178,7 +182,7 @@ class WebScraper:
 
                     return None
 
-    async def scrape_game_info(self, compare_prices_url):
+    async def scrape_game_info(self, ctx, compare_prices_url):
         scrapped_game_info = {}
         async with aiohttp.ClientSession() as session:
             async with session.get(compare_prices_url) as response:
@@ -187,7 +191,6 @@ class WebScraper:
                     soup = BeautifulSoup(text, "lxml")
 
                     game_info_widget = soup.select_one("#game-info-side")
-
                     release_date = (
                         game_info_widget.find("h4", string="Release date")
                         .find_next("p", class_="game-info-details-content")
@@ -296,6 +299,10 @@ class WebScraper:
             "https://img.gg.deals/18/93/128a5dc7abdb6ca529957c94d56f02f53331.svg": "Fanatical",
             "https://img.gg.deals/6e/67/057fb90629fd628003980b92477276c4594f.svg": "G2A*",
             "https://img.gg.deals/9a/b7/887418f9bc8725e5a60d3edeb2f2d023ea3d.svg": "G2A*",
+            "https://img.gg.deals/55/a0/2b6ea3d1302b0db179964a9b68fd11c81c31.svg": "Microsoft Store",
+            "https://img.gg.deals/a6/4f/c0e24320970b5b0563d67784f43a182a9250.svg": "Microsoft Store",
+            "https://img.gg.deals/f7/46/a2bfac8854ad9e116643458b5e0d7504c2ce_90xt35_Q100.png": "MTCGAME*",
+            "https://img.gg.deals/08/b1/8609adc12910b43ef07b3f2563205a3191ef_90xt35_Q100.png": "MTCGAME*",
         }
 
         # Get the shop name based on the logo
@@ -596,11 +603,49 @@ class WebScraper:
             .find_next("p", class_="game-info-details-content")
             .text.strip()
         )
-        reviews = (
-            game_info_widget.find("h4", string="Reviews")
-            .find_next("span", class_="reviews-label")
-            .text.strip()
-        )
+
+        reviews_element = game_info_widget.find("h4", string="Reviews")
+
+        if reviews_element:
+            reviews_label = reviews_element.find_next("span", class_="reviews-label")
+
+            if reviews_label:
+                reviews = reviews_label.text.strip()
+            else:
+                reviews_section = game_info_widget.find(
+                    "div", class_="game-info-details-section-reviews"
+                )
+
+                if reviews_section:
+                    reviews_header = reviews_section.find(
+                        "h4", class_="game-info-inner-heading"
+                    )
+
+                    if reviews_header and reviews_header.text.strip() == "Reviews":
+                        meta_score_element = reviews_section.find(
+                            "span", class_="game-score-meta-value"
+                        )
+                        # user_score_element = reviews_section.find("span", class_="game-score-circle")
+                        opencritic_score_element = reviews_section.find(
+                            "span", class_="opencritic-score"
+                        )
+
+                        if all([meta_score_element, opencritic_score_element]):
+                            meta_score = meta_score_element.text.strip()
+                            # user_score = user_score_element.text.strip()
+                            opencritic_score = opencritic_score_element.text.strip()
+
+                            reviews = f"MetaCritic Score: {meta_score}\nOpenCritic Score: {opencritic_score}"
+                        else:
+                            self.log.warning("Some score elements not found.")
+                    else:
+                        self.log.warning(
+                            "Reviews section found, but header does not match."
+                        )
+                else:
+                    self.log.warning("Reviews section not found.")
+        else:
+            self.log.warning("Reviews element not found.")
 
         game_info_genres = soup.select_one("#game-info-genres")
 
@@ -624,7 +669,7 @@ class WebScraper:
                 ).find_all("a", class_="badge-wrapper")[:3]
             ]
         else:
-            tags = []
+            tags = []  # Return an empty list when tags are not present
 
         game_info_features = soup.select_one("#game-info-features")
         features_section = game_info_features.find("h4", string="Features")
@@ -704,10 +749,10 @@ class WebScraper:
 
         embed.set_thumbnail(url=formatted_data["Game Image (URL)"])
         columns = list(formatted_data.keys())
-        # Now we'll use scraped_game_info
-        columns_gi = list(scraped_game_info.keys())
         # ['release_date', 'playable_on', 'developer_publisher', 'reviews', 'genres', 'tags', 'features', 'related_links', 'game_description']
         max_length = 1024  # Maximum length for a field in Discord embed
+        a = scraped_game_info.get("tags")
+
         embed.add_field(
             name="Tags",
             value=" - ".join([f"{tag}" for tag in scraped_game_info.get("tags")]),
@@ -727,7 +772,7 @@ class WebScraper:
         )
         description = (
             # f"\n__Keyshops__: {formatted_data.get('Keyshops')} - __Official Stores__: {formatted_data.get('Official Stores')}\n\n"
-            f"Only 4 Official & Keyshops will be displayed below for a full list [Press Here]({formatted_data.get('Compare Prices URL')})\n"
+            f"\nOnly 4 Official & Keyshops will be displayed below. For the full list [Press Here]({formatted_data.get('Compare Prices URL')})\n"
         )
         # await ctx.send(f"{scraped_game_info.get('game_description')}")
         first_paragraph = scraped_game_info.get("game_description").split("\n\n")[0]
@@ -758,7 +803,7 @@ class WebScraper:
         sorted_details = sorted(
             pricing_details_filtered, key=lambda x: (x["Price"], x["Deal Date"])
         )
-        # self.log.warning(f"Sorted Details: {sorted_details}")
+
         warning = (
             "\\* means Keyshop, beware there may be risks type ``!risks`` for details."
         )
