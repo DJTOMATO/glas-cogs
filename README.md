@@ -58,6 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Deals   | Find videogame deals in several storefronts. |                           Glas                           |        ✅        |
 |   Letterdance   | Create GIFs by combining dancing letters horizontally! |                           Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
 |   Kofi   | Show target info and goals in Ko-fi! |                           Glas                           |        ✅        |
 |   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
