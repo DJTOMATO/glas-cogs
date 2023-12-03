@@ -1,0 +1,13 @@
+{
+    "name": "Game Deals!",
+    "short": "Find game deals in several storefronts.",
+    "description": "Find game deals in several storefronts",
+    "install_msg": "Thanks for installing `deals` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["deals", "videogames", "offers"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
