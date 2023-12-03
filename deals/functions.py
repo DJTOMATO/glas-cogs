@@ -62,9 +62,9 @@ class WebScraper:
                             raise ValueError("No information available for this game.")
 
                         # Log only when there is valid information
-                        self.log.warning(
-                            f"Scraped game information: {scraped_game_info}"
-                        )
+                        # self.log.warning(
+                        #    f"Scraped game information: {scraped_game_info}"
+                        # )
                         return formatted_data, all_deals_details, scraped_game_info
                     else:
                         a = "nnothing lol"
@@ -309,7 +309,12 @@ class WebScraper:
             "https://img.gg.deals/b9/4f/d6049f39b978a6b14ea09731c2704fb7aa8e.svg": "GameSeal*",
             "https://img.gg.deals/e9/be/7f3f4f266ebbcac23cc2b06ec50116a618ec.svg": "GameSeal*",
             "https://img.gg.deals/d7/f7/ef59006a3db0dc177f8c99a49838b3540841_90xt35_Q100.png": "Minecraft Store",
-            # "https://img.gg.deals/d7/f7/ef59006a3db0dc177f8c99a49838b3540841_90xt35_Q100.png": "Minecraft Store",
+            "https://img.gg.deals/b7/a8/1bdf3de51f6ddcd197d7c52c7097b2941e1b.svg": "GamesPlanet **UK**",
+            "https://img.gg.deals/c0/8e/03c6c3a3f46d79a3ff340af4523a7c857478.svg": "GamesPlanet **UK**",
+            "https://img.gg.deals/bf/6e/abca8bb55ba442f27c9e5aadb85c2ce78c14_90xt35_Q100.png": "JoyBuggy",
+            "https://img.gg.deals/37/6e/466703e3769c79252b9a140a6df34d712f54_90xt35_Q100.png": "JoyBuggy",
+            "https://img.gg.deals/17/c1/09fd29fa9a61da4bfa1dc42f1813f99b1915_90xt35_Q100.png": "HRK",
+            "https://img.gg.deals/17/c1/09fd29fa9a61da4bfa1dc42f1813f99b1915_90xt35_Q100.png": "HRK",
         }
 
         # Get the shop name based on the logo
@@ -849,7 +854,7 @@ class WebScraper:
             )
             embed2.set_footer(
                 icon_url="https://bae.lena.moe/l9q3mnnat3i3.gif",
-                text=f"Powered by GG.deals",
+                text=f"Powered by deals.gg",
             )
         embed2.add_field(name="Disclaimer", value=warning, inline=False)
 
