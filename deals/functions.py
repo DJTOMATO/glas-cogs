@@ -230,6 +230,7 @@ class WebScraper:
                         game_info_widget.find("div", class_="widget-heading")
                         .find_next("p")
                         .text.strip()
+                        .split("\n\n")[0]
                     )
 
                     # Extract related links
@@ -303,6 +304,8 @@ class WebScraper:
             "https://img.gg.deals/a6/4f/c0e24320970b5b0563d67784f43a182a9250.svg": "Microsoft Store",
             "https://img.gg.deals/f7/46/a2bfac8854ad9e116643458b5e0d7504c2ce_90xt35_Q100.png": "MTCGAME*",
             "https://img.gg.deals/08/b1/8609adc12910b43ef07b3f2563205a3191ef_90xt35_Q100.png": "MTCGAME*",
+            "https://img.gg.deals/59/af/a6775f91e45dc89393a411cb9af173c5a175.svg": "Driffle*",
+            "https://img.gg.deals/58/3d/191405fb7798cb3520e0e8f7dcf96ad6e1fd.svg": "Driffle*",
         }
 
         # Get the shop name based on the logo
@@ -775,11 +778,13 @@ class WebScraper:
             f"\nOnly 4 Official & Keyshops will be displayed below. For the full list [Press Here]({formatted_data.get('Compare Prices URL')})\n"
         )
         # await ctx.send(f"{scraped_game_info.get('game_description')}")
-        first_paragraph = scraped_game_info.get("game_description").split("\n\n")[0]
+        first_paragraph = scraped_game_info.get("game_description").split("\n")[0]
 
         # await ctx.send(f"{first_paragraph}")
         # Build the final description
         filled_description = f"{first_paragraph}\n {description}"
+        # trim filled_descipriton to 1024
+        filled_description = filled_description[:1024]
 
         embed.add_field(name="Description", value=filled_description, inline=False)
 
