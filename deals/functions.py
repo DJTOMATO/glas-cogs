@@ -306,6 +306,10 @@ class WebScraper:
             "https://img.gg.deals/08/b1/8609adc12910b43ef07b3f2563205a3191ef_90xt35_Q100.png": "MTCGAME*",
             "https://img.gg.deals/59/af/a6775f91e45dc89393a411cb9af173c5a175.svg": "Driffle*",
             "https://img.gg.deals/58/3d/191405fb7798cb3520e0e8f7dcf96ad6e1fd.svg": "Driffle*",
+            "https://img.gg.deals/b9/4f/d6049f39b978a6b14ea09731c2704fb7aa8e.svg": "GameSeal*",
+            "https://img.gg.deals/e9/be/7f3f4f266ebbcac23cc2b06ec50116a618ec.svg": "GameSeal*",
+            "https://img.gg.deals/d7/f7/ef59006a3db0dc177f8c99a49838b3540841_90xt35_Q100.png": "Minecraft Store",
+            # "https://img.gg.deals/d7/f7/ef59006a3db0dc177f8c99a49838b3540841_90xt35_Q100.png": "Minecraft Store",
         }
 
         # Get the shop name based on the logo
