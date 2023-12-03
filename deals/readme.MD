@@ -17,39 +17,14 @@ Sends you a DM reminding you the dangers of buying in keyshops
 ![Consider](https://images-ext-2.discordapp.net/external/vKWgQlZHqVq5i0vaZDYW3EzP5oM1cGL7boa2hRf2HXM/https/bae.lena.moe/tHZFfvvP5HRt.jpg?format=webp)
 
 
-**Before you buy in keyshops, make sure you read about all the associated risks.**
+**Warning: Before purchasing from keyshops, be aware of the following:.**
 
-- Unknown source of the key
+    - Keys may not come directly from the publisher.
+    - Additional fees may appear at checkout for payment methods.
+    - Also, Extra 'order fees' at checkout.
+    - Use reputable vendors on keyshops.
+    - Beware of hidden lower prices.
+    - EU VAT will be added if applicable.
+    - Do not buy purchased gifts, there's risk of Steam accounts ban
 
-Majority of keys in the store do not come directly from the publisher.
-
-- Obligatory payment fee at checkout
-
-An extra fee will be added at checkout for all available payment methods.
-
-- Optional payment fee at checkout
-
-An extra fee will be added at checkout for some payment methods. The remaining options are free of charge.
-
-- Obligatory 'order fee' at checkout
-
-An 'order fee' will be added on top of the price displayed in the store when you reach the checkout.
-
-- Marketplace
-
-A marketplace is an eBay-like platform where multiple vendors sell their keys. Make sure you select a vendor with a good reputation and many successful transactions.
-
-- Best price is hidden
-
-The store promotes more expensive offers, even though a lower price is available if you scroll down.
-
-- EU VAT added at checkout
-
-The store will ask you about your country of origin at checkout. Once you select an EU country, EU VAT will be added to the final price.
-
-- Paid 'buyer protection'
-
-Trading Steam gifts is against the T&C of Steam. Purchasing them from keyshops might put your Steam account at risk.
-
-
-**We do not hold accountable for issues you may encounter while purchasing, we just provide you a source of deals based on Web browsing, Final discretion is advised.**
+**Note: We are not accountable for any issues encountered during the purchasing process; use at your own discretion.**

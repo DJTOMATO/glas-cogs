@@ -54,8 +54,18 @@ class Deals(commands.Cog):
 
     @commands.command()
     async def risks(self, ctx):
-        """Warns you about buying in keyshops"""
-        warning = "Before you buy in keyshops, make sure you read about all the associated risks.\n\n- Unknown source of the key\nMajority of keys in the store do not come directly from the publisher.\n\n- Obligatory payment fee at checkout\nAn extra fee will be added at checkout for all available payment methods.\n\n- Optional payment fee at checkout\nAn extra fee will be added at checkout for some payment methods. The remaining options are free of charge.\n\n- Obligatory 'order fee' at checkout\nAn 'order fee' will be added on top of the price displayed in the store when you reach the checkout.\n\n- Marketplace\nA marketplace is an eBay-like platform where multiple vendors sell their keys. Make sure you select a vendor with a good reputation and many successful transactions.\n\n- Best price is hidden\nThe store promotes more expensive offers, even though a lower price is available if you scroll down.\n\n- EU VAT added at checkout\nThe store will ask you about your country of origin at checkout. Once you select an EU country, EU VAT will be added to the final price.\n\n- Paid 'buyer protection'\nTrading Steam gifts is against the T&C of Steam. Purchasing them from keyshops might put your Steam account at risk.\n\n\n We do not hold accountable for issues you may encounter while purchasing, we just provide you a source of deals based on Web browsing, Final discretion is advised."
+        """Warns you about risks of using keyshops"""
+        warning = (
+            "Warning: Before purchasing from keyshops, be aware of the following:\n\n"
+            "- Keys may not come directly from the publisher.\n"
+            "- Additional fees may appear at checkout for payment methods.\n"
+            "- Also, Extra 'order fees' at checkout.\n"
+            "- Use reputable vendors on keyshops.\n"
+            "- Beware of hidden lower prices.\n"
+            "- EU VAT will be added if applicable.\n"
+            "- Do not buy purchased gifts, there's risk of Steam accounts ban\n\n"
+            "Note: We're not responsible for any purchasing issues; use at your discretion."
+        )
 
         embed = discord.Embed(title="Risks", description=warning)
         embed.set_image(url="https://bae.lena.moe/tHZFfvvP5HRt.jpg")
