@@ -819,7 +819,7 @@ class WebScraper:
                     .replace("₩", "")
                     .replace("R$", "")
                     .replace("₽", "")
-                    # Add more currency symbols as needed
+                    .replace(",", ".")  # Replace commas with dots
                 ),
                 "Formatted Price": details[
                     "Price"
@@ -831,7 +831,6 @@ class WebScraper:
             }
             for details in all_deals_details
         ]
-
         # Sort the pricing details by price and then by deal date
         sorted_details = sorted(
             pricing_details_filtered, key=lambda x: (x["Price"], x["Deal Date"])
