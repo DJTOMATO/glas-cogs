@@ -123,21 +123,24 @@ class GuildID(commands.Cog):
                 embed.add_field(name="Guild Name", value=guild_name, inline=True)
 
                 if isinstance(invite.guild, discord.PartialInviteGuild):
-                    embed.add_field(
-                        name="Guild Description", value=guild_description, inline=False
-                    )
+                    # Add Guild Description field only if guild_description is not None
+                    if guild_description is not None:
+                        embed.add_field(
+                            name="Guild Description",
+                            value=guild_description,
+                            inline=False,
+                        )
                     # add attachment image
 
+                    # Format features in pairs
                     formatted_features = [
                         f"{guild_features[i]}\n{guild_features[i + 1]}"
-                        for i in range(0, len(guild_features), 2)
+                        for i in range(0, len(guild_features) - 1, 2)
                     ]
 
-                    embed.add_field(
-                        name="Guild Features",
-                        value="\n".join(formatted_features),
-                        inline=False,
-                    )
+                    # If there is an odd number of features, add the last one without a pair
+                    if len(guild_features) % 2 != 0:
+                        formatted_features.append(f"{guild_features[-1]}\nN/A")
 
                     embed.set_thumbnail(url=guild_icon)
                     embed.add_field(
@@ -145,11 +148,13 @@ class GuildID(commands.Cog):
                         value=f"[Click here]({guild_banner})",
                         inline=True,
                     )
-                    embed.add_field(
-                        name="Guild Splash",
-                        value=f"[Click here]({guild_splash})",
-                        inline=True,
-                    )
+                    # Add Guild Splash field only if guild_splash is not None
+                    if guild_splash is not None:
+                        embed.add_field(
+                            name="Guild Splash",
+                            value=f"[Click here]({guild_splash})",
+                            inline=True,
+                        )
                     embed.add_field(
                         name="Guild Vanity URL", value=guild_vanity_url, inline=False
                     )
@@ -171,6 +176,13 @@ class GuildID(commands.Cog):
                         value=guild_premium_subscription_count,
                         inline=True,
                     )
+                    # Add guild features only if there are features to display
+                    if formatted_features:
+                        embed.add_field(
+                            name="Guild Features",
+                            value="\n".join(formatted_features),
+                            inline=False,
+                        )
 
                 elif isinstance(invite, discord.Invite):
                     embed.add_field(name="Owner", value=owner_name, inline=True)
@@ -281,7 +293,9 @@ class GuildID(commands.Cog):
             except ValueError as e:
                 await ctx.send(str(e))
             except Exception as e:
-                await ctx.send("An error occurred while processing the invite")
+                await ctx.send(
+                    f"An error occurred while processing the invitacion! {str(e)}"
+                )
                 await ctx.send(f"Error: {str(e)}")
 
     @commands.command()
