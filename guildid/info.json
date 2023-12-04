@@ -1,0 +1,14 @@
+{
+    "name": "Guild & Invite stats!",
+    "short": "Retrieves Stats.",
+    "description": "Retrieves Guild&Invite Stats",
+    "install_msg": "Thanks for installing `guildid` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["Guild", "Invites", "Stats"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "requirements": [""],
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
