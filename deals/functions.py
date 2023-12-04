@@ -322,9 +322,7 @@ class WebScraper:
         }
 
         # Get the shop name based on the logo
-        shop_name = shop_mapping.get(
-            shop_logo, "Unknown Shop - Report it to Dev"
-        )
+        shop_name = shop_mapping.get(shop_logo, "Unknown Shop - Report it to Dev")
 
         # Update the deal details with the shop name
         deal_details["Shop Name"] = shop_name
@@ -805,7 +803,24 @@ class WebScraper:
         pricing_details_filtered = [
             {
                 "Shop Name": details["Shop Name"],
-                "Price": float(details["Price"].replace("~", "").replace("$", "")),
+                "Price": float(
+                    details["Price"]
+                    .replace("~", "")
+                    .replace("$", "")
+                    .replace("¥", "")
+                    .replace("€", "")
+                    .replace("£", "")
+                    .replace("CHF", "")
+                    .replace("CA$", "")
+                    .replace("A$", "")
+                    .replace("AU$", "")
+                    .replace("元", "")
+                    .replace("₹", "")
+                    .replace("₩", "")
+                    .replace("R$", "")
+                    .replace("₽", "")
+                    # Add more currency symbols as needed
+                ),
                 "Formatted Price": details[
                     "Price"
                 ],  # Store the original formatted price
