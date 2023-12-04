@@ -315,11 +315,15 @@ class WebScraper:
             "https://img.gg.deals/37/6e/466703e3769c79252b9a140a6df34d712f54_90xt35_Q100.png": "JoyBuggy",
             "https://img.gg.deals/17/c1/09fd29fa9a61da4bfa1dc42f1813f99b1915_90xt35_Q100.png": "HRK",
             "https://img.gg.deals/17/c1/09fd29fa9a61da4bfa1dc42f1813f99b1915_90xt35_Q100.png": "HRK",
+            "https://img.gg.deals/6d/38/363da1aa77190a475d9871d0d1bdaa68d5d0.svg": "DLGAMER",
+            "https://img.gg.deals/06/46/9941ae8cf02a6bca9b720185e4e1fd4713db.svg": "DLGAMER",
+            "https://img.gg.deals/63/06/c2664d916ee13c4aee10e0659238f5898eaf_90xt35_Q100.png": "WinGameStore",
+            "https://img.gg.deals/7e/c6/69f2e354883c0ce9703081ae16e5c624a411_90xt35_Q100.png": "WinGameStore",
         }
 
         # Get the shop name based on the logo
         shop_name = shop_mapping.get(
-            shop_logo, "Unknown Shop - Report it to @522860386664579082"
+            shop_logo, "Unknown Shop - Report it to Dev"
         )
 
         # Update the deal details with the shop name
