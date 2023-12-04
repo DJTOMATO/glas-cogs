@@ -8,6 +8,7 @@
     "hidden": false,
     "disabled": false,
     "type": "COG",
+    "requirements": ["lxml", "asyncio", "aiohttp", "bs4"],
     "end_user_data_statement": "This cog does not store end user data.",
     "min_bot_version": "3.5.0"
 }
