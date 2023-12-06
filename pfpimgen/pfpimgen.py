@@ -63,6 +63,7 @@ class PfpImgen(commands.Cog):
         )
         self.session = aiohttp.ClientSession()
         self.log = logging.getLogger("glas.glas-cogs.pfpimgen")
+
     async def cog_unload(self):
         await self.session.close()
 
@@ -71,8 +72,6 @@ class PfpImgen(commands.Cog):
     ) -> None:
         return
 
-
-        
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["catgirl"], cooldown_after_parsing=True)
@@ -162,7 +161,9 @@ class PfpImgen(commands.Cog):
             # Download the server image asynchronously
             server_image_url = guild.icon.url
             server_image_bytes = await self.download_image(server_image_url)
-            task = functools.partial(self.gen_wake, ctx, avatar, username, server_image_bytes, folder, file)
+            task = functools.partial(
+                self.gen_wake, ctx, avatar, username, server_image_bytes, folder, file
+            )
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -270,7 +271,6 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -885,6 +885,27 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def brandnew(self, ctx, *, member: Optional[FuzzyMember] = None):
+        """It's brand new"""
+        if not member:
+            biden = None
+            member = ctx.author
+        else:
+            biden = ctx.author
+        async with ctx.typing():
+            trump = await self.get_avatar(member)
+            if biden:
+                biden = await self.get_avatar(biden)
+            task = functools.partial(self.gen_brandnew, ctx, trump, biden_avatar=biden)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def ireally(self, ctx, *, member: FuzzyMember = None):
         """I really shouln't..."""
         if not member:
@@ -927,6 +948,23 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_sus, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def failed(self, ctx, *, member: FuzzyMember = None):
+        """Failed product..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_product, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -1468,6 +1506,28 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "horny.png")
+        fp.close()
+        return _file
+
+    def gen_brandnew(self, ctx, member_avatar, *, biden_avatar=None):
+        member_avatar = self.bytes_to_image(member_avatar, 160)
+        # base canvas
+        im = Image.open(
+            f"{bundled_data_path(self)}/brandnew/brandnew_mask.png", mode="r"
+        ).convert("RGBA")
+
+        # avatars
+        im.paste(member_avatar, (418, 37), member_avatar)
+        member_avatar.close()
+        if biden_avatar:
+            biden_avatar = self.bytes_to_image(biden_avatar, 160)
+            im.paste(biden_avatar, (80, 420), biden_avatar)
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "brandnew.png")
         fp.close()
         return _file
 
@@ -2357,6 +2417,34 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "sugoi.png")
         fp.close()
         return _file
+    
+
+    def gen_product(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+
+        im = Image.new("RGBA", (1008, 756), None)
+        im.paste(member_avatar, (361, 183), member_avatar)
+        mask = Image.open(
+            f"{bundled_data_path(self)}/failed/failed_mask.png", mode="r"
+        ).convert("RGBA")
+        ribbon = Image.open(
+            f"{bundled_data_path(self)}/failed/spinner.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(mask, (0, 0), mask)
+        im.paste(ribbon, (470, 255), ribbon)
+        mask.close()
+        ribbon.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "failed.png")
+        fp.close()
+        return _file
+    
 
     def gen_bill(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 200)
@@ -2383,23 +2471,27 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "bill.png")
         fp.close()
         return _file
-    
+
     def gen_wake(self, ctx, member_avatar, username, server_avatar, file, folder):
         member_avatar = self.bytes_to_image(member_avatar, 200)
         server_image = Image.open(server_avatar).convert("RGBA").resize((77, 77))
 
         # Load all images in {bundled_data_path(self)}/korone/*.png (should be 0 to 8
         # 7 .png)
-        gif_sprites = [Image.open(f"{bundled_data_path(self)}/korone/{i}.png") for i in range(0, 7)]
+        gif_sprites = [
+            Image.open(f"{bundled_data_path(self)}/korone/{i}.png") for i in range(0, 7)
+        ]
 
         # Create an empty list to store the frames
         gif_frames = []
         new_x, new_y = 406, 180
         for count, image in enumerate(gif_sprites):
             text = str(username)
-            text = re.sub(r'[^a-zA-Z0-9_]', '', username)
-            #text = str(text+ str(count))
-            font = ImageFont.truetype(f"{bundled_data_path(self)}/Magistral-Cond-W08-Bold.ttf", 20)
+            text = re.sub(r"[^a-zA-Z0-9_]", "", username)
+            # text = str(text+ str(count))
+            font = ImageFont.truetype(
+                f"{bundled_data_path(self)}/Magistral-Cond-W08-Bold.ttf", 20
+            )
 
             # New image for each frame
             im = Image.new("RGBA", (498, 373), (0, 0, 0, 0))
@@ -2408,9 +2500,9 @@ class PfpImgen(commands.Cog):
 
             # Create a drawing object on the image
             canvas = ImageDraw.Draw(im)
-            #get length of username
+            # get length of username
             length = len(text)
-            #set margin
+            # set margin
             margin = 0
             if length > 6:
                 margin = length
@@ -2425,11 +2517,11 @@ class PfpImgen(commands.Cog):
                 margin = length
                 margin += 70
             if length < 6:
-                margin = 0 
+                margin = 0
 
             if count == 0:
                 new_x = 400 - margin
-                new_y = 170 
+                new_y = 170
             if count == 1:
                 new_x = 392 - margin
                 new_y = 170
@@ -2465,13 +2557,12 @@ class PfpImgen(commands.Cog):
                 stroke_width=3,
                 stroke_fill=(255, 29, 80),
             )
-            #self.log.warning(f"Appending image: {count}")
+            # self.log.warning(f"Appending image: {count}")
             # Append the modified image to the list
             gif_frames.append(im.copy())  # Use copy to avoid referencing the same image
 
-
         os.makedirs(folder, exist_ok=True)
-            
+
         # Assuming gif_frames is your list of frames
 
         # Duplicate each frame in the list when appending
@@ -2481,10 +2572,10 @@ class PfpImgen(commands.Cog):
         duplicated_frames[0].save(
             os.path.join(folder, "wakeup.gif"),
             save_all=True,
-            append_images=duplicated_frames, # + duplicated_frames[1:] + duplicated_frames[1:],
+            append_images=duplicated_frames,  # + duplicated_frames[1:] + duplicated_frames[1:],
             optimize=False,
             duration=60,
-            loop=0
+            loop=0,
         )
 
         _file = discord.File(os.path.join(folder, "wakeup.gif"))
@@ -2542,12 +2633,12 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "bau.png")
         fp.close()
         return _file
-    
+
     def gen_better(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 340)
 
         member_avatar = member_avatar.rotate(15, Image.NEAREST, expand=1)
-        
+
         im = Image.new("RGBA", (465, 500), None)
         better_mask = Image.open(
             f"{bundled_data_path(self)}/better/better_mask.png", mode="r"
@@ -2555,7 +2646,7 @@ class PfpImgen(commands.Cog):
 
         im.paste(member_avatar, (30, 40), member_avatar)
         im.paste(better_mask, (0, 0), better_mask)
-        
+
         better_mask.close()
         member_avatar.close()
         # make im transparent by making white areas transparent
@@ -2571,16 +2662,13 @@ class PfpImgen(commands.Cog):
 
         im.putdata(new_data)
 
-        fp = BytesIO() 
+        fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "playbettergames.png")
         fp.close()
         return _file
-
-
-
 
     def gen_mygf(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 306)
