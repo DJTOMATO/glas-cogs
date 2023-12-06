@@ -319,12 +319,12 @@ class WebScraper:
             "https://img.gg.deals/06/46/9941ae8cf02a6bca9b720185e4e1fd4713db.svg": "DLGAMER",
             "https://img.gg.deals/63/06/c2664d916ee13c4aee10e0659238f5898eaf_90xt35_Q100.png": "WinGameStore",
             "https://img.gg.deals/7e/c6/69f2e354883c0ce9703081ae16e5c624a411_90xt35_Q100.png": "WinGameStore",
+            "https://img.gg.deals/31/f0/f443dc6e18c2a93ba59fb9a42cbb9eba41e3_90xt35_Q100.png": "Epic Store",
+            "https://img.gg.deals/31/f0/f443dc6e18c2a93ba59fb9a42cbb9eba41e3_90xt35_Q100.png": "Epic Store",
         }
 
         # Get the shop name based on the logo
-        shop_name = shop_mapping.get(
-            shop_logo, "Unknown Shop - Report it to Dev"
-        )
+        shop_name = shop_mapping.get(shop_logo, "Unknown Shop - Report it to Dev")
 
         # Update the deal details with the shop name
         deal_details["Shop Name"] = shop_name
@@ -613,12 +613,23 @@ class WebScraper:
                 playable_on.append(platform_title)
         else:
             playable_on = []
-
-        developer_publisher = (
-            game_info_widget.find("h4", string="Developer / Publisher")
-            .find_next("p", class_="game-info-details-content")
-            .text.strip()
+        developer_publisher = "None"
+        developer_publisher_element = game_info_widget.find(
+            "h4", string="Developer / Publisher"
         )
+        if developer_publisher_element:
+            next_p_element = developer_publisher_element.find_next(
+                "p", class_="game-info-details-content"
+            )
+            if next_p_element:
+                developer_publisher = next_p_element.text.strip()
+                # Continue with further processing
+            else:
+                print("No <p> element with class 'game-info-details-content' found.")
+                # Handle the case when the <p> element is not found
+        else:
+            print("No <h4> element with string 'Developer / Publisher' found.")
+            # Handle the case when the <h4> element is not found
 
         reviews_element = game_info_widget.find("h4", string="Reviews")
 
@@ -805,10 +816,28 @@ class WebScraper:
         pricing_details_filtered = [
             {
                 "Shop Name": details["Shop Name"],
-                "Price": float(details["Price"].replace("~", "").replace("$", "")),
-                "Formatted Price": details[
-                    "Price"
-                ],  # Store the original formatted price
+                "Price": 0
+                if details["Price"].lower() == "free"
+                else float(
+                    details["Price"]
+                    .replace("~", "")
+                    .replace("$", "")
+                    .replace("¥", "")
+                    .replace("€", "")
+                    .replace("£", "")
+                    .replace("CHF", "")
+                    .replace("CA$", "")
+                    .replace("A$", "")
+                    .replace("AU$", "")
+                    .replace("元", "")
+                    .replace("₹", "")
+                    .replace("₩", "")
+                    .replace("R$", "")
+                    .replace("₽", "")
+                    .replace(",", ".")  # Replace commas with dots
+                    .rsplit(".", 1)[0]  # Replace only the last dot
+                ),
+                "Formatted Price": details["Price"],
                 "Deal Date": details["Deal Date"],
                 "Shop URL": details["Shop URL"],
                 "Best Deal": details["Best Deal"],
