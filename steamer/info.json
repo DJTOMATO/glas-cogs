@@ -1,0 +1,13 @@
+{
+    "name": "Steamer!",
+    "short": "asd.",
+    "description": "asd.",
+    "install_msg": "Thanks for installing `Steamer` cog! Please enjoy it :D",
+    "author": ["TheRareGamer", "Glas"],
+    "tags": ["image", "firework", "gif"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
