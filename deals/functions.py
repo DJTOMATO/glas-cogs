@@ -324,6 +324,7 @@ class WebScraper:
             "https://img.gg.deals/fe/08/de2c02530fb90ebba80e45fbe39cc02c3324_90xt35_Q100.png": "YUPLAY*",
             "https://img.gg.deals/86/56/0acb7fb648728c5a5ad370db7c26714b5cb9.svg": "GamesPlanet US",  
             "https://img.gg.deals/0a/8c/cbd93a75cce4d35d2e91fca073f2353fa9bd.svg": "GamesPlanet US",
+            "https://img.gg.deals/53/0e/fbc31eb9b0fa0d8d7cc4534d559fd48977a3_90xt35_Q100.png": "Nuveem",
             
         }
 
