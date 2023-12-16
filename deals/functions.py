@@ -702,20 +702,36 @@ class WebScraper:
             ]
         else:
             tags = []  # Return an empty list when tags are not present
-
         game_info_features = soup.select_one("#game-info-features")
-        features_section = game_info_features.find("h4", string="Features")
 
-        if features_section:
-            features = [
-                feature.text.strip()
-                for feature in features_section.find_next(
-                    "div",
-                    class_="d-flex tags-list badges-container tags-list-dotdotdot",
-                ).find_all("a", class_="badge-wrapper")[:3]
-            ]
+        if game_info_features:
+            features_section = game_info_features.find("h4", string="Features")
+            if features_section:
+                features = [
+                    feature.text.strip()
+                    for feature in features_section.find_next(
+                        "div",
+                        class_="d-flex tags-list badges-container tags-list-dotdotdot",
+                    ).find_all("a", class_="badge-wrapper")[:3]
+                ]
         else:
-            features = []
+            self.log.warning("Game info features not found.")
+            features = []  # Return an empty list when features are not present
+        
+        #test
+        # game_info_features = soup.select_one("#game-info-features")
+        # features_section = game_info_features.find("h4", string="Features")
+
+        # if features_section:
+        #     features = [
+        #         feature.text.strip()
+        #         for feature in features_section.find_next(
+        #             "div",
+        #             class_="d-flex tags-list badges-container tags-list-dotdotdot",
+        #         ).find_all("a", class_="badge-wrapper")[:3]
+        #     ]
+        # else:
+        #     features = []
 
         game_info_links = soup.select_one(
             ".game-info-box .game-connected-list.type-links"
@@ -790,13 +806,13 @@ class WebScraper:
             value=" - ".join([f"{tag}" for tag in scraped_game_info.get("tags")]),
             inline=True,
         )
-        embed.add_field(
-            name="Features",
-            value=" - ".join(
-                [f"{feature}" for feature in scraped_game_info.get("features")]
-            ),
-            inline=True,
-        )
+        features = scraped_game_info.get("features")
+        if features:
+            embed.add_field(
+                name="Features",
+                value=" - ".join([f"{feature}" for feature in features]),
+                inline=True,
+            )
         embed.add_field(
             name="Reviews",
             value=f"{scraped_game_info.get('reviews')}",
