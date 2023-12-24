@@ -667,7 +667,7 @@ class Movietar(commands.Cog):
         cat2 = (
             ImageClip(numpydata2)
             .set_start(5.2)
-            .set_duration(0.52)
+            .set_duration(0.61)
             .resize((avisize))
             .set_position((pos))
         )
