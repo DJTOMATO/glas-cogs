@@ -916,6 +916,23 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def ash(self, ctx, *, member: FuzzyMember = None):
+        """You become ash..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_ash, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -2321,6 +2338,28 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "sugoi.png")
+        fp.close()
+        return _file
+
+    def gen_sugoi(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 500)
+
+        im = Image.new("RGBA", (500, 500), None)
+        im.paste(member_avatar, (0, 0), member_avatar)
+        head = Image.open(
+            f"{bundled_data_path(self)}/ash/ash.png", mode="r"
+        ).convert("RGBA")
+
+
+        im.paste(head, (0, 0), head)
+        head.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "ash.png")
         fp.close()
         return _file
 

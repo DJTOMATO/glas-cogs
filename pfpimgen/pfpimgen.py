@@ -935,6 +935,40 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def jack(self, ctx, *, member: FuzzyMember = None):
+        """Jack Sparrow's tresaure..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_jack, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def ash(self, ctx, *, member: FuzzyMember = None):
+        """You become ash..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_ash, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def pretend(self, ctx, *, member: FuzzyMember = None):
         """You become Essex..."""
         if not member:
@@ -2372,6 +2406,46 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
+    def gen_ash(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 500)
+
+        im = Image.new("RGBA", (500, 500), None)
+        im.paste(member_avatar, (0, 0), member_avatar)
+        head = Image.open(
+            f"{bundled_data_path(self)}/ash/ash.png", mode="r"
+        ).convert("RGBA")
+        im.paste(head, (50, 30), head)
+        head.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "ash.png")
+        fp.close()
+        return _file
+
+    def gen_jack(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+
+        im = Image.new("RGBA", (337, 746), None)
+        im.paste(member_avatar, (30,258), member_avatar)
+        head = Image.open(
+            f"{bundled_data_path(self)}/jack/jack.png", mode="r"
+        ).convert("RGBA")
+        im.paste(head, (0, 0), head)
+        head.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "jack.png")
+        fp.close()
+        return _file
+    
     def gen_bill(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 200)
 
