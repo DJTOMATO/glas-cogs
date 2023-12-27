@@ -4,9 +4,12 @@ import functools
 from io import BytesIO
 from typing import Literal, Optional
 import logging
+from tempfile import NamedTemporaryFile
 import tempfile
+import os
 import pathlib
-from moviepy.editor import ImageClip
+from moviepy.editor import VideoClip as ImageClip
+import subprocess
 import aiohttp
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
@@ -17,14 +20,23 @@ from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.data_manager import cog_data_path
 import moviepy.editor
+import traceback
 from concurrent.futures import ThreadPoolExecutor
+import io
+from functools import partial
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
-import io
+
 from .converters import FuzzyMember
 import cv2
 import numpy as np
-from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip, ColorClip
+from moviepy.editor import (
+    VideoFileClip,
+    ImageClip,
+    CompositeVideoClip,
+    ColorClip,
+    TextClip,
+)
 from moviepy.video.fx import all as vfx  # Import all video effects
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.fx.all import resize, mask_color
@@ -51,9 +63,28 @@ class Movietar(commands.Cog):
         )
         self.log = logging.getLogger("red.glas-cogs.movietar")
         self.session = aiohttp.ClientSession()
+        self.executor = ThreadPoolExecutor()
 
     def cog_unload(self):
         asyncio.create_task(self.session.close())
+
+    def add_image_to_clip(self, clip, image, start, duration, size, position):
+        image_clip = (
+            ImageClip(image)
+            .set_start(start)
+            .set_duration(duration)
+            .resize(size)
+            .set_position(position)
+        )
+        return CompositeVideoClip([clip, image_clip])
+
+    def add_text_to_clip(self, clip, text, fontsize, color, position):
+        text_clip = (
+            TextClip(text, fontsize=fontsize, color=color)
+            .set_position(position)
+            .set_duration(clip.duration)
+        )
+        return CompositeVideoClip([clip, text_clip])
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -397,7 +428,6 @@ class Movietar(commands.Cog):
                 file = discord.File(file, filename="lold.mp4")
                 await ctx.send(file=file)
 
-
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["lalone"], cooldown_after_parsing=True)
@@ -421,6 +451,114 @@ class Movietar(commands.Cog):
                 file = discord.File(file, filename="akira.mp4")
                 await ctx.send(file=file)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["yocuando"], cooldown_after_parsing=True)
+    async def mewhen(
+        self,
+        ctx,
+        member: FuzzyMember = None,
+        *,
+        text: commands.clean_content(fix_channel_mentions=True),
+    ):
+        """Mewhen..."""
+        if not member:
+            member = ctx.author
+        videotype = "mewhen.mp4"
+        pos = (0, 0)
+        avisize = (100, 100)
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                folder = pathlib.Path(
+                    tmpdirname
+                )  # cant tell if it returns a string or a path object
+                file = folder / f"{ctx.message.id}final.mp4"
+                image = await self.gen_vid_mewhen(
+                    ctx, avatar, file, folder, videotype, text
+                )  # just generates the video
+                # def gen_vid_mewhen(self, ctx, member_avatar, fp, folder, videotype, text):
+                file = discord.File(file, filename="mewhen.mp4")
+                await ctx.send(file=file)
+
+    def generate_video(self, ctx, member_avatar, file_path, folder, text):
+        try:
+            print("Start video generation")
+
+            member_avatar = self.bytes_to_image(member_avatar, 200)
+            print("Avatar processed")
+
+            numpydata = np.asarray(member_avatar)
+            avisize = (200, 200)
+
+            clip = VideoFileClip(f"{bundled_data_path(self) / 'mewhen.mp4'}")
+            print("Video clip loaded")
+
+            duration = clip.duration
+            clip = clip.volumex(1.0)
+
+            def add_cat_clip(start, duration, pos, avisize, numpydata):
+                nonlocal clip
+                cat_clip = (
+                    ImageClip(numpydata)  # Use numpydata directly as the image data
+                    .set_start(start)
+                    .set_duration(duration)
+                    .resize(avisize)
+                    .set_position(pos)
+                )
+                clip = CompositeVideoClip([clip, cat_clip])
+
+            # Add cat clips
+            add_cat_clip(1.98, 1.2, (100, 100), (200, 200), numpydata)
+            add_cat_clip(2.04, 1.61, (100, 100), (200, 200), numpydata)
+            add_cat_clip(5.05, 0.8, (100, 100), (200, 200), numpydata)
+            add_cat_clip(6.08, 0.8, (100, 100), (200, 200), numpydata)
+            add_cat_clip(7.09, 2.8, (100, 100), (200, 200), numpydata)
+            add_cat_clip(10.09, 0.5, (100, 100), (200, 200), numpydata)
+            add_cat_clip(12.08, 1.5, (100, 100), (200, 200), numpydata)
+
+            print("Cat clips added")
+
+            # Text clip
+            text_clip = TextClip(
+                text or "", fontsize=20, color="white", size=(avisize[0], 200)
+            ).set_duration(duration)
+            print("Text clip created")
+
+            # Composite the clips
+            final_clip = CompositeVideoClip(
+                [clip, text_clip.set_pos(("center", "top"))]
+            )
+            print("Final clip created")
+
+            video_buffer = BytesIO()
+
+            # Add the following debug statements
+            print("FFMPEG Version:")
+            subprocess.run(["ffmpeg", "-version"], check=True)
+
+            print("Generating video file...")
+            final_clip.write_videofile(
+                str(file_path),  # Use the file path instead of BytesIO
+                {
+                    "threads": 1,
+                    "preset": "superfast",
+                    "verbose": True,
+                    "logger": None,
+                    "codec": "libx264",
+                    "audio_codec": "aac",
+                },
+            )
+
+            video_buffer.seek(0)
+
+            print("Video generation successful")
+            return video_buffer
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            traceback.print_exc()  # Add this line to print the traceback
+            return None
 
     # ads
     async def generate_image(self, ctx: commands.Context, task: functools.partial):
@@ -655,7 +793,7 @@ class Movietar(commands.Cog):
         clip = CompositeVideoClip([clip, cat])
         avisize = (640, 360)
         pos = (0, 0)
-                # Apply a burn effect
+        # Apply a burn effect
         enhancer = ImageEnhance.Contrast(member_avatar)
         burned_image = enhancer.enhance(0.5)  # Reduce contrast to simulate burn
 
@@ -687,3 +825,107 @@ class Movietar(commands.Cog):
         )
         path = fp
         return data
+
+        # add_cat_clip(1.98, 1.2, (100, 100), (200, 200), numpydata)
+        # add_cat_clip(2.04, 1.61, (100, 100), (200, 200), numpydata)
+        # add_cat_clip(5.05, 0.8, (100, 100), (200, 200), numpydata)
+        # add_cat_clip(6.08, 0.8, (100, 100), (200, 200), numpydata)
+        # add_cat_clip(7.09, 2.8, (100, 100), (200, 200), numpydata)
+        # add_cat_clip(10.09, 0.5, (100, 100), (200, 200), numpydata)
+        # add_cat_clip(12.08, 1.5, (100, 100), (200, 200), numpydata)
+
+    async def async_write_videofile(self, fp, clip, folder, ctx):
+        loop = asyncio.get_event_loop()
+
+        # Use ThreadPoolExecutor to run the blocking write_videofile in a separate thread
+        await loop.run_in_executor(
+            self.executor,
+            partial(
+                clip.write_videofile,
+                str(fp),
+                threads=1,
+                preset="superfast",
+                verbose=False,
+                logger=None,
+                codec="libx264",
+                audio_codec="aac",
+                temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4"),
+            ),
+        )
+
+    async def gen_vid_mewhen(self, ctx, member_avatar, fp, folder, videotype, text):
+        # Convert member_avatar to an image
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+
+        # Load video clip
+        clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
+        duration = clip.duration
+
+        numpydata = np.asarray(member_avatar)
+
+        # Create a list to hold all clips
+        all_clips = [clip]
+
+        # Add cat clips directly
+        cat_clips = [
+            ImageClip(numpydata)
+            .set_start(start_time)
+            .set_duration(duration)
+            .resize(resize_size)
+            .set_position(position)
+            for start_time, duration, resize_size, position in [
+                (1.1, 0.9, (400, 400), (425, 200)),  # peinado
+                (2, 1.18, (250, 250), (470, 425)),  # garage puerta
+                (4.3, 1.10, (300, 300), (200, 230)),  # baile izquierda
+                (5.4, 1.06, (260, 260), (490, 200)),  # baile centro
+                (6.5, 1.077, (300, 300), (470, 240)),  # toma frente garage
+                (7.64, 2.278, (400, 400), (50, 240)),  # lateral  garage
+                (10, 1.0, (320, 320), (480, 230)),  # garage frontal
+                (12.1, 2.1, (350, 350), (520, 130)),  # centro amarillo
+                (14.444, 0.808, (250, 250), (570, 200)),  # grupal
+            ]
+        ]
+        # add clip to all_clips
+        all_clips.extend(cat_clips)
+
+        # Composite video with avatar, cat clips, and text
+        clip = CompositeVideoClip(all_clips)
+
+        # Set top padding and maximum height for the text
+        top_padding = 22
+
+        # Set a fixed ratio for font size relative to video width
+        font_size_ratio = 0.04  # Adjust this ratio as needed
+
+        # Calculate font size based on the video width and the fixed ratio
+        font_size = int(clip.w * font_size_ratio)
+
+        # Create the TextClip with the calculated font size and set the width to the video width
+        text_clip = TextClip(
+            text,
+            color="black",
+            bg_color="transparent",
+            font="Arial",
+            size=(clip.w, None),  # Set width to video width
+            method="caption",
+            align="center",
+            fontsize=font_size,
+        )
+
+        # Set top padding to the text
+        text_clip = (
+            text_clip.set_position(("center", top_padding))
+            .set_start(0)
+            .set_duration(15)
+        )
+
+        # Add the text clip to the list
+        all_clips.append(text_clip)
+
+        # Composite video with avatar, cat clips, and text
+        clip = CompositeVideoClip(all_clips)
+
+        # Use asyncio to write the video file asynchronously
+        await self.async_write_videofile(fp, clip, folder, ctx)
+
+        return fp
