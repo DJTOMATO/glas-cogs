@@ -1127,7 +1127,7 @@ class PfpImgen(commands.Cog):
         im.paste(nekomask, (0, 0), nekomask)
         nekomask.close()
         member_avatar.close()
-
+#uppy test
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
