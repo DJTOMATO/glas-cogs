@@ -856,7 +856,13 @@ class Movietar(commands.Cog):
     async def gen_vid_mewhen(self, ctx, member_avatar, fp, folder, videotype, text):
         # Convert member_avatar to an image
         member_avatar = self.bytes_to_image(member_avatar, 300)
+        # Create a circular mask
+        mask = Image.new("L", member_avatar.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, member_avatar.size[0], member_avatar.size[1]), fill=255)
 
+        # Apply the circular mask to the avatar
+        member_avatar.putalpha(mask)
         # Load video clip
         clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
         duration = clip.duration
