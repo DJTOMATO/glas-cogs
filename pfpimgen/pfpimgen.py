@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import os
+
 import asyncio
 from email.mime import image
 import functools
@@ -29,9 +29,6 @@ from io import BytesIO
 from typing import Literal, Optional
 import random
 import aiohttp
-import tempfile
-import pathlib
-import re
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
 import numpy as np
@@ -40,7 +37,6 @@ from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
-import logging
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -62,7 +58,6 @@ class PfpImgen(commands.Cog):
             force_registration=True,
         )
         self.session = aiohttp.ClientSession()
-        self.log = logging.getLogger("glas.glas-cogs.pfpimgen")
 
     async def cog_unload(self):
         await self.session.close()
@@ -134,36 +129,6 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_you, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["awake"], cooldown_after_parsing=True)
-    async def wakeup(self, ctx, *, member: FuzzyMember = None):
-        """Wake up!..."""
-        if not member:
-            member = ctx.author
-        guild = ctx.guild
-
-        username = member.display_name
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                folder = pathlib.Path(
-                    tmpdirname
-                )  # cant tell if it returns a string or a path object
-                file = folder / f"{ctx.message.id}.gif"
-        if guild.icon:
-            # Download the server image asynchronously
-            server_image_url = guild.icon.url
-            server_image_bytes = await self.download_image(server_image_url)
-            task = functools.partial(
-                self.gen_wake, ctx, avatar, username, server_image_bytes, folder, file
-            )
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -885,27 +850,6 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def brandnew(self, ctx, *, member: Optional[FuzzyMember] = None):
-        """It's brand new"""
-        if not member:
-            biden = None
-            member = ctx.author
-        else:
-            biden = ctx.author
-        async with ctx.typing():
-            trump = await self.get_avatar(member)
-            if biden:
-                biden = await self.get_avatar(biden)
-            task = functools.partial(self.gen_brandnew, ctx, trump, biden_avatar=biden)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
     async def ireally(self, ctx, *, member: FuzzyMember = None):
         """I really shouln't..."""
         if not member:
@@ -940,14 +884,14 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def sus(self, ctx, *, member: FuzzyMember = None):
-        """You're among us..."""
+    async def secreto(self, ctx, *, member: FuzzyMember = None):
+        """El Secreto de la creatividad"""
         if not member:
             member = ctx.author
 
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_sus, ctx, avatar)
+            task = functools.partial(self.gen_creatividad, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -957,14 +901,14 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def failed(self, ctx, *, member: FuzzyMember = None):
-        """Failed product..."""
+    async def sus(self, ctx, *, member: FuzzyMember = None):
+        """You're among us..."""
         if not member:
             member = ctx.author
 
         async with ctx.typing():
             avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_product, ctx, avatar)
+            task = functools.partial(self.gen_sus, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -1506,28 +1450,6 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "horny.png")
-        fp.close()
-        return _file
-
-    def gen_brandnew(self, ctx, member_avatar, *, biden_avatar=None):
-        member_avatar = self.bytes_to_image(member_avatar, 160)
-        # base canvas
-        im = Image.open(
-            f"{bundled_data_path(self)}/brandnew/brandnew_mask.png", mode="r"
-        ).convert("RGBA")
-
-        # avatars
-        im.paste(member_avatar, (418, 37), member_avatar)
-        member_avatar.close()
-        if biden_avatar:
-            biden_avatar = self.bytes_to_image(biden_avatar, 160)
-            im.paste(biden_avatar, (80, 420), biden_avatar)
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "brandnew.png")
         fp.close()
         return _file
 
@@ -2322,6 +2244,38 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
+    def gen_creatividad(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 350)
+
+        # Create a circular mask
+        mask = Image.new("L", member_avatar.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, member_avatar.size[0], member_avatar.size[1]), fill=255)
+
+        # Apply the circular mask to the avatar
+        member_avatar.putalpha(mask)
+
+        im = Image.new("RGBA", (458, 612), None)
+        creatividad = Image.open(
+            f"{bundled_data_path(self)}/creatividad/creatividad.png", mode="r"
+        ).convert("RGBA")
+        muy = Image.open(
+            f"{bundled_data_path(self)}/creatividad/muy.png", mode="r"
+        ).convert("RGBA")
+        im.paste(creatividad, (0, 0), creatividad)
+        im.paste(member_avatar, (50, 100), member_avatar)
+        im.paste(muy, (0, 0), muy)
+        creatividad.close()
+        member_avatar.close()
+        muy.close()
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "creatividad.png")
+        fp.close()
+        return _file
+
     def gen_didyou(self, ctx, member_avatar, username):
         member_avatar = self.bytes_to_image(member_avatar, 500)
 
@@ -2417,34 +2371,6 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "sugoi.png")
         fp.close()
         return _file
-    
-
-    def gen_product(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
-
-        im = Image.new("RGBA", (1008, 756), None)
-        im.paste(member_avatar, (361, 183), member_avatar)
-        mask = Image.open(
-            f"{bundled_data_path(self)}/failed/failed_mask.png", mode="r"
-        ).convert("RGBA")
-        ribbon = Image.open(
-            f"{bundled_data_path(self)}/failed/spinner.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(mask, (0, 0), mask)
-        im.paste(ribbon, (470, 255), ribbon)
-        mask.close()
-        ribbon.close()
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "failed.png")
-        fp.close()
-        return _file
-    
 
     def gen_bill(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 200)
@@ -2470,116 +2396,6 @@ class PfpImgen(commands.Cog):
         im.close()
         _file = discord.File(fp, "bill.png")
         fp.close()
-        return _file
-
-    def gen_wake(self, ctx, member_avatar, username, server_avatar, file, folder):
-        member_avatar = self.bytes_to_image(member_avatar, 200)
-        server_image = Image.open(server_avatar).convert("RGBA").resize((77, 77))
-
-        # Load all images in {bundled_data_path(self)}/korone/*.png (should be 0 to 8
-        # 7 .png)
-        gif_sprites = [
-            Image.open(f"{bundled_data_path(self)}/korone/{i}.png") for i in range(0, 7)
-        ]
-
-        # Create an empty list to store the frames
-        gif_frames = []
-        new_x, new_y = 406, 180
-        for count, image in enumerate(gif_sprites):
-            text = str(username)
-            text = re.sub(r"[^a-zA-Z0-9_]", "", username)
-            # text = str(text+ str(count))
-            font = ImageFont.truetype(
-                f"{bundled_data_path(self)}/Magistral-Cond-W08-Bold.ttf", 20
-            )
-
-            # New image for each frame
-            im = Image.new("RGBA", (498, 373), (0, 0, 0, 0))
-            im.paste(server_image, (355, 75), server_image)
-            im.paste(image, (0, 0), image)
-
-            # Create a drawing object on the image
-            canvas = ImageDraw.Draw(im)
-            # get length of username
-            length = len(text)
-            # set margin
-            margin = 0
-            if length > 6:
-                margin = length
-
-            if length > 10:
-                margin = length
-                margin += 30
-            if length > 15:
-                margin = length
-                margin += 50
-            if length > 30:
-                margin = length
-                margin += 70
-            if length < 6:
-                margin = 0
-
-            if count == 0:
-                new_x = 400 - margin
-                new_y = 170
-            if count == 1:
-                new_x = 392 - margin
-                new_y = 170
-            if count == 2:
-                new_x = 388 - margin
-                new_y = 170
-            if count == 3:
-                new_x = 395 - margin
-                new_y = 170
-            if count == 4:
-                new_x = 385 - margin
-                new_y = 170
-            if count == 5:
-                new_x = 395 - margin
-                new_y = 170
-            if count == 6:
-                new_x = 400 - margin
-                new_y = 170
-            if count == 7:
-                new_x = 395 - margin
-                new_y = 170
-            if count == 8:
-                new_x = 380 - margin
-                new_y = 170
-
-            # Draw text on the image
-            canvas.text(
-                (new_x, new_y),
-                text,
-                font=font,
-                fill=(255, 255, 255),
-                align="left",
-                stroke_width=3,
-                stroke_fill=(255, 29, 80),
-            )
-            # self.log.warning(f"Appending image: {count}")
-            # Append the modified image to the list
-            gif_frames.append(im.copy())  # Use copy to avoid referencing the same image
-
-        os.makedirs(folder, exist_ok=True)
-
-        # Assuming gif_frames is your list of frames
-
-        # Duplicate each frame in the list when appending
-        duplicated_frames = [frame for frame in gif_frames]
-
-        # Create a GIF based on all frames stored in duplicated_frames
-        duplicated_frames[0].save(
-            os.path.join(folder, "wakeup.gif"),
-            save_all=True,
-            append_images=duplicated_frames,  # + duplicated_frames[1:] + duplicated_frames[1:],
-            optimize=False,
-            duration=60,
-            loop=0,
-        )
-
-        _file = discord.File(os.path.join(folder, "wakeup.gif"))
-
         return _file
 
     def gen_clownoffice(self, ctx, member_avatar):
@@ -2883,8 +2699,3 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "pretend.png")
         fp.close()
         return _file
-
-    async def download_image(self, url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                return BytesIO(await response.read())
