@@ -383,49 +383,6 @@ class Movietar(commands.Cog):
                 await ctx.send(file=file)
 
     @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 60, commands.BucketType.user)
-    @commands.command(aliases=["chuhh"], cooldown_after_parsing=True)
-    async def chuh(self, ctx, *, member: FuzzyMember = None):
-        """chuh..."""
-        if not member:
-            member = ctx.author
-        videotype = "huh.mp4"
-        pos = (0, 0)
-        avisize = (640, 360)
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                folder = pathlib.Path(tmpdirname)
-                file = folder / f"{ctx.message.id}final.mp4"
-                image = await self.gen_vidgs(
-                    ctx, avatar, file, folder, videotype, pos, avisize
-                )
-                file = discord.File(file, filename="huh.mp4")
-            await ctx.send(file=file)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 60, commands.BucketType.user)
-    @commands.command(aliases=["herewego"], cooldown_after_parsing=True)
-    async def awshit(self, ctx, *, member: FuzzyMember = None):
-        """CJ....."""
-        if not member:
-            member = ctx.author
-        videotype = "awshit.mp4"
-        pos = (0, 0)
-        avisize = (640, 360)
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                folder = pathlib.Path(tmpdirname)
-                file = folder / f"{ctx.message.id}final.mp4"
-
-                image = await self.gen_vidas(
-                    ctx, avatar, file, folder, videotype, pos, avisize
-                )
-                file = discord.File(file, filename="aws.mp4")
-            await ctx.send(file=file)
-
-    @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["lolazo"], cooldown_after_parsing=True)
     async def lold(self, ctx, *, member: FuzzyMember = None):
