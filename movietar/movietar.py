@@ -13,7 +13,7 @@ import subprocess
 import aiohttp
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-from redbot.core import commands
+from redbot.core import commands, app_commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
@@ -85,6 +85,26 @@ class Movietar(commands.Cog):
             .set_duration(clip.duration)
         )
         return CompositeVideoClip([clip, text_clip])
+
+    @commands.hybrid_command(description="Make meme videos with people's avatars.")
+    @app_commands.guild_only()
+    @app_commands.describe(video="The video you want to make.", avatar="The user whose avatar you want in the video.")
+    @app_commands.choices(video=[app_commands.Choice(name="List of crimes", value="crimenes"),
+                                 app_commands.Choice(name="4K", value="fourk"),
+                                 app_commands.Choice(name="I have the power", value="heman"),
+                                 app_commands.Choice(name="I blame somebody", value="blame"),
+                                 app_commands.Choice(name="Financial support", value="bernie"),
+                                 app_commands.Choice(name="Consequences", value="cons"),
+                                 app_commands.Choice(name="Facts, not feelings", value="feeling"),
+                                 app_commands.Choice(name="No god no", value="nogod"),
+                                 app_commands.Choice(name="What has this place become", value="place"),
+                                 app_commands.Choice(name="Cocaine", value="flour"),
+                                 app_commands.Choice(name="Wtf", value="wtf"),
+                                 app_commands.Choice(name="Leave me alone", value="akira")])
+    async def makevideo(self, ctx: commands.Context, video: str, avatar: discord.Member):
+        if not ctx.interaction:
+            return await ctx.reply("Please use the slash command.")
+        await self.__dict__[video](ctx, member=avatar)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -363,49 +383,6 @@ class Movietar(commands.Cog):
                 await ctx.send(file=file)
 
     @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 60, commands.BucketType.user)
-    @commands.command(aliases=["chuhh"], cooldown_after_parsing=True)
-    async def chuh(self, ctx, *, member: FuzzyMember = None):
-        """chuh..."""
-        if not member:
-            member = ctx.author
-        videotype = "huh.mp4"
-        pos = (0, 0)
-        avisize = (640, 360)
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                folder = pathlib.Path(tmpdirname)
-                file = folder / f"{ctx.message.id}final.mp4"
-                image = await self.gen_vidgs(
-                    ctx, avatar, file, folder, videotype, pos, avisize
-                )
-                file = discord.File(file, filename="huh.mp4")
-            await ctx.send(file=file)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 60, commands.BucketType.user)
-    @commands.command(aliases=["herewego"], cooldown_after_parsing=True)
-    async def awshit(self, ctx, *, member: FuzzyMember = None):
-        """CJ....."""
-        if not member:
-            member = ctx.author
-        videotype = "awshit.mp4"
-        pos = (0, 0)
-        avisize = (640, 360)
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                folder = pathlib.Path(tmpdirname)
-                file = folder / f"{ctx.message.id}final.mp4"
-
-                image = await self.gen_vidas(
-                    ctx, avatar, file, folder, videotype, pos, avisize
-                )
-                file = discord.File(file, filename="aws.mp4")
-            await ctx.send(file=file)
-
-    @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["lolazo"], cooldown_after_parsing=True)
     async def lold(self, ctx, *, member: FuzzyMember = None):
@@ -480,7 +457,7 @@ class Movietar(commands.Cog):
                 # def gen_vid_mewhen(self, ctx, member_avatar, fp, folder, videotype, text):
                 file = discord.File(file, filename="mewhen.mp4")
                 await ctx.send(file=file)
-
+    
     def generate_video(self, ctx, member_avatar, file_path, folder, text):
         try:
             print("Start video generation")
@@ -582,6 +559,10 @@ class Movietar(commands.Cog):
     def bytes_to_image(image: BytesIO, size: int):
         image = Image.open(image).convert("RGBA")
         image = image.resize((size, size), Image.Resampling.LANCZOS)
+        mask = Image.new("L", image.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + image.size, fill=255)
+        image.putalpha(mask)
         return image
 
     def gen_vid(self, ctx, member_avatar, fp, folder, videotype, pos, avisize):
