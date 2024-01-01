@@ -457,7 +457,7 @@ class Movietar(commands.Cog):
                 # def gen_vid_mewhen(self, ctx, member_avatar, fp, folder, videotype, text):
                 file = discord.File(file, filename="mewhen.mp4")
                 await ctx.send(file=file)
-
+    
     def generate_video(self, ctx, member_avatar, file_path, folder, text):
         try:
             print("Start video generation")
@@ -559,6 +559,10 @@ class Movietar(commands.Cog):
     def bytes_to_image(image: BytesIO, size: int):
         image = Image.open(image).convert("RGBA")
         image = image.resize((size, size), Image.Resampling.LANCZOS)
+        mask = Image.new("L", image.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + image.size, fill=255)
+        image.putalpha(mask)
         return image
 
     def gen_vid(self, ctx, member_avatar, fp, folder, videotype, pos, avisize):
