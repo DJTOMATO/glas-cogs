@@ -86,7 +86,7 @@ class Movietar(commands.Cog):
         )
         return CompositeVideoClip([clip, text_clip])
 
-    @app_commands.command(description="Make meme videos with people's avatars.")
+    @commands.hybrid_command(description="Make meme videos with people's avatars.")
     @app_commands.guild_only()
     @app_commands.describe(video="The video you want to make.", avatar="The user whose avatar you want in the video.")
     @app_commands.choices(video=[app_commands.Choice(name="Wanted", value="crimenes"),
@@ -104,8 +104,7 @@ class Movietar(commands.Cog):
                                  app_commands.Choice(name="Lol'd", value="lold"),
                                  app_commands.Choice(name="Leave me alone", value="akira"),
                                  app_commands.Choice(name="Me when", value="mewhen")])
-    async def makevideo(self, interaction: discord.Interaction, video: str, avatar: discord.Member):
-        ctx = await self.bot.get_context(interaction.message)
+    async def makevideo(self, ctx: commands.Context, video: str, avatar: discord.Member):
         await self.__dict__[video](ctx, member=avatar)
 
     @commands.bot_has_permissions(attach_files=True)
