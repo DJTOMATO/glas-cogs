@@ -100,10 +100,7 @@ class Movietar(commands.Cog):
                                  app_commands.Choice(name="What has this place become", value="place"),
                                  app_commands.Choice(name="Cocaine", value="flour"),
                                  app_commands.Choice(name="Wtf", value="wtf"),
-                                 app_commands.Choice(name="Here we go again", value="awshit"),
-                                 app_commands.Choice(name="Lol'd", value="lold"),
-                                 app_commands.Choice(name="Leave me alone", value="akira"),
-                                 app_commands.Choice(name="Me when", value="mewhen")])
+                                 app_commands.Choice(name="Leave me alone", value="akira")])
     async def makevideo(self, ctx: commands.Context, video: str, avatar: discord.Member):
         if not ctx.interaction:
             return await ctx.reply("Please use the slash command.")
