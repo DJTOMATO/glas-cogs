@@ -89,10 +89,10 @@ class Movietar(commands.Cog):
     @commands.hybrid_command(description="Make meme videos with people's avatars.")
     @app_commands.guild_only()
     @app_commands.describe(video="The video you want to make.", avatar="The user whose avatar you want in the video.")
-    @app_commands.choices(video=[app_commands.Choice(name="Wanted", value="crimenes"),
+    @app_commands.choices(video=[app_commands.Choice(name="List of crimes", value="crimenes"),
                                  app_commands.Choice(name="4K", value="fourk"),
-                                 app_commands.Choice(name="I've got the power", value="heman"),
-                                 app_commands.Choice(name="Blame", value="blame"),
+                                 app_commands.Choice(name="I have the power", value="heman"),
+                                 app_commands.Choice(name="I blame somebody", value="blame"),
                                  app_commands.Choice(name="Financial support", value="bernie"),
                                  app_commands.Choice(name="Consequences", value="cons"),
                                  app_commands.Choice(name="Facts, not feelings", value="feeling"),
@@ -105,6 +105,8 @@ class Movietar(commands.Cog):
                                  app_commands.Choice(name="Leave me alone", value="akira"),
                                  app_commands.Choice(name="Me when", value="mewhen")])
     async def makevideo(self, ctx: commands.Context, video: str, avatar: discord.Member):
+        if not ctx.interaction:
+            return await ctx.reply("Please use the slash command.")
         await self.__dict__[video](ctx, member=avatar)
 
     @commands.bot_has_permissions(attach_files=True)
