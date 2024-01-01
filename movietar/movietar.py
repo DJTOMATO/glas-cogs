@@ -13,7 +13,7 @@ import subprocess
 import aiohttp
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-from redbot.core import commands
+from redbot.core import commands, app_commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
@@ -85,6 +85,27 @@ class Movietar(commands.Cog):
             .set_duration(clip.duration)
         )
         return CompositeVideoClip([clip, text_clip])
+
+    @app_commands.command(description="Make meme videos with people's avatars.")
+    @app_commands.guild_only()
+    @app_commands.describe(video="The video you want to make.", avatar="The user whose avatar you want in the video.")
+    @app_commands.choices(video=[app_commands.Choice(name="Wanted", value="crimenes"),
+                                 app_commands.Choice(name="4K", value="fourk"),
+                                 app_commands.Choice(name="I've got the power", value="heman"),
+                                 app_commands.Choice(name="Blame", value="blame"),
+                                 app_commands.Choice(name="Financial support", value="bernie"),
+                                 app_commands.Choice(name="Consequences", value="cons"),
+                                 app_commands.Choice(name="Facts, not feelings", value="feeling"),
+                                 app_commands.Choice(name="No god no", value="nogod"),
+                                 app_commands.Choice(name="What has this place become", value="place"),
+                                 app_commands.Choice(name="Cocaine", value="flour"),
+                                 app_commands.Choice(name="Wtf", value="wtf"),
+                                 app_commands.Choice(name="Here we go again", value="awshit"),
+                                 app_commands.Choice(name="Lol'd", value="lold"),
+                                 app_commands.Choice(name="Leave me alone", value="akira"),
+                                 app_commands.Choice(name="Me when", value="mewhen")])
+    async def makevideo(self, interaction: discord.Interaction, video: str, avatar: discord.Member):
+        await self.__dict__[video](member=avatar)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
