@@ -105,7 +105,8 @@ class Movietar(commands.Cog):
                                  app_commands.Choice(name="Leave me alone", value="akira"),
                                  app_commands.Choice(name="Me when", value="mewhen")])
     async def makevideo(self, interaction: discord.Interaction, video: str, avatar: discord.Member):
-        await self.__dict__[video](member=avatar)
+        ctx = await self.bot.get_context(interaction.message)
+        await self.__dict__[video](ctx, member=avatar)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
