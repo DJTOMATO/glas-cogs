@@ -4,3 +4,7 @@ pfpimgen/data/nep/nep_mask.png.ori
 pfpimgen/data/pippa/pippa_mask.png.ori
 .vscode/settings.json
 pfpimgen/data/museum/art_mask.png
+umineko/__pycache__/umineko.cpython-311.opt-1.pyc
+umineko/__pycache__/sekai.cpython-311.opt-1.pyc
+umineko/__pycache__/functions_js.cpython-311.opt-1.pyc
+umineko/__pycache__/__init__.cpython-311.opt-1.pyc

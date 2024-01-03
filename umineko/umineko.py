@@ -86,6 +86,30 @@ class Umineko(commands.Cog):
                 f"An error occurred: {str(e)}", ephemeral=True
             )
 
+    @umi_command.autocomplete("left")
+    @umi_command.autocomplete("center")
+    @umi_command.autocomplete("right")
+    @umi_command.autocomplete("metaleft")
+    @umi_command.autocomplete("metaright")
+    @umi_command.autocomplete("metacenter")
+    async def character_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ):
+        if not current:
+            results = CHARACTER_CHOICES.keys()
+        else:
+            results = [
+                ch
+                for ch in CHARACTER_CHOICES.keys()
+                if ch.lower().startswith(current.lower())
+            ]
+            results += [
+                ch
+                for ch in CHARACTER_CHOICES.keys()
+                if current.lower() in ch[1:].lower()
+            ]
+        return [app_commands.Choice(name=ch, value=ch) for ch in results][:25]
+
 
 async def generate_image(ctx, **kwargs):
     """Generate Umineko Screenshot and return the image."""

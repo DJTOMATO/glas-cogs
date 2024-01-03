@@ -38,55 +38,55 @@ LOCATION_CHOICES = {
     "subway": "Subway",
 }
 
-CHARACTER_CHOICES = [
-    {"name": "ange", "value": "Ange Ushiromiya"},
-    {"name": "battler", "value": "Battler Ushiromiya"},
-    {"name": "beatrice", "value": "Beatrice"},
-    {"name": "bernkastel", "value": "Bernkastel"},
-    {"name": "chiester41", "value": "Chiester 4101"},
-    {"name": "chiester45", "value": "Chiester 45"},
-    {"name": "dlanor", "value": "Dlanor A. Knox"},
-    {"name": "erika", "value": "Erika Furudo"},
-    {"name": "eva", "value": "Eva Ushiromiya"},
-    {"name": "evatrice", "value": "Eva-Beatrice"},
-    {"name": "gaap", "value": "Gaap"},
-    {"name": "genji", "value": "Genji Ronoue"},
-    {"name": "gohda", "value": "Gohda"},
-    {"name": "jessica", "value": "Jessica Ushiromiya"},
-    {"name": "kinzo", "value": "Kinzo Ushiromiya"},
-    {"name": "kumasawa", "value": "Kumasawa"},
-    {"name": "kyrie", "value": "Kyrie Ushiromiya"},
-    {"name": "lambda", "value": "Lambda Delta"},
-    {"name": "maria", "value": "Maria Ushiromiya"},
-    {"name": "nanjo", "value": "Terumasa Nanjo"},
-    {"name": "natsuhi", "value": "Natsuhi Ushiromiya"},
-    {"name": "rosa", "value": "Rosa Ushiromiya"},
-    {"name": "rudolf", "value": "Rudolf Ushiromiya"},
-    {"name": "shannon", "value": "Shannon"},
-    {"name": "virgilia", "value": "Virgilia"},
-    {"name": "satan", "value": "Satan"},
-    {"name": "beelze", "value": "Beelzebub"},
-    {"name": "kanon", "value": "Kanon"},
-    {"name": "sakutaro", "value": "Sakutaro"},
-    {"name": "will", "value": "Willard H. Wright"},
-    {"name": "zepar", "value": "Zepar"},
-    {"name": "claire", "value": "Claire Vauxof Bernardus"},
-    {"name": "cornelia", "value": "Cornelia"},
-    {"name": "levia", "value": "Leviathan"},
-    {"name": "belphe", "value": "Belphegor"},
-    {"name": "amakusa", "value": "Amakusa"},
-    {"name": "chiester00", "value": "Chiester 00"},
-    {"name": "asmo", "value": "Asmodeus"},
-    {"name": "featherine", "value": "Featherine Augustus Aurora"},
-    {"name": "furfur", "value": "Furfur"},
-    {"name": "lion", "value": "Lion Ushiromiya"},
-    {"name": "gertrude", "value": "Gertrude"},
-    {"name": "hideyoshi", "value": "Hideyoshi Ushiromiya"},
-    {"name": "luci", "value": "Lucifer"},
-    {"name": "mammon", "value": "Mammon"},
-    {"name": "ronove", "value": "Ronove"},
-    {"name": "krauss", "value": "Krauss Ushiromiya"},
-]
+CHARACTER_CHOICES = {
+    "Ange Ushiromiya": "ange",
+    "Battler Ushiromiya": "battler",
+    "Beatrice": "beatrice",
+    "Bernkastel": "bernkastel",
+    "Chiester 4101": "chiester41",
+    "Chiester 45": "chiester45",
+    "Dlanor A. Knox": "dlanor",
+    "Erika Furudo": "erika",
+    "Eva Ushiromiya": "eva",
+    "Eva-Beatrice": "evatrice",
+    "Gaap": "gaap",
+    "Genji Ronoue": "genji",
+    "Gohda": "gohda",
+    "Jessica Ushiromiya": "jessica",
+    "Kinzo Ushiromiya": "kinzo",
+    "Kumasawa": "kumasawa",
+    "Kyrie Ushiromiya": "kyrie",
+    "Lambda Delta": "lambda",
+    "Maria Ushiromiya": "maria",
+    "Terumasa Nanjo": "nanjo",
+    "Natsuhi Ushiromiya": "natsuhi",
+    "Rosa Ushiromiya": "rosa",
+    "Rudolf Ushiromiya": "rudolf",
+    "Shannon": "shannon",
+    "Virgilia": "virgilia",
+    "Satan": "satan",
+    "Beelzebub": "beelze",
+    "Kanon": "kanon",
+    "Sakutaro": "sakutaro",
+    "Willard H. Wright": "will",
+    "Zepar": "zepar",
+    "Claire Vauxof Bernardus": "claire",
+    "Cornelia": "cornelia",
+    "Leviathan": "levia",
+    "Belphegor": "belphe",
+    "Amakusa": "amakusa",
+    "Chiester 00": "chiester00",
+    "Asmodeus": "asmo",
+    "Featherine Augustus Aurora": "featherine",
+    "Furfur": "furfur",
+    "Lion Ushiromiya": "lion",
+    "Gertrude": "gertrude",
+    "Hideyoshi Ushiromiya": "hideyoshi",
+    "Lucifer": "luci",
+    "Mammon": "mammon",
+    "Ronove": "ronove",
+    "Krauss Ushiromiya": "krauss",
+}
 
 
 def convert_to_discord_file(image_data):
@@ -104,6 +104,14 @@ async def background_randomizer(self, ctx, type):
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     random_file = random.choice(files)
     final_path = f"{bundled_data_path(self)}/assets/backgrounds/{type}/{random_file}"
+    return final_path
+
+
+async def character_randomizer(self, ctx, type):
+    path = f"{bundled_data_path(self)}/assets/sprites/{type}"
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    random_file = random.choice(files)
+    final_path = f"{bundled_data_path(self)}/assets/sprites/{type}/{random_file}"
     return final_path
 
 
@@ -132,14 +140,17 @@ async def generate(self, ctx, **kwargs):
     bgImage = Image.open(f"{final_path}")  # Replace with the correct image path
     if bgImage:
         ctx.draw_image(bgImage, (0, 0, canvas.width, canvas.height))
-
-    imageContainer = Image.open(
-        "imageContainer.jpg"
-    )  # Replace with the correct image path
     meta = False
 
     meta_image = Image.open(
-        "assets/metaworld/hana1.webp"
+        f"{bundled_data_path(self)}/assets/metaworld/hana1.webp"
+    )  # Replace with the correct image path
+
+    if left:
+        left = character_randomizer(left)
+
+    imageContainer = Image.open(
+        "imageContainer.jpg"
     )  # Replace with the correct image path
 
     for child in imageContainer:
@@ -314,15 +325,15 @@ CHOICE_DESC = {
 }
 
 CHOICES = {
-    "left": [
-        Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    ],
-    "center": [
-        Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    ],
-    "right": [
-        Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    ],
+    # "left": [
+    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
+    # ],
+    # "center": [
+    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
+    # ],
+    # "right": [
+    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
+    # ],
     "color1": [
         Choice(name=value, value=title) for value, title in COLOR_CHOICES.items()
     ],
@@ -332,13 +343,13 @@ CHOICES = {
     "bg": [
         Choice(name=title, value=value) for value, title in LOCATION_CHOICES.items()
     ],
-    "metaleft": [
-        Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    ],
-    "metaright": [
-        Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    ],
-    "metacenter": [
-        Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    ],
+    # "metaleft": [
+    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
+    # ],
+    # "metaright": [
+    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
+    # ],
+    # "metacenter": [
+    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
+    # ],
 }
