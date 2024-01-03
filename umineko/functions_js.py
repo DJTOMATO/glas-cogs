@@ -58,7 +58,7 @@ async def wrap_text(self, draw, text, x, y, max_width):
                         line = test_line
 
                 draw.text((current_x, current_y), line, fill=text_color, font=font)
-                current_x += length - draw.textlength(" ", font=font)
+                current_x += length + draw.textlength("", font=font)
             elif plain_text:
                 words = plain_text.split(" ")
                 line = ""
@@ -77,7 +77,7 @@ async def wrap_text(self, draw, text, x, y, max_width):
                         line = test_line
 
                 draw.text((current_x, current_y), line, fill="white", font=font)
-                current_x += length - draw.textlength(" ", font=font)
+                current_x += length + draw.textlength("", font=font)
 
         current_y += line_height
         current_x = x
