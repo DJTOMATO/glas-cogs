@@ -130,7 +130,6 @@ async def generate(self, ctx, **parameters):
         "color2": "",
         "bg": "",
     }
-    # Update the default values with the provided parameters
     parameters = {
         key: parameters.get(key, default_value)
         for key, default_value in default_values.items()
@@ -141,6 +140,9 @@ async def generate(self, ctx, **parameters):
     )
 
     # BG
+    if parameters["bg"] == None:
+        parameters["bg"] = "mainbuilding"
+
     final_path = await background_randomizer(self, ctx, parameters["bg"])
 
     canvas = Image.new("RGB", (640, 480), "white")

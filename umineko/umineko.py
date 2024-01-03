@@ -109,6 +109,7 @@ class Umineko(commands.Cog):
                 for ch in CHARACTER_CHOICES.keys()
                 if current.lower() in ch[1:].lower()
             ]
+
         return [app_commands.Choice(name=ch, value=ch) for ch in results][:25]
 
     async def generate_image(self, ctx, **parameters):
