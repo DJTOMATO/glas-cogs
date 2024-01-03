@@ -8,7 +8,6 @@ import asyncio
 import functools
 import regex as re
 from .functions_js import (
-    COLOR_CHOICES,
     CHARACTER_CHOICES,
     CHOICES,
     CHOICE_DESC,
@@ -31,6 +30,7 @@ class Umineko(commands.Cog):
         self.embed = discord.Embed(title="Umineko", description="a.")
         self.color = None
         self.log = logging.getLogger("glas.glas-cogs.umineko")
+        self.font_path = f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf"
 
     # async def generate_image(self, task: commands.Context):
     #     task = self.bot.loop.run_in_executor(None, task)
@@ -57,8 +57,6 @@ class Umineko(commands.Cog):
         metaleft: Optional[str],
         metacenter: Optional[str],
         metaright: Optional[str],
-        color1: Optional[str],
-        color2: Optional[str],
         bg: Optional[str],
     ):
         """Make a Umineko Screenshot!"""
@@ -95,30 +93,9 @@ class Umineko(commands.Cog):
             "metaleft": metaleft,
             "metacenter": metacenter,
             "metaright": metaright,
-            "color1": color1,
-            "color2": color2,
             "bg": bg,
         }
 
-        DEFAULT_CHARACTER_FOLDER = "beatrice"
-        characters = {
-            "left": left,
-            "center": center,
-            "right": right,
-            "metaleft": metaleft,
-            "metacenter": metacenter,
-            "metaright": metaright,
-        }
-        character_folders = {}
-        for key, value in characters.items():
-            if value in CHARACTER_CHOICES:
-                character_folders[key] = CHARACTER_CHOICES[value]
-            elif not value:
-                character_folders[key] = DEFAULT_CHARACTER_FOLDER
-            else:
-                return await ctx.send(
-                    f"You chose an invalid character for {key}", ephemeral=True
-                )
         try:
             image = await self.generate_image(ctx, **parameters)
             if isinstance(image, discord.File):

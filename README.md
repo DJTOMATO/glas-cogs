@@ -58,6 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Umineko   | Umineko Screenshot Generator. |                           Glas & [Holo](https://github.com/hollowstrawberry)                     |        ✅        |
 |   Deals   | Find videogame deals in several storefronts. |                           Glas                           |        ✅        |
 |   Letterdance   | Create GIFs by combining dancing letters horizontally! |                           Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
 |   Kofi   | Show target info and goals in Ko-fi! |                           Glas                           |        ✅        |

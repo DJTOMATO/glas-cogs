@@ -1,19 +1,19 @@
-# Sekai Help
+# Umineko Cog
 
-Creates Sekai Sticker<br/>WONDERHOY
+Umineko Screenshot Generator, using the **PS3** sprites and backgrounds.
 
-![Wonderhoy!](https://bae.lena.moe/0KL3pT3ioAIA.png)
+Based on [mochidaz/umineko-screenshot-generator-ps3](https://github.com/mochidaz/umineko-screenshot-generator-ps3)
 
-# characters (Hybrid Command)
- - Usage: `[p]characters `
- - Slash Usage: `/characters `
 
-Show available characters!
+# umi
+ - Usage: `[p]umi text`
 
-# sekai (Hybrid Command)
- - Usage: `[p]sekai [character=None] [chara_face=None] [text=None] [textx=0] [texty=0] [fontsize=0] `
- - Slash Usage: `/sekai [character=None] [chara_face=None] [text=None] [textx=0] [texty=0] [fontsize=0] `
- - Cooldown: `1 per 5.0 seconds`
+# Example:
+ - `/umi text1: red;This is red, blue;this is blue, gold;this is gold. \n white;this is a new line, but golden;golden \n\n\n white;NEW LINES DON'T EXIST \n\n\n red;NEW LINES EXIST BATTLER HAHAHAHA left: Beatrice center: Battler Ushiromiya right: Virgilia bg: Main Building``
 
-Make a Sekai sticker!<br/>View all characters with `[p]characters`.<br/>Simple Example: ``[p]sekai emu 13 "Wonderhoy!"``<br/>Ext Example: ``[p]sekai emu 13 "Wonderhoy!" 25 50 30``
+- How it looks
+![Example](https://cdn.discordapp.com/attachments/1067594786736980058/1192105412477071442/image.png?ex=65a7ddae&is=659568ae&hm=1753e0579cd72fb4e11bc5bc723717b16d444dd19aff20f9262af7f31209c8c4&)
 
+
+# Thanks
+- [Holo](https://github.com/hollowstrawberry) for carrying me through the pain of interactions

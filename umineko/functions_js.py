@@ -12,10 +12,82 @@ import logging
 import textwrap
 
 
+async def get_font(self):
+    image_width = 640
+    image_height = 480
+    base_font_size = 30
+    font_size = max(
+        int((base_font_size * min(image_width, image_height)) / image_width),
+        8,
+    )
+
+    return ImageFont.truetype(self.font_path, size=font_size)
+
+
+async def wrap_text(self, draw, text, x, y, max_width):
+    font = await get_font(self)
+    line_height = font.getsize("A")[1]
+
+    current_x, current_y = x, y
+
+    for line in text.split(f"\\n"):
+        self.log.error("Line: %s", line)
+        words = re.findall(r"(\w+)?;(.*?)(?=\w+;|$)|([^\s]+)", line)
+        self.log.error("Words: %s", words)
+        for word in words:
+            color, content, plain_text = word
+
+            if color:
+                text_color = COLOR_CHOICES.get(color, "white")
+                words = content.split(" ")
+                line = ""
+
+                for word in words:
+                    test_line = line + word + " "
+                    length = draw.textlength(test_line, font=font)
+                    test_width = length
+
+                    if current_x + test_width > x + max_width:
+                        draw.text(
+                            (current_x, current_y), line, fill=text_color, font=font
+                        )
+                        current_y += line_height
+                        line = word + " "
+                        current_x = x
+                    else:
+                        line = test_line
+
+                draw.text((current_x, current_y), line, fill=text_color, font=font)
+                current_x += length - draw.textlength(" ", font=font)
+            elif plain_text:
+                words = plain_text.split(" ")
+                line = ""
+
+                for word in words:
+                    test_line = line + word + " "
+                    length = draw.textlength(test_line, font=font)
+                    test_width = length
+
+                    if current_x + test_width > x + max_width:
+                        draw.text((current_x, current_y), line, fill="white", font=font)
+                        current_y += line_height
+                        line = word + " "
+                        current_x = x
+                    else:
+                        line = test_line
+
+                draw.text((current_x, current_y), line, fill="white", font=font)
+                current_x += length - draw.textlength(" ", font=font)
+
+        current_y += line_height
+        current_x = x
+
+
 COLOR_CHOICES = {
     "red": "#ff0000",
     "blue": "#5decff",
     "golden": "#ffcc00",
+    "gold": "#ffcc00",
     "white": "#ffffff",
 }
 
@@ -153,8 +225,6 @@ async def generate(self, ctx, **parameters):
         "metaleft": "",
         "metacenter": "",
         "metaright": "",
-        "color1": "",
-        "color2": "",
         "bg": "",
     }
     parameters = {
@@ -194,7 +264,10 @@ async def generate(self, ctx, **parameters):
             imageContainer.append((position, character))
 
     world = "meta"
-
+    brightness = 0.55
+    enhancer = ImageEnhance.Brightness(canvas)
+    canvas = enhancer.enhance(brightness)
+    canvas = canvas.filter(ImageFilter.BLUR)  # Assuming you want to remove the filter
     for position, character in imageContainer:
         if character.mode != "RGBA":
             character = character.convert("RGBA")
@@ -249,20 +322,8 @@ async def generate(self, ctx, **parameters):
                     ),
                     character,
                 )
-    text_color = parameters.get("color1", "#000000")
 
-    brightness = 0.55
-    enhancer = ImageEnhance.Brightness(canvas)
-    canvas = enhancer.enhance(brightness)
-    canvas = canvas.filter(ImageFilter.BLUR)  # Assuming you want to remove the filter
     draw = ImageDraw.Draw(canvas)
-
-    font_size = max(int((8 * 100) / canvas.height), 30)
-    font_path = f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf"
-    font = ImageFont.truetype(font_path, size=font_size)
-    max_text_width = canvas.width - 2 * (canvas.width * 0.065)
-    text_color = parameters.get("color1", "#000000")
-    text_size = draw.textsize(parameters["text1"], font)
 
     # Adjusted text position (start from top-left corner)
     text_position = (
@@ -270,106 +331,16 @@ async def generate(self, ctx, **parameters):
         canvas.height * 0.055,
     )
     max_width = canvas.width * 0.9
-    wrapped_text = textwrap.fill(parameters["text1"], width=20)
-    wrapped_lines = wrapped_text.splitlines()
-    # Draw multiline text
-    current_y = text_position[1]
 
-    shadow_offset = (2, 2)
-    for line in wrapped_lines:
-        line_width, line_height = draw.textsize(line, font=font)
+    # Wrap text using the new function
+    await wrap_text(
+        self, draw, parameters["text1"], text_position[0], text_position[1], max_width
+    )
 
-        # Draw text shadow
-        draw.text(
-            (
-                (canvas.width - line_width) / 2 + shadow_offset[0],
-                current_y + shadow_offset[1],
-            ),
-            line,
-            font=font,
-            fill="#000000",  # Shadow color
-            align="center",  # Center align the shadow
-        )
-
-        # Draw actual text
-        draw.text(
-            ((canvas.width - line_width) / 2, current_y),
-            line,
-            font=font,
-            fill=text_color,
-            align="center",  # Center align the text
-        )
-        current_y += line_height
-        # Convert the canvas to an Image object
-        image = convert_to_image(canvas)
+    # Convert the canvas to an Image object
+    image = convert_to_image(canvas)
 
     return image
-
-
-def wrap_text(ctx, text, x, y, max_width, line_height):
-    color_codes = {
-        "red": "#ff0000",
-        "blue": "#5decff",
-        "golden": "#ffcc00",
-    }
-
-    regex = re.compile(r"\[(\w+)\](.*?)\[\/\w+\]|([^\[\n]+)|(\n)")
-    matches = regex.findall(text)
-
-    current_x = x
-    current_y = y
-
-    for match in matches:
-        color, content, plain_text, new_line = match
-
-        if new_line:
-            current_y += line_height
-            current_x = x
-        elif color:
-            text_color = color_codes.get(color, "white")
-            words = content.split(" ")
-            line = ""
-
-            for word in words:
-                test_line = line + word + " "
-                metrics = ctx.textsize(test_line)
-                test_width = metrics[0]
-
-                if current_x + test_width > x + max_width:
-                    ctx.text((current_x, current_y), line, fill=text_color)
-                    current_y += line_height
-                    line = word + " "
-                    current_x = x
-                else:
-                    line = test_line
-
-            ctx.text((current_x, current_y), line, fill=text_color)
-            line_metrics = ctx.textsize(line)
-            current_x += line_metrics[0] - ctx.textsize(" ")[0]
-        elif plain_text:
-            words = plain_text.split(" ")
-            line = ""
-
-            for word in words:
-                test_line = line + word + " "
-                metrics = ctx.textsize(test_line)
-                test_width = metrics[0]
-
-                if current_x + test_width > x + max_width:
-                    ctx.text((current_x, current_y), line, fill="white")
-                    current_y += line_height
-                    line = word + " "
-                    current_x = x
-                else:
-                    line = test_line
-
-            ctx.text((current_x, current_y), line, fill="white")
-            line_metrics = ctx.textsize(line)
-            current_x += line_metrics[0] - ctx.textsize(" ")[0]
-
-
-# Assuming the ctx object is from the Python Imaging Library (Pillow) and has a method 'text'.
-# If you're using a different library, adapt the text rendering accordingly.
 
 
 CHOICE_DESC = {
@@ -378,39 +349,13 @@ CHOICE_DESC = {
     "right": "Right character.",
     "text1": "Top text.",
     "text2": "Center text (optional).",
-    "color1": "The truth level.",
-    "color2": "Truth Level.",
     "metaleft": "Meta Character",
     "metaright": "Meta Character",
     "metacenter": "Meta Character",
 }
 
 CHOICES = {
-    # "left": [
-    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    # ],
-    # "center": [
-    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    # ],
-    # "right": [
-    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    # ],
-    "color1": [
-        Choice(name=value, value=title) for value, title in COLOR_CHOICES.items()
-    ],
-    "color2": [
-        Choice(name=value, value=title) for value, title in COLOR_CHOICES.items()
-    ],
     "bg": [
         Choice(name=title, value=value) for value, title in LOCATION_CHOICES.items()
     ],
-    # "metaleft": [
-    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    # ],
-    # "metaright": [
-    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    # ],
-    # "metacenter": [
-    #     Choice(name=title, value=value) for value, title in CHARACTER_CHOICES.items()
-    # ],
 }
