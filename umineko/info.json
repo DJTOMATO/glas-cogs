@@ -1,0 +1,14 @@
+{
+    "name": "Umineko Screenshot Generator",
+    "short": "Umineko",
+    "description": "Umineko Screenshot Generator, using the PS3 sprites and backgrounds ",
+    "install_msg": "Thanks for installing `umineko` cog! \nThis cog requires a specific version of pillow, be sure to restart your bot after installation if it doesn't work! \nPlease enjoy it :D Wonderhoy!",
+    "author": ["Glas"],
+    "requirements": ["pillow==9.5.0"],
+    "tags": ["image", "umineko", "visual_novel", "meme", "fun"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
