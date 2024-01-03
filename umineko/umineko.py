@@ -16,6 +16,7 @@ from .functions_js import (
     convert_to_discord_file,
 )
 import logging
+import traceback
 
 from typing import Optional, Union, Tuple, Coroutine, Any
 
@@ -61,6 +62,30 @@ class Umineko(commands.Cog):
         bg: Optional[str],
     ):
         """Make a Umineko Screenshot!"""
+        if left and left not in CHARACTER_CHOICES:
+            return await ctx.send(
+                f"You chose an invalid character for left", ephemeral=True
+            )
+        if center and center not in CHARACTER_CHOICES:
+            return await ctx.send(
+                f"You chose an invalid character for center", ephemeral=True
+            )
+        if center and center not in CHARACTER_CHOICES:
+            return await ctx.send(
+                f"You chose an invalid character for center", ephemeral=True
+            )
+        if metaleft and metaleft not in CHARACTER_CHOICES:
+            return await ctx.send(
+                f"You chose an invalid character for metaleft", ephemeral=True
+            )
+        if metacenter and metacenter not in CHARACTER_CHOICES:
+            return await ctx.send(
+                f"You chose an invalid character for metacenter", ephemeral=True
+            )
+        if metaright and metaright not in CHARACTER_CHOICES:
+            return await ctx.send(
+                f"You chose an invalid character for metaright", ephemeral=True
+            )
         parameters = {
             "text1": text1,
             "text2": text2,
@@ -75,36 +100,23 @@ class Umineko(commands.Cog):
             "bg": bg,
         }
 
-        DEFAULT_CHARACTER_FOLDER = "beatrice"
-        characters = {
-            "left": left,
-            "center": center,
-            "right": right,
-            "metaleft": metaleft,
-            "metacenter": metacenter,
-            "metaright": metaright,
-        }
-        character_folders = {}
-        for key, value in characters.items():
-            if value in CHARACTER_CHOICES:
-                character_folders[key] = CHARACTER_CHOICES[value]
-            elif not value:
-                character_folders[key] = DEFAULT_CHARACTER_FOLDER
-            else:
-                return await ctx.send(
-                    f"You chose an invalid character for {key}", ephemeral=True
-                )
         try:
             image = await self.generate_image(ctx, **parameters)
-            await ctx.send(file=image) if isinstance(
-                image, discord.File
-            ) else await ctx.send(image)
+            if isinstance(image, discord.File):
+                await ctx.response.send_message(file=image)
+            else:
+                await ctx.response.send_message(image)
         except Exception as e:
-            # Handle the exception, e.g., log it or inform the user
+            # Log the full traceback
+            self.log.error("An error occurred:")
+            self.log.error(
+                "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            )
+
+            # Handle the exception, e.g., inform the user
             await ctx.response.send_message(
                 f"An error occurred: {str(e)}", ephemeral=True
             )
-            self.log.warning(f"Error: {str(e)}")
 
     @umi_command.autocomplete("left")
     @umi_command.autocomplete("center")

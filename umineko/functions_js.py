@@ -9,6 +9,7 @@ from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageEnhance
 import io, os, random, re
 from redbot.core.app_commands import Choice
 import logging
+import textwrap
 
 
 COLOR_CHOICES = {
@@ -17,6 +18,7 @@ COLOR_CHOICES = {
     "golden": "#ffcc00",
     "white": "#ffffff",
 }
+
 
 LOCATION_CHOICES = {
     "airport": "Airport",
@@ -89,14 +91,21 @@ CHARACTER_CHOICES = {
 }
 
 
-def convert_to_discord_file(image_data):
-    """Convert image data to a Discord File."""
-    # Replace the following lines with your actual conversion logic
-    with io.BytesIO(image_data) as file_content:
+def convert_to_discord_file(image):
+    with io.BytesIO() as file_content:
+        image.save(file_content, format="PNG")
         file_content.seek(0)
-        discord_file = discord.File(file_content, filename="image.png")
+        return discord.File(file_content, filename="image.png")
 
-    return discord_file
+
+def convert_to_image(canvas):
+    # If canvas is already an Image object, return it
+    if isinstance(canvas, Image.Image):
+        return canvas
+
+    # Otherwise, handle the conversion logic here
+    # For example, open the canvas as an image
+    return Image.open(canvas)
 
 
 async def background_randomizer(self, ctx, type):
@@ -108,11 +117,29 @@ async def background_randomizer(self, ctx, type):
 
 
 async def character_randomizer(self, ctx, type):
+    type = str(type)
     path = f"{bundled_data_path(self)}/sprites/{type}"
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     random_file = random.choice(files)
     final_path = f"{bundled_data_path(self)}/sprites/{type}/{random_file}"
-    return final_path
+
+    try:
+        # Load the image using PIL
+        character_image = Image.open(final_path).convert("RGBA")
+
+        # Check if the image has transparency
+        if "A" not in character_image.getbands():
+            # If the image does not have an alpha channel, create one
+            alpha_image = Image.new("L", character_image.size, 255)
+            character_image.putalpha(alpha_image)
+
+    except Exception as e:
+        # Log the error details
+        self.log.error("An error occurred while processing the image:")
+        self.log.error(str(e))
+        character_image = None
+
+    return final_path, character_image
 
 
 async def generate(self, ctx, **parameters):
@@ -135,33 +162,25 @@ async def generate(self, ctx, **parameters):
         for key, default_value in default_values.items()
     }
 
-    self.log.warning(
-        f"args: {', '.join(f'{key}={value}' for key, value in parameters.items())}"
-    )
-
     # BG
-    if parameters["bg"] == None:
+    if parameters["bg"] is None:
         parameters["bg"] = "mainbuilding"
 
     final_path = await background_randomizer(self, ctx, parameters["bg"])
 
-    canvas = Image.new("RGB", (640, 480), "white")
-    draw = ImageDraw.Draw(canvas)
+    # Load the background image directly as the canvas
+    # Create a new transparent canvas
+    canvas = Image.new("RGBA", (640, 480), (0, 0, 0, 255))
 
-    # FONT
-    font = ImageFont.truetype(
-        f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf", size=12
-    )
-
-    brightness = 0.55
-    enhancer = ImageEnhance.Brightness(canvas)
-    canvas = enhancer.enhance(brightness)
-
-    # Abre BG
-    bgImage = Image.open(f"{final_path}")  # Replace with the correct image path
-    if bgImage:
-        canvas.paste(bgImage, (0, 0))
-
+    # Load the background image
+    self.log.info("Selected Background Image Path: %s", final_path)
+    background = Image.open(final_path).convert("RGBA")
+    self.log.info("Selected Background Image Size: %s", background.size)
+    self.log.error("Background Size:: %s", background.size)
+    self.log.error("Canvas Size:: %s", canvas.size)
+    # Paste the background onto the canvas
+    canvas.paste(background, (0, 0), background)
+    self.log.info("Canvas Size after Loading Background: %s", canvas.size)
     meta_image = Image.open(
         f"{bundled_data_path(self)}/metaworld/hana1.webp"
     )  # Replace with the correct image path
@@ -169,75 +188,122 @@ async def generate(self, ctx, **parameters):
     imageContainer = []
     for position in ["left", "right", "center", "metaleft", "metaright", "metacenter"]:
         if parameters[position]:
-            character = await character_randomizer(self, ctx, parameters[position])
+            image_path, character = await character_randomizer(
+                self, ctx, CHARACTER_CHOICES[parameters[position]]
+            )
             imageContainer.append((position, character))
 
-    for position, child in imageContainer:
-        if child.dataset["show"] == "true":
-            world = child.dataset.get("world", "normal")
+    world = "meta"
 
-            if world == "meta":
-                canvas = canvas.filter(ImageFilter.Brightness(brightness))
-                meta = True
-                meta_position = child.dataset.get("position", "center")
+    for position, character in imageContainer:
+        if character.mode != "RGBA":
+            character = character.convert("RGBA")
 
-                if meta_position == "left":
-                    canvas.paste(
-                        child,
-                        (int(canvas.width * -0.25), int(canvas.width * -0.05)),
-                        child,
-                    )
-                elif meta_position == "right":
-                    canvas.paste(
-                        child,
-                        (int(canvas.width * 0.41), int(canvas.width * -0.05)),
-                        child,
-                    )
-                elif meta_position == "center":
-                    canvas.paste(
-                        child,
-                        (int(canvas.width * 0.15), int(canvas.width * -0.05)),
-                        child,
-                    )
-            else:
-                meta = False
-                position = child.dataset.get("position", "left")
+        if world == "meta":
+            meta_position = position
+            if meta_position == "left":
+                # Use direct paste without alpha_composite
+                canvas.paste(
+                    character,
+                    (int(canvas.width * -0.25), int(canvas.width * -0.05)),
+                    character,
+                )
+            elif meta_position == "right":
+                canvas.paste(
+                    character,
+                    (int(canvas.width * 0.41), int(canvas.width * -0.05)),
+                    character,
+                )
+            elif meta_position == "center":
+                canvas.paste(
+                    character,
+                    (int(canvas.width * 0.15), int(canvas.width * -0.05)),
+                    character,
+                )
+        else:
+            # Non-meta world
+            if position == "left":
+                canvas.paste(
+                    character,
+                    (
+                        int(canvas.width * -0.13),
+                        int(canvas.width * -0.05),
+                    ),
+                    character,
+                )
+            elif position == "right":
+                canvas.paste(
+                    character,
+                    (
+                        int(canvas.width * 0.41),
+                        int(canvas.width * -0.05),
+                    ),
+                    character,
+                )
+            elif position == "center":
+                canvas.paste(
+                    character,
+                    (
+                        int(canvas.width * 0.15),
+                        int(canvas.width * -0.05),
+                    ),
+                    character,
+                )
+    text_color = parameters.get("color1", "#000000")
 
-                if position == "left":
-                    canvas.paste(
-                        child,
-                        (int(canvas.width * -0.13), int(canvas.width * -0.05)),
-                        child,
-                    )
-                elif position == "right":
-                    canvas.paste(
-                        child,
-                        (int(canvas.width * 0.41), int(canvas.width * -0.05)),
-                        child,
-                    )
-                elif position == "center":
-                    canvas.paste(
-                        child,
-                        (int(canvas.width * 0.15), int(canvas.width * -0.05)),
-                        child,
-                    )
-
+    brightness = 0.55
+    enhancer = ImageEnhance.Brightness(canvas)
+    canvas = enhancer.enhance(brightness)
     canvas = canvas.filter(ImageFilter.BLUR)  # Assuming you want to remove the filter
+    draw = ImageDraw.Draw(canvas)
 
-    # Set font size to be responsive with window
-    font_size = (8 * 100) / canvas.height
-    font = ImageFont.truetype(
-        f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf", size=font_size
+    font_size = max(int((8 * 100) / canvas.height), 30)
+    font_path = f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf"
+    font = ImageFont.truetype(font_path, size=font_size)
+    max_text_width = canvas.width - 2 * (canvas.width * 0.065)
+    text_color = parameters.get("color1", "#000000")
+    text_size = draw.textsize(parameters["text1"], font)
+
+    # Adjusted text position (start from top-left corner)
+    text_position = (
+        canvas.width * 0.065,
+        canvas.height * 0.055,
     )
-    draw.text(
-        (canvas.width * 0.065, canvas.width * 0.055), parameters["text1"], font=font
-    )
+    max_width = canvas.width * 0.9
+    wrapped_text = textwrap.fill(parameters["text1"], width=20)
+    wrapped_lines = wrapped_text.splitlines()
+    # Draw multiline text
+    current_y = text_position[1]
 
-    # You can continue to draw text and perform other operations with the canvas and draw objects
+    shadow_offset = (2, 2)
+    for line in wrapped_lines:
+        line_width, line_height = draw.textsize(line, font=font)
 
-    # Convert the canvas to a Discord File
-    image_file = convert_to_discord_file(canvas)
-    return image_file
+        # Draw text shadow
+        draw.text(
+            (
+                (canvas.width - line_width) / 2 + shadow_offset[0],
+                current_y + shadow_offset[1],
+            ),
+            line,
+            font=font,
+            fill="#000000",  # Shadow color
+            align="center",  # Center align the shadow
+        )
+
+        # Draw actual text
+        draw.text(
+            ((canvas.width - line_width) / 2, current_y),
+            line,
+            font=font,
+            fill=text_color,
+            align="center",  # Center align the text
+        )
+        current_y += line_height
+        # Convert the canvas to an Image object
+        image = convert_to_image(canvas)
+
+    return image
 
 
 def wrap_text(ctx, text, x, y, max_width, line_height):
