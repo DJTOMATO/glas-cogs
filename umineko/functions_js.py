@@ -5,7 +5,7 @@ from redbot.core.commands import BadArgument, MemberConverter
 from unidecode import unidecode
 from redbot.core.data_manager import bundled_data_path
 import regex as re
-from PIL import Image, ImageFilter, ImageDraw, ImageFont
+from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageEnhance
 import io, os, random, re
 from redbot.core.app_commands import Choice
 import logging
@@ -130,7 +130,6 @@ async def generate(self, ctx, **parameters):
         "color2": "",
         "bg": "",
     }
-    # An error occurred: Umineko.generate_image() takes 1 positional argument but 2 were given
     # Update the default values with the provided parameters
     parameters = {
         key: parameters.get(key, default_value)
@@ -140,145 +139,103 @@ async def generate(self, ctx, **parameters):
     self.log.warning(
         f"args: {', '.join(f'{key}={value}' for key, value in parameters.items())}"
     )
+
     # BG
     final_path = await background_randomizer(self, ctx, parameters["bg"])
 
     canvas = Image.new("RGB", (640, 480), "white")
-    ctx = ImageDraw.Draw(canvas)
-    ctx.rectangle([(0, 0), (canvas.width, canvas.height)], fill="white")
+    draw = ImageDraw.Draw(canvas)
+
     # FONT
     font = ImageFont.truetype(
         f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf", size=12
     )
 
-    try:
-        font.load()
-        # No direct equivalent for document.fonts.add(loaded_face) in Python Imaging Library
-    except Exception as error:
-        print(error)
-
     brightness = 0.55
-    ctx.filter(ImageFilter.Brightness(brightness))
+    enhancer = ImageEnhance.Brightness(canvas)
+    canvas = enhancer.enhance(brightness)
+
     # Abre BG
     bgImage = Image.open(f"{final_path}")  # Replace with the correct image path
     if bgImage:
-        ctx.draw_image(bgImage, (0, 0, canvas.width, canvas.height))
-    meta = False
+        canvas.paste(bgImage, (0, 0))
 
     meta_image = Image.open(
         f"{bundled_data_path(self)}/metaworld/hana1.webp"
     )  # Replace with the correct image path
 
     imageContainer = []
-    if left:
-        left = await character_randomizer(parameters["left"])
-        imageContainer.append(left)
-    if right:
-        right = await character_randomizer(parameters["right"])
-        imageContainer.append(right)
-    if center:
-        center = await character_randomizer(parameters["center"])
-        imageContainer.append(center)
-    if metaleft:
-        metaleft = await character_randomizer(parameters["metaleft"])
-        imageContainer.append(metaleft)
-    if metaright:
-        metaright = await character_randomizer(parameters["metaright"])
-        imageContainer.append(metaright)
-    if metacenter:
-        metacenter = await character_randomizer(parameters["metacenter"])
-        imageContainer.append(metacenter)
+    for position in ["left", "right", "center", "metaleft", "metaright", "metacenter"]:
+        if parameters[position]:
+            character = await character_randomizer(self, ctx, parameters[position])
+            imageContainer.append((position, character))
 
-    for child in imageContainer:
+    for position, child in imageContainer:
         if child.dataset["show"] == "true":
             world = child.dataset.get("world", "normal")
 
             if world == "meta":
-                ctx.draw_image(meta_image, (0, 0, canvas.width, canvas.height))
-                ctx.filter(ImageFilter.Brightness(brightness))
-                position = child.dataset.get("position", "center")
+                canvas = canvas.filter(ImageFilter.Brightness(brightness))
+                meta = True
+                meta_position = child.dataset.get("position", "center")
 
-                if position == "left":
-                    ctx.draw_image(
+                if meta_position == "left":
+                    canvas.paste(
                         child,
-                        (
-                            canvas.width * -0.25,
-                            canvas.width * -0.05,
-                            canvas.width * 0.75,
-                            canvas.width * 0.6,
-                        ),
+                        (int(canvas.width * -0.25), int(canvas.width * -0.05)),
+                        child,
                     )
-                elif position == "right":
-                    ctx.draw_image(
+                elif meta_position == "right":
+                    canvas.paste(
                         child,
-                        (
-                            canvas.width * 0.41,
-                            canvas.width * -0.05,
-                            canvas.width * 0.75,
-                            canvas.width * 0.6,
-                        ),
+                        (int(canvas.width * 0.41), int(canvas.width * -0.05)),
+                        child,
                     )
-                elif position == "center":
-                    ctx.draw_image(
+                elif meta_position == "center":
+                    canvas.paste(
                         child,
-                        (
-                            canvas.width * 0.15,
-                            canvas.width * -0.05,
-                            canvas.width * 0.75,
-                            canvas.width * 0.6,
-                        ),
+                        (int(canvas.width * 0.15), int(canvas.width * -0.05)),
+                        child,
                     )
             else:
-                if meta:
-                    ctx.filter(ImageFilter.Brightness(0.3))
-
+                meta = False
                 position = child.dataset.get("position", "left")
 
                 if position == "left":
-                    ctx.draw_image(
+                    canvas.paste(
                         child,
-                        (
-                            canvas.width * -0.13,
-                            canvas.width * -0.05,
-                            canvas.width * 0.75,
-                            canvas.width * 0.6,
-                        ),
+                        (int(canvas.width * -0.13), int(canvas.width * -0.05)),
+                        child,
                     )
                 elif position == "right":
-                    ctx.draw_image(
+                    canvas.paste(
                         child,
-                        (
-                            canvas.width * 0.41,
-                            canvas.width * -0.05,
-                            canvas.width * 0.75,
-                            canvas.width * 0.6,
-                        ),
+                        (int(canvas.width * 0.41), int(canvas.width * -0.05)),
+                        child,
                     )
                 elif position == "center":
-                    ctx.draw_image(
+                    canvas.paste(
                         child,
-                        (
-                            canvas.width * 0.15,
-                            canvas.width * -0.05,
-                            canvas.width * 0.75,
-                            canvas.width * 0.6,
-                        ),
+                        (int(canvas.width * 0.15), int(canvas.width * -0.05)),
+                        child,
                     )
 
-    ctx.global_alpha = 1
-    ctx.filter(ImageFilter.BLUR)  # Assuming you want to remove the filter
+    canvas = canvas.filter(ImageFilter.BLUR)  # Assuming you want to remove the filter
 
     # Set font size to be responsive with window
     font_size = (8 * 100) / canvas.height
-    ctx.font = f"{font_size}vh SazanamiGothic"
+    font = ImageFont.truetype(
+        f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf", size=font_size
+    )
+    draw.text(
+        (canvas.width * 0.065, canvas.width * 0.055), parameters["text1"], font=font
+    )
 
-    text_x = canvas.width * 0.065
-    text_y = canvas.width * 0.055
-    max_text_width = canvas.width - canvas.width * 0.065 * 2
-    line_height = canvas.width * 0.034
-    text = text
-    ctx.textShadow = (2, 2, "#000000")
-    wrap_text(ctx, text, text_x, text_y, max_text_width, line_height)
+    # You can continue to draw text and perform other operations with the canvas and draw objects
+
+    # Convert the canvas to a Discord File
+    image_file = convert_to_discord_file(canvas)
+    return image_file
 
 
 def wrap_text(ctx, text, x, y, max_width, line_height):
