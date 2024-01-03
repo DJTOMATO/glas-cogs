@@ -100,6 +100,25 @@ class Umineko(commands.Cog):
             "bg": bg,
         }
 
+        DEFAULT_CHARACTER_FOLDER = "beatrice"
+        characters = {
+            "left": left,
+            "center": center,
+            "right": right,
+            "metaleft": metaleft,
+            "metacenter": metacenter,
+            "metaright": metaright,
+        }
+        character_folders = {}
+        for key, value in characters.items():
+            if value in CHARACTER_CHOICES:
+                character_folders[key] = CHARACTER_CHOICES[value]
+            elif not value:
+                character_folders[key] = DEFAULT_CHARACTER_FOLDER
+            else:
+                return await ctx.send(
+                    f"You chose an invalid character for {key}", ephemeral=True
+                )
         try:
             image = await self.generate_image(ctx, **parameters)
             if isinstance(image, discord.File):
