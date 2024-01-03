@@ -115,10 +115,33 @@ async def character_randomizer(self, ctx, type):
     return final_path
 
 
-async def generate(self, ctx, **kwargs):
-    self.log.warning(f"args: {kwargs}")
+async def generate(self, ctx, **parameters):
+    # Create a dictionary with default values
+    default_values = {
+        "text1": "",
+        "text2": "",
+        "left": "",
+        "center": "",
+        "right": "",
+        "metaleft": "",
+        "metacenter": "",
+        "metaright": "",
+        "color1": "",
+        "color2": "",
+        "bg": "",
+    }
+    # An error occurred: Umineko.generate_image() takes 1 positional argument but 2 were given
+    # Update the default values with the provided parameters
+    parameters = {
+        key: parameters.get(key, default_value)
+        for key, default_value in default_values.items()
+    }
+
+    self.log.warning(
+        f"args: {', '.join(f'{key}={value}' for key, value in parameters.items())}"
+    )
     # BG
-    final_path = background_randomizer(kwargs=type)
+    final_path = await background_randomizer(self, ctx, parameters["bg"])
 
     canvas = Image.new("RGB", (640, 480), "white")
     ctx = ImageDraw.Draw(canvas)
@@ -146,12 +169,25 @@ async def generate(self, ctx, **kwargs):
         f"{bundled_data_path(self)}/assets/metaworld/hana1.webp"
     )  # Replace with the correct image path
 
+    imageContainer = []
     if left:
-        left = character_randomizer(left)
-
-    imageContainer = Image.open(
-        "imageContainer.jpg"
-    )  # Replace with the correct image path
+        left = await character_randomizer(parameters["left"])
+        imageContainer.append(left)
+    if right:
+        right = await character_randomizer(parameters["right"])
+        imageContainer.append(right)
+    if center:
+        center = await character_randomizer(parameters["center"])
+        imageContainer.append(center)
+    if metaleft:
+        metaleft = await character_randomizer(parameters["metaleft"])
+        imageContainer.append(metaleft)
+    if metaright:
+        metaright = await character_randomizer(parameters["metaright"])
+        imageContainer.append(metaright)
+    if metacenter:
+        metacenter = await character_randomizer(parameters["metacenter"])
+        imageContainer.append(metacenter)
 
     for child in imageContainer:
         if child.dataset["show"] == "true":

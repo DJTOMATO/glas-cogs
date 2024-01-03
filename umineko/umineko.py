@@ -31,14 +31,14 @@ class Umineko(commands.Cog):
         self.color = None
         self.log = logging.getLogger("glas.glas-cogs.umineko")
 
-    async def generate_image(self, task: commands.Context):
-        task = self.bot.loop.run_in_executor(None, task)
-        try:
-            image = await asyncio.wait_for(task, timeout=60)
-        except asyncio.TimeoutError:
-            return "An error occurred while generating this sticker. Try again later."
-        else:
-            return image
+    # async def generate_image(self, task: commands.Context):
+    #     task = self.bot.loop.run_in_executor(None, task)
+    #     try:
+    #         image = await asyncio.wait_for(task, timeout=60)
+    #     except asyncio.TimeoutError:
+    #         return "An error occurred while generating this sticker. Try again later."
+    #     else:
+    #         return image
 
     @app_commands.command(name="umi", description="Umineko Background Generator")
     @app_commands.describe(**CHOICE_DESC)
@@ -85,6 +85,7 @@ class Umineko(commands.Cog):
             await ctx.response.send_message(
                 f"An error occurred: {str(e)}", ephemeral=True
             )
+            self.log.warning(f"Error: {str(e)}")
 
     @umi_command.autocomplete("left")
     @umi_command.autocomplete("center")
@@ -110,15 +111,14 @@ class Umineko(commands.Cog):
             ]
         return [app_commands.Choice(name=ch, value=ch) for ch in results][:25]
 
+    async def generate_image(self, ctx, **parameters):
+        """Generate Umineko Screenshot and return the image."""
+        # Core logic for Umineko screenshot generation using kwargs and ctx
 
-async def generate_image(ctx, **kwargs):
-    """Generate Umineko Screenshot and return the image."""
-    # Core logic for Umineko screenshot generation using kwargs and ctx
+        # Replace the following line with your actual image generation logic
+        image_data = await generate(self, ctx, **parameters)
 
-    # Replace the following line with your actual image generation logic
-    image_data = generate(**kwargs)
+        # For simplicity, assume there's a method to convert image_data to a Discord File
+        image_file = convert_to_discord_file(image_data)
 
-    # For simplicity, assume there's a method to convert image_data to a Discord File
-    image_file = convert_to_discord_file(image_data)
-
-    return image_file
+        return image_file
