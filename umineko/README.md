@@ -21,7 +21,8 @@ Based on [mochidaz/umineko-screenshot-generator-ps3](https://github.com/mochidaz
 # Thanks
 - [Holo](https://github.com/hollowstrawberry) for carrying me through the pain of interactions
 
-```...Without love, it cannot be 'seen'? ...... Hah. That's backwards.
-............
-Because of love, you end up 'seeing' things that don't even exist.```
+```
+...Without love, it cannot be 'seen'? ...... Hah. That's backwards.
+Because of love, you end up 'seeing' things that don't even exist.
+```
 — Erika
