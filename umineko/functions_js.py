@@ -100,18 +100,18 @@ def convert_to_discord_file(image_data):
 
 
 async def background_randomizer(self, ctx, type):
-    path = f"{bundled_data_path(self)}/assets/backgrounds/{type}"
+    path = f"{bundled_data_path(self)}/backgrounds/{type}"
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     random_file = random.choice(files)
-    final_path = f"{bundled_data_path(self)}/assets/backgrounds/{type}/{random_file}"
+    final_path = f"{bundled_data_path(self)}/backgrounds/{type}/{random_file}"
     return final_path
 
 
 async def character_randomizer(self, ctx, type):
-    path = f"{bundled_data_path(self)}/assets/sprites/{type}"
+    path = f"{bundled_data_path(self)}/sprites/{type}"
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     random_file = random.choice(files)
-    final_path = f"{bundled_data_path(self)}/assets/sprites/{type}/{random_file}"
+    final_path = f"{bundled_data_path(self)}/sprites/{type}/{random_file}"
     return final_path
 
 
@@ -148,7 +148,7 @@ async def generate(self, ctx, **parameters):
     ctx.rectangle([(0, 0), (canvas.width, canvas.height)], fill="white")
     # FONT
     font = ImageFont.truetype(
-        f"{bundled_data_path(self)}/assets/fonts/sazanami-gothic.ttf", size=12
+        f"{bundled_data_path(self)}/fonts/sazanami-gothic.ttf", size=12
     )
 
     try:
@@ -166,7 +166,7 @@ async def generate(self, ctx, **parameters):
     meta = False
 
     meta_image = Image.open(
-        f"{bundled_data_path(self)}/assets/metaworld/hana1.webp"
+        f"{bundled_data_path(self)}/metaworld/hana1.webp"
     )  # Replace with the correct image path
 
     imageContainer = []
