@@ -61,6 +61,20 @@ class Umineko(commands.Cog):
         bg: Optional[str],
     ):
         """Make a Umineko Screenshot!"""
+
+        if left and left not in CHARACTER_CHOICES:
+            return await ctx.send(f"You chose an invalid character for left", ephemeral=True)
+        if center and center not in CHARACTER_CHOICES:
+            return await ctx.send(f"You chose an invalid character for center", ephemeral=True)
+        if center and center not in CHARACTER_CHOICES:
+            return await ctx.send(f"You chose an invalid character for center", ephemeral=True)
+        if metaleft and metaleft not in CHARACTER_CHOICES:
+            return await ctx.send(f"You chose an invalid character for metaleft", ephemeral=True)
+        if metacenter and metacenter not in CHARACTER_CHOICES:
+            return await ctx.send(f"You chose an invalid character for metacenter", ephemeral=True)
+        if metaright and metaright not in CHARACTER_CHOICES:
+            return await ctx.send(f"You chose an invalid character for metaright", ephemeral=True)
+
         parameters = {
             "text1": text1,
             "text2": text2,
@@ -74,26 +88,6 @@ class Umineko(commands.Cog):
             "color2": color2,
             "bg": bg,
         }
-
-        DEFAULT_CHARACTER_FOLDER = "beatrice"
-        characters = {
-            "left": left,
-            "center": center,
-            "right": right,
-            "metaleft": metaleft,
-            "metacenter": metacenter,
-            "metaright": metaright,
-        }
-        character_folders = {}
-        for key, value in characters.items():
-            if value in CHARACTER_CHOICES:
-                character_folders[key] = CHARACTER_CHOICES[value]
-            elif not value:
-                character_folders[key] = DEFAULT_CHARACTER_FOLDER
-            else:
-                return await ctx.send(
-                    f"You chose an invalid character for {key}", ephemeral=True
-                )
         try:
             image = await self.generate_image(ctx, **parameters)
             await ctx.send(file=image) if isinstance(
