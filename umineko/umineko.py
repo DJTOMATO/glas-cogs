@@ -49,15 +49,12 @@ class Umineko(commands.Cog):
     async def umi_command(
         self,
         ctx: commands.Context,
-        text1: str,
-        text2: Optional[str],
+        text: str,
         left: Optional[str],
         center: Optional[str],
         right: Optional[str],
-        metaleft: Optional[str],
-        metacenter: Optional[str],
-        metaright: Optional[str],
         bg: Optional[str],
+        meta: Optional[str],
     ):
         """Make a Umineko Screenshot!"""
         if left and left not in CHARACTER_CHOICES:
@@ -72,27 +69,13 @@ class Umineko(commands.Cog):
             return await ctx.send(
                 f"You chose an invalid character for center", ephemeral=True
             )
-        if metaleft and metaleft not in CHARACTER_CHOICES:
-            return await ctx.send(
-                f"You chose an invalid character for metaleft", ephemeral=True
-            )
-        if metacenter and metacenter not in CHARACTER_CHOICES:
-            return await ctx.send(
-                f"You chose an invalid character for metacenter", ephemeral=True
-            )
-        if metaright and metaright not in CHARACTER_CHOICES:
-            return await ctx.send(
-                f"You chose an invalid character for metaright", ephemeral=True
-            )
+
         parameters = {
-            "text1": text1,
-            "text2": text2,
+            "text": text,
             "left": left,
             "center": center,
             "right": right,
-            "metaleft": metaleft,
-            "metacenter": metacenter,
-            "metaright": metaright,
+            "meta": meta,
             "bg": bg,
         }
 
@@ -117,9 +100,6 @@ class Umineko(commands.Cog):
     @umi_command.autocomplete("left")
     @umi_command.autocomplete("center")
     @umi_command.autocomplete("right")
-    @umi_command.autocomplete("metaleft")
-    @umi_command.autocomplete("metaright")
-    @umi_command.autocomplete("metacenter")
     async def character_autocomplete(
         self, interaction: discord.Interaction, current: str
     ):

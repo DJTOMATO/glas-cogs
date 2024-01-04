@@ -28,9 +28,12 @@ async def wrap_text(self, draw, text, x, y, max_width):
     font = await get_font(self)
     line_height = font.getsize("A")[1]
 
+    shadow_offset = 2  # Adjust the shadow offset as needed
+    shadow_color = "gray"  # Adjust the shadow color as needed
+
     current_x, current_y = x, y
 
-    for line in text.split(f"\\n"):
+    for line in text.split("\\n"):
         self.log.error("Line: %s", line)
         words = re.findall(r"(\w+)?;(.*?)(?=\w+;|$)|([^\s]+)", line)
         self.log.error("Words: %s", words)
@@ -48,6 +51,14 @@ async def wrap_text(self, draw, text, x, y, max_width):
                     test_width = length
 
                     if current_x + test_width > x + max_width:
+                        # Draw shadow
+                        draw.text(
+                            (current_x + shadow_offset, current_y + shadow_offset),
+                            line,
+                            fill=shadow_color,
+                            font=font,
+                        )
+                        # Draw main text
                         draw.text(
                             (current_x, current_y), line, fill=text_color, font=font
                         )
@@ -57,6 +68,14 @@ async def wrap_text(self, draw, text, x, y, max_width):
                     else:
                         line = test_line
 
+                # Draw shadow
+                draw.text(
+                    (current_x + shadow_offset, current_y + shadow_offset),
+                    line,
+                    fill=shadow_color,
+                    font=font,
+                )
+                # Draw main text
                 draw.text((current_x, current_y), line, fill=text_color, font=font)
                 current_x += length + draw.textlength("", font=font)
             elif plain_text:
@@ -69,18 +88,42 @@ async def wrap_text(self, draw, text, x, y, max_width):
                     test_width = length
 
                     if current_x + test_width > x + max_width:
-                        draw.text((current_x, current_y), line, fill="white", font=font)
+                        # Draw shadow
+                        draw.text(
+                            (current_x + shadow_offset, current_y + shadow_offset),
+                            line,
+                            fill=shadow_color,
+                            font=font,
+                        )
+                        # Draw main text
+                        draw.text(
+                            (current_x, current_y),
+                            line,
+                            fill="white",
+                            font=font,
+                        )
                         current_y += line_height
                         line = word + " "
                         current_x = x
                     else:
                         line = test_line
 
-                draw.text((current_x, current_y), line, fill="white", font=font)
+                # Draw shadow
+                draw.text(
+                    (current_x + shadow_offset, current_y + shadow_offset),
+                    line,
+                    fill=shadow_color,
+                    font=font,
+                )
+                # Draw main text
+                draw.text(
+                    (current_x, current_y), line, fill="white", font=font
+                )
                 current_x += length + draw.textlength("", font=font)
 
         current_y += line_height
         current_x = x
+
 
 
 COLOR_CHOICES = {
@@ -91,6 +134,10 @@ COLOR_CHOICES = {
     "white": "#ffffff",
 }
 
+META_CHOICES = {
+    "true": "true",
+
+}
 
 LOCATION_CHOICES = {
     "airport": "Airport",
@@ -217,14 +264,11 @@ async def character_randomizer(self, ctx, type):
 async def generate(self, ctx, **parameters):
     # Create a dictionary with default values
     default_values = {
-        "text1": "",
-        "text2": "",
+        "text": "",
         "left": "",
         "center": "",
         "right": "",
-        "metaleft": "",
-        "metacenter": "",
-        "metaright": "",
+        "meta": "",
         "bg": "",
     }
     parameters = {
@@ -256,14 +300,15 @@ async def generate(self, ctx, **parameters):
     )  # Replace with the correct image path
 
     imageContainer = []
-    for position in ["left", "right", "center", "metaleft", "metaright", "metacenter"]:
+    for position in ["left", "right", "center"]:
         if parameters[position]:
             image_path, character = await character_randomizer(
                 self, ctx, CHARACTER_CHOICES[parameters[position]]
             )
             imageContainer.append((position, character))
 
-    world = "meta"
+    if parameters["meta"] == "true":
+        canvas.paste(meta_image,(0,0),meta_image)
     brightness = 0.55
     enhancer = ImageEnhance.Brightness(canvas)
     canvas = enhancer.enhance(brightness)
@@ -272,56 +317,34 @@ async def generate(self, ctx, **parameters):
         if character.mode != "RGBA":
             character = character.convert("RGBA")
 
-        if world == "meta":
-            meta_position = position
-            if meta_position == "left":
-                # Use direct paste without alpha_composite
-                canvas.paste(
-                    character,
-                    (int(canvas.width * -0.25), int(canvas.width * -0.05)),
-                    character,
-                )
-            elif meta_position == "right":
-                canvas.paste(
-                    character,
-                    (int(canvas.width * 0.41), int(canvas.width * -0.05)),
-                    character,
-                )
-            elif meta_position == "center":
-                canvas.paste(
-                    character,
-                    (int(canvas.width * 0.15), int(canvas.width * -0.05)),
-                    character,
-                )
-        else:
-            # Non-meta world
-            if position == "left":
-                canvas.paste(
-                    character,
-                    (
-                        int(canvas.width * -0.13),
-                        int(canvas.width * -0.05),
-                    ),
-                    character,
-                )
-            elif position == "right":
-                canvas.paste(
-                    character,
-                    (
-                        int(canvas.width * 0.41),
-                        int(canvas.width * -0.05),
-                    ),
-                    character,
-                )
-            elif position == "center":
-                canvas.paste(
-                    character,
-                    (
-                        int(canvas.width * 0.15),
-                        int(canvas.width * -0.05),
-                    ),
-                    character,
-                )
+
+        if position == "left":
+            canvas.paste(
+                character,
+                (
+                    int(canvas.width * -0.13),
+                    int(canvas.width * -0.05),
+                ),
+                character,
+            )
+        elif position == "right":
+            canvas.paste(
+                character,
+                (
+                    int(canvas.width * 0.41),
+                    int(canvas.width * -0.05),
+                ),
+                character,
+            )
+        elif position == "center":
+            canvas.paste(
+                character,
+                (
+                    int(canvas.width * 0.15),
+                    int(canvas.width * -0.05),
+                ),
+                character,
+            )
 
     draw = ImageDraw.Draw(canvas)
 
@@ -334,7 +357,7 @@ async def generate(self, ctx, **parameters):
 
     # Wrap text using the new function
     await wrap_text(
-        self, draw, parameters["text1"], text_position[0], text_position[1], max_width
+        self, draw, parameters["text"], text_position[0], text_position[1], max_width
     )
 
     # Convert the canvas to an Image object
@@ -347,15 +370,16 @@ CHOICE_DESC = {
     "left": "Left character",
     "center": "Center character",
     "right": "Right character.",
-    "text1": "Top text.",
-    "text2": "Center text (optional).",
-    "metaleft": "Meta Character",
-    "metaright": "Meta Character",
-    "metacenter": "Meta Character",
+    "text": "Top text.",
+    "meta": "Meta World",
+
 }
 
 CHOICES = {
     "bg": [
         Choice(name=title, value=value) for value, title in LOCATION_CHOICES.items()
+    ],
+        "meta": [
+        Choice(name=title, value=value) for value, title in META_CHOICES.items()
     ],
 }
