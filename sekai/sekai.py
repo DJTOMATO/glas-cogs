@@ -310,6 +310,7 @@ class Sekai(commands.Cog):
             # await ctx.send(
             #    f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
             # )
+            character = character.lower() #para que el dova no me pida weas
             async with ctx.typing():
                 task = functools.partial(
                     self.gen_card,
