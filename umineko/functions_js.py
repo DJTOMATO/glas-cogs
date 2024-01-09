@@ -354,10 +354,18 @@ async def generate(self, ctx, **parameters):
         canvas.height * 0.055,
     )
     max_width = canvas.width * 0.9
+    text = parameters["text"]
 
+    # Define a translation table for accented characters
+    accented_chars = "áéíóúÁÉÍÓÚ"
+    unaccented_chars = "aeiouAEIOU"
+    translation_table = str.maketrans(accented_chars, unaccented_chars)
+
+    # Replace accented characters in the text
+    text = text.translate(translation_table)
     # Wrap text using the new function
     await wrap_text(
-        self, draw, parameters["text"], text_position[0], text_position[1], max_width
+        self, draw, text, text_position[0], text_position[1], max_width
     )
 
     # Convert the canvas to an Image object
