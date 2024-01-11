@@ -500,9 +500,15 @@ class Sekai(commands.Cog):
             text_y += text_height + line_spacing
 
         fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "Sticker.png")
-        fp.close()
+
+        # Save the final image to a file
+        with BytesIO() as fp:
+            im.save(fp, "GIF", save_all=True, append_images=[im], loop=0)
+            fp.seek(0)
+
+            # Create a Discord file object
+            _file = discord.File(fp, "wonderhohy.gif")
+            im.close()
+            fp.close()
         return _file
+
