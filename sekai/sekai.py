@@ -266,7 +266,8 @@ class Sekai(commands.Cog):
         self.__version__ = "1.0.0"
         self.message = None
         self.embed = discord.Embed(
-            title="Sekai Stickers!", description="Select a character to view available stickers."
+            title="Sekai Stickers!",
+            description="Select a character to view available stickers.",
         )
         self.color = None
 
@@ -299,18 +300,17 @@ class Sekai(commands.Cog):
         if (
             character == None
             and chara_face == None
-            and text == 0
+            and text == None
             and textx == 0
             and texty == 0
             and fontsize == 0
         ):
-            # If no arguments are provided, send the command's help message
             await ctx.send_help(ctx.command)
         else:
             # await ctx.send(
-            #    f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
+            #     f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
             # )
-            character = character.lower() #para que el dova no me pida weas
+            character = character.lower()  # para que el dova no me pida weas
             async with ctx.typing():
                 task = functools.partial(
                     self.gen_card,
@@ -412,7 +412,8 @@ class Sekai(commands.Cog):
         # Creation
         try:
             sticker_base = Image.open(
-                f"{bundled_data_path(self)}/{character}/{character}_{chara_face}.png", mode="r"
+                f"{bundled_data_path(self)}/{character}/{character}_{chara_face}.png",
+                mode="r",
             ).convert("RGBA")
         except FileNotFoundError:
             return f"The specified sticker file was not found. \nCheck the list with {ctx.prefix}characters"
@@ -511,4 +512,3 @@ class Sekai(commands.Cog):
             im.close()
             fp.close()
         return _file
-

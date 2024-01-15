@@ -88,20 +88,29 @@ class Movietar(commands.Cog):
 
     @commands.hybrid_command(description="Make meme videos with people's avatars.")
     @app_commands.guild_only()
-    @app_commands.describe(video="The video you want to make.", avatar="The user whose avatar you want in the video.")
-    @app_commands.choices(video=[app_commands.Choice(name="List of crimes", value="crimenes"),
-                                 app_commands.Choice(name="4K", value="fourk"),
-                                 app_commands.Choice(name="I have the power", value="heman"),
-                                 app_commands.Choice(name="I blame somebody", value="blame"),
-                                 app_commands.Choice(name="Financial support", value="bernie"),
-                                 app_commands.Choice(name="Consequences", value="cons"),
-                                 app_commands.Choice(name="Facts, not feelings", value="feeling"),
-                                 app_commands.Choice(name="No god no", value="nogod"),
-                                 app_commands.Choice(name="What has this place become", value="place"),
-                                 app_commands.Choice(name="Cocaine", value="flour"),
-                                 app_commands.Choice(name="Wtf", value="wtf"),
-                                 app_commands.Choice(name="Leave me alone", value="akira")])
-    async def makevideo(self, ctx: commands.Context, video: str, avatar: discord.Member):
+    @app_commands.describe(
+        video="The video you want to make.",
+        avatar="The user whose avatar you want in the video.",
+    )
+    @app_commands.choices(
+        video=[
+            app_commands.Choice(name="List of crimes", value="crimenes"),
+            app_commands.Choice(name="4K", value="fourk"),
+            app_commands.Choice(name="I have the power", value="heman"),
+            app_commands.Choice(name="I blame somebody", value="blame"),
+            app_commands.Choice(name="Financial support", value="bernie"),
+            app_commands.Choice(name="Consequences", value="cons"),
+            app_commands.Choice(name="Facts, not feelings", value="feeling"),
+            app_commands.Choice(name="No god no", value="nogod"),
+            app_commands.Choice(name="What has this place become", value="place"),
+            app_commands.Choice(name="Cocaine", value="flour"),
+            app_commands.Choice(name="Wtf", value="wtf"),
+            app_commands.Choice(name="Leave me alone", value="akira"),
+        ]
+    )
+    async def makevideo(
+        self, ctx: commands.Context, video: str, avatar: discord.Member
+    ):
         if not ctx.interaction:
             return await ctx.reply("Please use the slash command.")
         await self.__dict__[video](ctx, member=avatar)
@@ -457,7 +466,7 @@ class Movietar(commands.Cog):
                 # def gen_vid_mewhen(self, ctx, member_avatar, fp, folder, videotype, text):
                 file = discord.File(file, filename="mewhen.mp4")
                 await ctx.send(file=file)
-    
+
     def generate_video(self, ctx, member_avatar, file_path, folder, text):
         try:
             print("Start video generation")
@@ -565,8 +574,17 @@ class Movietar(commands.Cog):
         image.putalpha(mask)
         return image
 
+    @staticmethod
+    def bytes_to_image_square(image: BytesIO, size: int):
+        image = Image.open(image).convert("RGBA")
+        image = image.resize((size, size), Image.Resampling.LANCZOS)
+        return image
+
     def gen_vid(self, ctx, member_avatar, fp, folder, videotype, pos, avisize):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
+        if videotype == "crimes.mp4":
+            member_avatar = self.bytes_to_image_square(member_avatar, 300)
+        else:
+            member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
         clip = clip.volumex(1.0)
         numpydata = np.asarray(member_avatar)
