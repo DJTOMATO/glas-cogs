@@ -1161,7 +1161,7 @@ class PfpImgen(commands.Cog):
         im.paste(nekomask, (0, 0), nekomask)
         nekomask.close()
         member_avatar.close()
-#uppy test
+        # uppy test
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
@@ -2411,9 +2411,9 @@ class PfpImgen(commands.Cog):
 
         im = Image.new("RGBA", (500, 500), None)
         im.paste(member_avatar, (0, 0), member_avatar)
-        head = Image.open(
-            f"{bundled_data_path(self)}/ash/ash.png", mode="r"
-        ).convert("RGBA")
+        head = Image.open(f"{bundled_data_path(self)}/ash/ash.png", mode="r").convert(
+            "RGBA"
+        )
         im.paste(head, (50, 30), head)
         head.close()
         member_avatar.close()
@@ -2430,10 +2430,10 @@ class PfpImgen(commands.Cog):
         member_avatar = self.bytes_to_image(member_avatar, 300)
 
         im = Image.new("RGBA", (337, 746), None)
-        im.paste(member_avatar, (30,258), member_avatar)
-        head = Image.open(
-            f"{bundled_data_path(self)}/jack/jack.png", mode="r"
-        ).convert("RGBA")
+        im.paste(member_avatar, (30, 258), member_avatar)
+        head = Image.open(f"{bundled_data_path(self)}/jack/jack.png", mode="r").convert(
+            "RGBA"
+        )
         im.paste(head, (0, 0), head)
         head.close()
         member_avatar.close()
@@ -2445,7 +2445,7 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "jack.png")
         fp.close()
         return _file
-    
+
     def gen_bill(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 200)
 
@@ -2565,7 +2565,7 @@ class PfpImgen(commands.Cog):
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (672, 658), None)
+        im = Image.new("RGBA", (672, 568), None)
         mygfmask = Image.open(
             f"{bundled_data_path(self)}/mygf/mygf_mask.png", mode="r"
         ).convert("RGBA")
