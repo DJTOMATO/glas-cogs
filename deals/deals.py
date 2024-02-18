@@ -18,7 +18,17 @@ class Deals(commands.Cog):
         self.log = logging.getLogger("glas.glas-cogs.ggdeals")
 
     @commands.command()
-    async def deals(self, ctx, *, gamename: commands.clean_content(fix_channel_mentions=False, use_nicknames=False, escape_markdown=False, remove_markdown=False) = None):
+    async def deals(
+        self,
+        ctx,
+        *,
+        gamename: commands.clean_content(
+            fix_channel_mentions=False,
+            use_nicknames=False,
+            escape_markdown=False,
+            remove_markdown=False,
+        ) = None,
+    ):
         """Returns a list of deals"""
         # Send a "Bot is typing..." status
         async with ctx.typing():
