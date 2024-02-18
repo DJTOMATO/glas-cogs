@@ -19,35 +19,31 @@ class Deals(commands.Cog):
 
     @commands.command()
     async def deals(self, ctx, *, gamename: commands.clean_content(fix_channel_mentions=False, use_nicknames=False, escape_markdown=False, remove_markdown=False) = None):
-        if not gamename:
-            # If no arguments are provided, send the command's help message
-            await ctx.send_help(ctx.command)
-        else:
-            """Returns a list of deals"""
-            # Send a "Bot is typing..." status
-            async with ctx.typing():
-                # Perform your async task
-                scraper = WebScraper()
-                if gamename is None:
-                   await ctx.send("You forgot the game name!")
-                   return     
-                results = await scraper.scrape(ctx, gamename)
-                if results is None:
-                    await ctx.send(f"Error: Game {gamename} not found")
-                    return
+        """Returns a list of deals"""
+        # Send a "Bot is typing..." status
+        async with ctx.typing():
+            # Perform your async task
+            scraper = WebScraper()
+            if gamename is None:
+                await ctx.send("You forgot the game name! Please try again. \n\n Example: !deals The Last of Us 2")
+                return     
+            results = await scraper.scrape(ctx, gamename)
+            if results is None:
+                await ctx.send(f"Error: Game {gamename} not found")
+                return
 
-                formatted_data, all_deals_details, scraped_game_info = results
+            formatted_data, all_deals_details, scraped_game_info = results
 
-                # Create the embed
-                embed, embed2 = await scraper.make_embed(
-                    ctx, formatted_data, all_deals_details, scraped_game_info
-                )
+            # Create the embed
+            embed, embed2 = await scraper.make_embed(
+                ctx, formatted_data, all_deals_details, scraped_game_info
+            )
 
-                # Send the final embed and remove the "Bot is typing..." status
-                await ctx.send(embed=embed)
-                await ctx.send(embed=embed2)
+            # Send the final embed and remove the "Bot is typing..." status
+            await ctx.send(embed=embed)
+            await ctx.send(embed=embed2)
 
-                # command that returns text
+            # command that returns text
 
     @commands.command()
     async def risks(self, ctx):
