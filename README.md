@@ -78,6 +78,7 @@
 |  PfpImgen  | Make images with avatars! (+23 new images!)        | [PhenoM4n4n](https://github.com/phenom4n4n/phen-cogs/)\* |        ✅        |
 |  Weeedcog  | Comic cog, now with +1300 Weeb images              |    [dualmoon](https://github.com/dualmoon/Cogs.v3)\*     |        ✅        |
 |    Ogey    | Generates a random Ogey\*                          |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
+|    Mogo    | Generates a random Mogogo\*                          |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
 |    Fire    | New year fireworks                                 | [TrustyJaid](https://github.com/TrustyJAID/Trusty-cogs/) |        ✅        |
 
 - \* (forked from)
