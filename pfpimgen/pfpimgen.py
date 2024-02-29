@@ -901,6 +901,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def competition(self, ctx, *, member: FuzzyMember = None):
+        """When you're at a competition"""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_compet, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def sus(self, ctx, *, member: FuzzyMember = None):
         """You're among us..."""
         if not member:
@@ -2583,6 +2600,37 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "mygf.png")
+        fp.close()
+        return _file
+
+    def gen_compet(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 50)
+        member_avatar2 = self.bytes_to_image(member_avatar, 55)
+        member_avatar3 = self.bytes_to_image(member_avatar, 575)
+
+        im = Image.new("RGBA", (575, 722), None)
+        mycompmask = Image.open(
+            f"{bundled_data_path(self)}/competition/competition_mask.png", mode="r"
+        ).convert("RGBA")
+
+        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        im.paste(mycompmask, (0, 0), mycompmask)
+        mycompmask.close()
+        
+        im.paste(member_avatar, (346, 40), member_avatar)
+        member_avatar.close()
+
+        im.paste(member_avatar2, (484, 86), member_avatar2)
+        member_avatar2.close()
+
+        im.paste(member_avatar3, (0, 163), member_avatar3)
+        member_avatar3.close()
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "whenyoure.png")
         fp.close()
         return _file
 
