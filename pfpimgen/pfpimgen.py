@@ -2604,9 +2604,9 @@ class PfpImgen(commands.Cog):
         return _file
 
     def gen_compet(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 50)
-        member_avatar2 = self.bytes_to_image(member_avatar, 55)
-        member_avatar3 = self.bytes_to_image(member_avatar, 575)
+        member_avatar1 = self.bytes_to_image(member_avatar, 60)
+        member_avatar2 = self.bytes_to_image(member_avatar, 60)
+        member_avatar3 = self.bytes_to_image(member_avatar, 580)
 
         im = Image.new("RGBA", (575, 722), None)
         mycompmask = Image.open(
@@ -2617,14 +2617,14 @@ class PfpImgen(commands.Cog):
         # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(mycompmask, (0, 0), mycompmask)
         mycompmask.close()
-        
-        im.paste(member_avatar, (346, 40), member_avatar)
+
+        im.paste(member_avatar1, (342, 38), member_avatar1)
         member_avatar.close()
 
-        im.paste(member_avatar2, (484, 86), member_avatar2)
+        im.paste(member_avatar2, (480, 84), member_avatar2)
         member_avatar2.close()
 
-        im.paste(member_avatar3, (0, 163), member_avatar3)
+        im.paste(member_avatar3, (0, 160), member_avatar3)
         member_avatar3.close()
         fp = BytesIO()
         im.save(fp, "PNG")
