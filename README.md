@@ -58,6 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Ship    | Calculate the percentage of love compatibility between two people!                   |                           Glas                           |        ✅        |
 |   Umineko   | Umineko Screenshot Generator. |                           Glas & [Holo](https://github.com/hollowstrawberry)                     |        ✅        |
 |   Deals   | Find videogame deals in several storefronts. |                           Glas                           |        ✅        |
 |   Letterdance   | Create GIFs by combining dancing letters horizontally! |                           Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
