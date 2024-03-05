@@ -5,6 +5,7 @@
     "install_msg": "Thanks for installing `ship` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["love", "meme", "ship"],
+    "requirements": ["pillow==9.5.0", "unidecode", "rapidfuzz"],
     "hidden": false,
     "disabled": false,
     "type": "COG",

@@ -56,7 +56,7 @@ relationships_en = {
 }
 
 
-class ShipCog(commands.Cog):
+class Ship(commands.Cog):
     @commands.command(aliases=["love"], cooldown_after_parsing=True)
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
