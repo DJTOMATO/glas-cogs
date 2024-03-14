@@ -61,7 +61,7 @@
 |   Ship    | Calculate the percentage of love compatibility between two people!                   |                           Glas                           |        ✅        |
 |   Umineko   | Umineko Screenshot Generator. |                           Glas & [Holo](https://github.com/hollowstrawberry)                     |        ✅        |
 |   Deals   | Find videogame deals in several storefronts. |                           Glas                           |        ✅        |
-|   Letterdance   | Create GIFs by combining dancing letters horizontally! |                           Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
+|   Letterdance   | Combine dancing letters horizontally! |                      Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
 |   Kofi   | Show target info and goals in Ko-fi! |                           Glas                           |        ✅        |
 |   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
 |   GoogleIt   | LMGTFY your users dumb questions! |                           Glas                           |        ✅        |
@@ -70,11 +70,11 @@
 |   Bubble   | Create a bubble speech from users and attachments! |                           Glas                           |        ✅        |
 |   Sekai    | Generate Project Sekai Stickers!                   |                           Glas                           |        ✅        |
 |  Ygocard   | Generate Yu-Gi-Oh Cards from users!                |                           Glas                           |        ✅        |
-|   NoArgs   | Cleans memes with ugly CDN arguments!              |                           Glas                           |        ✅        |
 |  Pokefuse  | Fusion Gen 1 Pokemon                               |                           Glas                           |        ✅        |
 |  Movietar  | Make videos with avatars!                          |                           Glas                           |        ✅        |
 | Youwouldnt | You wouldn't steal a car                           |                           Glas                           |        ✅        |
-| Anime  | Get info about anime characters, shows, staff, studio and so much more                           |                           TheDiscordHistorian                           |        ✅        |
+| GuildID | Guild & Invite stats!                           |                           Glas                           |        ✅        |
+| Anime  | Get info about anime characters, shows, staff, studio and so much more  |   TheDiscordHistorian                           |        ✅        |
 | Watamelon  | Posts a random Watamelon image\*                   |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
 |  PfpImgen  | Make images with avatars! (+23 new images!)        | [PhenoM4n4n](https://github.com/phenom4n4n/phen-cogs/)\* |        ✅        |
 |  Weeedcog  | Comic cog, now with +1300 Weeb images              |    [dualmoon](https://github.com/dualmoon/Cogs.v3)\*     |        ✅        |
@@ -83,6 +83,9 @@
 |    Fire    | New year fireworks                                 | [TrustyJaid](https://github.com/TrustyJAID/Trusty-cogs/) |        ✅        |
 
 - \* (forked from)
+
+### Abandoned/Unused Cogs
+[Moved here](https://github.com/DJTOMATO/glas-unused-cogs)
 
 ## Credits
 
