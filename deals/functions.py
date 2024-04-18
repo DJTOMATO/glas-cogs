@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import re
 import logging
 import discord
-
+#from redbot.core.data_manager import bundled_data_path
 
 class WebScraper:
     def __init__(self):
@@ -24,7 +24,8 @@ class WebScraper:
                     # Find the first div with the specified CSS selector
                     target_div = soup.select_one(
                         ".list-items div.hoverable-box:nth-child(1)"
-                    )
+                    )   
+
 
                     # If the div is found, you can extract its text or other information
                     if target_div:
@@ -40,7 +41,8 @@ class WebScraper:
                             "Game Image (URL)"
                         ] = self.extract_game_image_url(target_div)
                         formatted_data["Game name"] = self.extract_game_name(target_div)
-
+                                            #title = soup.select_one(".active span[itemprop='name']")
+                        #self.log.warning("Title new" + str(formatted_data["Game name"]))
                         # Extract "Compare Prices" URL
 
                         compare_prices_url = self.extract_compare_prices_url(target_div)
@@ -124,18 +126,27 @@ class WebScraper:
 
     def extract_game_image_url(self, target_div):
         # Extract the game image URL using the provided CSS selector
-        game_image_div = target_div.select_one(
-            "div:nth-child(3) > a:nth-child(1) > picture:nth-child(1) > img:nth-child(3)"
-        )
-        if game_image_div:
-            game_image_url = game_image_div.get("src", "")
-            return game_image_url
+        # with open(f"{bundled_data_path(self)}/target_div.txt", "w") as f:
+        #     f.write(str(target_div))
+        # game_image_div = target_div.select_one(
+        #     "div:nth-child(3) > a:nth-child(1) > picture:nth-child(1) > img:nth-child(3)"
+        # )
+
+        # Find all image elements
+        image_elements = target_div.find_all('img')
+
+        # Initialize variable to store the first matched image URL
+        first_image_url = next((img['src'].split()[0] for img in image_elements if '498xr286.jpg' in img.get('srcset', '')), None)
+
+
+        #self.log.warning("first image: " + str(first_image_url))
+        # if game_image_div:
+        #     game_image_url = game_image_div.get("src", "")
+        return first_image_url
 
     def extract_game_name(self, target_div):
         # Extract the game name using the provided CSS selector
-        game_name_div = target_div.select_one(
-            "div:nth-child(4) > div:nth-child(1) > div:nth-child(1)"
-        )
+        game_name_div = target_div.find('a', class_='game-info-title')
         if game_name_div:
             game_name = game_name_div.get_text().strip()
             return game_name
@@ -325,7 +336,7 @@ class WebScraper:
             "https://img.gg.deals/86/56/0acb7fb648728c5a5ad370db7c26714b5cb9.svg": "GamesPlanet US",  
             "https://img.gg.deals/0a/8c/cbd93a75cce4d35d2e91fca073f2353fa9bd.svg": "GamesPlanet US",
             "https://img.gg.deals/53/0e/fbc31eb9b0fa0d8d7cc4534d559fd48977a3_90xt35_Q100.png": "Nuveem",
-            
+            "https://img.gg.deals/f7/50/92c4f611a78f7070912a754a000195c2e26a.svg": "GameSeal*",
         }
 
         # Get the shop name based on the logo
@@ -334,7 +345,10 @@ class WebScraper:
         # Update the deal details with the shop name
         deal_details["Shop Name"] = shop_name
         # Title
-        title_element = deal.select_one(".game-info-title")
+        #print(deal)
+        title_element = deal.select_one(".breadcrumbs-list > li:nth-child(4) > a:nth-child(1) > span:nth-child(1)")
+        #self.log.warning(f"title_element: {title_element}")
+
         title = title_element.get_text().strip() if title_element else ""
         deal_details["Title"] = title
 
@@ -873,8 +887,8 @@ class WebScraper:
         )
 
         warning = (
-            "\\* means Keyshop, beware there may be risks type ``!risks`` for details."
-        )
+            "\\* means Keyshop, beware there may be risks type ``{prefix}risks`` for details."
+        ).format(prefix=ctx.clean_prefix)
         # Check if the list is not empty
         if all_deals_details:
             # Initialize description with an empty string
