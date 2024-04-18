@@ -135,8 +135,16 @@ class WebScraper:
         # Find all image elements
         image_elements = target_div.find_all('img')
 
-        # Initialize variable to store the first matched image URL
-        first_image_url = next((img['src'].split()[0] for img in image_elements if '498xr286.jpg' in img.get('srcset', '')), None)
+        for img in image_elements:
+            srcset = img.get('srcset', '')
+            if '498xr286.jpg' in srcset:
+                urls = srcset.split(',')
+                for url in urls:
+                    if '498xr286.jpg' in url:
+                        first_image_url = url.strip().split()[0]
+                        break
+                if first_image_url:
+                    break
 
 
         #self.log.warning("first image: " + str(first_image_url))
