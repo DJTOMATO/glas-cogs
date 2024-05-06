@@ -347,6 +347,8 @@ class WebScraper:
             "https://img.gg.deals/f7/50/92c4f611a78f7070912a754a000195c2e26a.svg": "GameSeal*",
             "https://img.gg.deals/fc/4d/0098e85b68abbb6831511036a67b21e2d804_90xt35_Q100.png": "AllYouPlay*",
             "https://img.gg.deals/2f/49/5511e9bfeb8d186e64437ab6e1f07f032d6a_90xt35_Q100.png": "Etail Market (US)*",
+            "https://img.gg.deals/e9/f9/74e5cfd0af1b5fd339d9cff33b3d6f76837c_90xt35_Q100.png": "Etail Market (EU)*",
+            "https://img.gg.deals/b5/bf/f6a2641666e4fd0055e7d7fb2bcb20beb455_90xt35_Q100.png": "GamersGate",
         }
 
         # Get the shop name based on the logo
