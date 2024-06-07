@@ -151,12 +151,16 @@ class Ship(commands.Cog):
         image.paste(im=avatar2, box=(380, 19))
         image.paste(im=template, box=(0, 0), mask=template)
         draw = ImageDraw.Draw(image)
+
         font = ImageFont.truetype(
             f"{bundled_data_path(self)}/Lato-Bold.ttf", size=32, encoding="utf-8"
         )
-        text_width, text_height = draw.textsize(str(rate) + "%", font=font)
+        draw = ImageDraw.Draw(image)
+        bbox = draw.textbbox((0, 0), str(rate) + "%", font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
         draw.text(
-            (305 - text_width // 2, 110 - text_height // 2),
+            (305 - text_width // 2, 90 - text_height // 2),
             str(rate) + "%",
             fill=(255, 255, 255),
             font=font,
