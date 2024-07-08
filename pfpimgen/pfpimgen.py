@@ -59,6 +59,21 @@ class PfpImgen(commands.Cog):
         )
         self.session = aiohttp.ClientSession()
 
+    async def send_with_retries(self, ctx, content=None, file=None, retries=3, delay=2):
+        for attempt in range(retries):
+            try:
+                if file:
+                    await ctx.send(file=file)
+                else:
+                    await ctx.send(content)
+                return  # If successful, exit the function
+            except discord.errors.DiscordServerError as e:
+                if attempt < retries - 1:
+                    await asyncio.sleep(delay)  # Wait before retrying
+                    delay *= 2  # Exponential backoff
+                else:
+                    raise e  # Raise the exception if it's the last attempt
+
     async def cog_unload(self):
         await self.session.close()
 
@@ -301,9 +316,9 @@ class PfpImgen(commands.Cog):
             task = functools.partial(self.gen_jail, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
-            await ctx.send(image)
+            await self.send_with_retries(ctx, content=image)
         else:
-            await ctx.send(file=image)
+            await self.send_with_retries(ctx, file=image)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -2739,13 +2754,13 @@ class PfpImgen(commands.Cog):
         reliablemask = Image.open(
             f"{bundled_data_path(self)}/reliable/reliable_mask.png", mode="r"
         ).convert("RGBA")
-        #member_avatar.rotate(-25, resample=0, expand=0, center=None, translate=None, fillcolor=None)
+        # member_avatar.rotate(-25, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(reliablemask, (0, 0), reliablemask)
         im.paste(member_avatar, (180, 395), member_avatar)
         reliablemask.close()
         member_avatar.close()
         # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None) 
+        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
 
         # TEST START
         # Load font
@@ -2759,7 +2774,9 @@ class PfpImgen(commands.Cog):
         draw = ImageDraw.Draw(rotated_text_img)
         username = username[:6] if len(username) > 6 else username
         # Draw the text on the rotated text image
-        draw.text((0, 0), username, font=font, fill=(0, 0, 0), align="left", stroke_width=0)
+        draw.text(
+            (0, 0), username, font=font, fill=(0, 0, 0), align="left", stroke_width=0
+        )
 
         # Rotate the text image by 20 degrees
         rotated_text_img = rotated_text_img.rotate(-24, expand=True)
