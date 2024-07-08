@@ -1,0 +1,14 @@
+{
+    "name": "DiceAI!",
+    "short": "Generates images using AI.",
+    "description": "Generates images using AI.",
+    "install_msg": "Thanks for installing `diceai` cog! Please enjoy it :D \n If you have issues running this be sure to run in your venv run playwright install-deps",
+    "author": ["Glas"],
+    "tags": ["image", "ai", "generation"],
+    "hidden": false,
+    "disabled": false,
+    "requirements": ["perchance", "argparse", "asyncio"],
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
