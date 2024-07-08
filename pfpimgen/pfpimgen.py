@@ -72,7 +72,9 @@ class PfpImgen(commands.Cog):
                     await asyncio.sleep(delay)  # Wait before retrying
                     delay *= 2  # Exponential backoff
                 else:
-                    raise e  # Raise the exception if it's the last attempt
+                    await ctx.send(
+                        f"Failed to send message after {retries} attempts. Error: {e}"
+                    )
 
     async def cog_unload(self):
         await self.session.close()
