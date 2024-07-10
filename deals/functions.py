@@ -350,6 +350,8 @@ class WebScraper:
             "https://img.gg.deals/e9/f9/74e5cfd0af1b5fd339d9cff33b3d6f76837c_90xt35_Q100.png": "Etail Market (EU)*",
             "https://img.gg.deals/b5/bf/f6a2641666e4fd0055e7d7fb2bcb20beb455_90xt35_Q100.png": "GamersGate",
             "https://img.gg.deals/32/d0/acd6afa24776b1eb578e4d22d24cf24669b4.svg": "Newegg",
+            "https://img.gg.deals/43/5d/048b3ab04326f931059e735b45ee3760da96_90xt35_Q100.png": "PremiumCDKeys",
+            "https://img.gg.deals/c9/cc/51fd616765c46c619e9f65b57987731739b9_90xt35_Q100.png": "PremiumCDKeys",
         }
 
         # Get the shop name based on the logo
