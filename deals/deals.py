@@ -35,8 +35,10 @@ class Deals(commands.Cog):
             # Perform your async task
             scraper = WebScraper()
             if gamename is None:
-                await ctx.send("You forgot the game name! Please try again. \n\n Example: !deals The Last of Us 2")
-                return     
+                await ctx.send(
+                    "You forgot the game name! Please try again. \n\n Example: !deals The Last of Us 2"
+                )
+                return
             results = await scraper.scrape(ctx, gamename)
             if results is None:
                 await ctx.send(f"Error: Game {gamename} not found")

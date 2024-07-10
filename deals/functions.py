@@ -349,6 +349,7 @@ class WebScraper:
             "https://img.gg.deals/2f/49/5511e9bfeb8d186e64437ab6e1f07f032d6a_90xt35_Q100.png": "Etail Market (US)*",
             "https://img.gg.deals/e9/f9/74e5cfd0af1b5fd339d9cff33b3d6f76837c_90xt35_Q100.png": "Etail Market (EU)*",
             "https://img.gg.deals/b5/bf/f6a2641666e4fd0055e7d7fb2bcb20beb455_90xt35_Q100.png": "GamersGate",
+            "https://img.gg.deals/32/d0/acd6afa24776b1eb578e4d22d24cf24669b4.svg": "Newegg",
         }
 
         # Get the shop name based on the logo
@@ -619,14 +620,33 @@ class WebScraper:
             async with session.get(compare_prices_url) as response:
                 if response.status == 200:
                     soup = BeautifulSoup(await response.text(), "lxml")
-
+        reviews = None
+        features = None
         game_info_widget = soup.select_one("#game-info-side")
+        # self.log.warning(f"game_info_widget: {game_info_widget}")
 
-        release_date = (
-            game_info_widget.find("h4", string="Release date")
-            .find_next("p", class_="game-info-details-content")
-            .text.strip()
-        )
+        # release_date = (
+        #     game_info_widget.find("h4", string="Release date")
+        #     .find_next("p", class_="game-info-details-content")
+        #     .text.strip()
+        # )
+
+        if game_info_widget:
+            release_date_span = game_info_widget.find("span", string="Release date")
+
+            if release_date_span:
+                release_date_p = release_date_span.find_next_sibling(
+                    "p", class_="game-info-details-content"
+                )
+
+                if release_date_p:
+                    release_date = release_date_p.text.strip()
+                else:
+                    release_date = "Release date not found"
+            else:
+                release_date = "Release date span not found"
+        else:
+            release_date = "Game info widget not found"
 
         playable_on_section = game_info_widget.find("h4", string="Playable on")
         if playable_on_section:
@@ -646,56 +666,76 @@ class WebScraper:
                 playable_on.append(platform_title)
         else:
             playable_on = []
+        # dev
         developer_publisher = "None"
-        developer_publisher_element = game_info_widget.find(
-            "h4", string="Developer / Publisher"
-        )
-        if developer_publisher_element:
-            next_p_element = developer_publisher_element.find_next(
-                "p", class_="game-info-details-content"
-            )
-            if next_p_element:
-                developer_publisher = next_p_element.text.strip()
-                # Continue with further processing
-            else:
-                print("No <p> element with class 'game-info-details-content' found.")
-                # Handle the case when the <p> element is not found
-        else:
-            print("No <h4> element with string 'Developer / Publisher' found.")
-            # Handle the case when the <h4> element is not found
 
-        reviews_element = game_info_widget.find("h4", string="Reviews")
+        # Find all <span> elements with class 'game-info-inner-heading'
+        span_elements = soup.find_all("span", class_="game-info-inner-heading")
+
+        # Iterate through each span element to find the one with 'Developer / Publisher'
+        for span in span_elements:
+            if span.text.strip() == "Developer / Publisher":
+                # Navigate to the parent <div> with class 'game-info-details-section-developer'
+                parent_div = span.parent
+
+                if parent_div:
+                    # Find all <a> tags with class 'grey-light-link' within the parent <div>
+                    developer_publisher_links = parent_div.find_all(
+                        "a", class_="grey-light-link"
+                    )
+
+                    # Extract developer and publisher names if links are found
+                    if developer_publisher_links:
+                        developer_names = [
+                            link.text.strip() for link in developer_publisher_links
+                        ]
+                        developer_publisher = " / ".join(developer_names)
+
+                break  # Exit the loop once we've found and extracted the information
+
+        # self.log.warning(f"Developer / Publisher: {developer_publisher}")
+
+        # DEV
+        # Reviews Section Parsing
+        reviews_element = game_info_widget.find(
+            "span", class_="game-info-details-section game-info-details-section-reviews"
+        )
+        reviews = None  # Initialize reviews to avoid UnboundLocalError
+
+        reviews_element = game_info_widget.find(
+            "div", class_="game-info-details-section game-info-details-section-reviews"
+        )
+
+        # self.log.warning(f"reviews_element: {reviews_element}")
 
         if reviews_element:
-            reviews_label = reviews_element.find_next("span", class_="reviews-label")
+            reviews_label = reviews_element.find("span", class_="reviews-label")
 
             if reviews_label:
                 reviews = reviews_label.text.strip()
             else:
-                reviews_section = game_info_widget.find(
-                    "div", class_="game-info-details-section-reviews"
-                )
+                reviews_section = reviews_element
 
                 if reviews_section:
                     reviews_header = reviews_section.find(
-                        "h4", class_="game-info-inner-heading"
+                        "span", class_="game-info-inner-heading"
                     )
 
                     if reviews_header and reviews_header.text.strip() == "Reviews":
                         meta_score_element = reviews_section.find(
-                            "span", class_="game-score-meta-value"
+                            "div", class_="game-score-meta-value"
                         )
-                        # user_score_element = reviews_section.find("span", class_="game-score-circle")
                         opencritic_score_element = reviews_section.find(
-                            "span", class_="opencritic-score"
+                            "div",
+                            class_="large no-margin game-score-meta-value game-score-circle no-score",
                         )
 
                         if all([meta_score_element, opencritic_score_element]):
                             meta_score = meta_score_element.text.strip()
-                            # user_score = user_score_element.text.strip()
                             opencritic_score = opencritic_score_element.text.strip()
 
                             reviews = f"MetaCritic Score: {meta_score}\nOpenCritic Score: {opencritic_score}"
+                            self.log.warning(f"Reviews: {reviews}")
                         else:
                             self.log.warning("Some score elements not found.")
                     else:
@@ -717,19 +757,30 @@ class WebScraper:
         else:
             genres = "Genres container not found."
 
-        game_info_tags = soup.select_one("#game-info-tags")
+        game_info_tags = soup.select_one(".game-info-content")
+        # TAGS
 
-        tags_section = game_info_tags.find("h4", string="Tags")
-        if tags_section:
-            tags = [
-                tag.text.strip()
-                for tag in tags_section.find_next(
+        if game_info_tags:
+            tags_section = game_info_tags.find("span", string="Tags")
+            if tags_section:
+                tags_div = tags_section.find_next(
                     "div",
                     class_="d-flex tags-list badges-container tags-list-dotdotdot",
-                ).find_all("a", class_="badge-wrapper")[:3]
-            ]
+                )
+                if tags_div:
+                    tags = [
+                        tag.text.strip()
+                        for tag in tags_div.find_all("a", class_="badge-wrapper")[:3]
+                    ]
+                else:
+                    tags = []  # Return an empty list when the tags div is not found
+            else:
+                tags = []  # Return an empty list when tags section header is not found
         else:
-            tags = []  # Return an empty list when tags are not present
+            tags = []  # Return an empty list when game_info_tags is not found
+
+        # TAGS
+
         game_info_features = soup.select_one("#game-info-features")
 
         if game_info_features:
@@ -811,6 +862,7 @@ class WebScraper:
         #  'Keyshops', 'Icon', 'Game Image (URL)', 'Game name', 'Compare Prices URL']
 
         for column_name in columns:
+            # Skip certain columns that are not to be added as fields
             if column_name not in [
                 "Game Image (URL)",
                 "Compare Prices URL",
@@ -819,16 +871,21 @@ class WebScraper:
                 "Keyshops",
                 "Official Stores",
             ]:
+                # Get the value from formatted_data or set to "N/A" if not present
                 column_value = formatted_data.get(column_name, "N/A")
+                # Add field to the embed
                 embed.add_field(name=column_name, value=column_value, inline=True)
-                # Adding fields to the embed
 
         embed.set_thumbnail(url=formatted_data["Game Image (URL)"])
         columns = list(formatted_data.keys())
         # ['release_date', 'playable_on', 'developer_publisher', 'reviews', 'genres', 'tags', 'features', 'related_links', 'game_description']
         max_length = 1024  # Maximum length for a field in Discord embed
         a = scraped_game_info.get("tags")
-
+        developer_publisher = scraped_game_info.get("developer_publisher", "")
+        first_publisher = developer_publisher.split(" / ")[
+            0
+        ]  # Get the first part before " / "
+        embed.add_field(name="Dev/Pub", value=first_publisher, inline=True)
         embed.add_field(
             name="Tags",
             value=" - ".join([f"{tag}" for tag in scraped_game_info.get("tags")]),
