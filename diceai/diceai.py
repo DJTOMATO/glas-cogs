@@ -109,7 +109,7 @@ class PerChance(commands.Cog):
         shape = parsed_args["shape"]
         guidance_scale = parsed_args["cfg_scale"]
         style = parsed_args["style"]
-        print("test.", enegative_prompt)
+        # print("test.", enegative_prompt)
         if style in styles:
             style_info = styles[style]
             prompt = style_info["prompt"].replace("[input.description]", prompt)
@@ -117,9 +117,10 @@ class PerChance(commands.Cog):
                 "[input.negative]", negative_prompt or ""
             )
 
-        description = (
-            f"{interaction.user.mention} your image is ready!\n\nPrompt: {eprompt}"
-        )
+        # description = (
+        #     f"{interaction.user.mention} your image is ready!\n\nPrompt: {eprompt}"
+        # )
+        description = f"Prompt: {eprompt}"
         if style:
             description += f"\nStyle: {style}"
         if enegative_prompt:
@@ -135,55 +136,65 @@ class PerChance(commands.Cog):
         await interaction.response.defer()
 
         async with interaction.channel.typing():
-            try:
-                gen = pc.ImageGenerator()
-                async with await gen.image(
-                    prompt,
-                    negative_prompt=negative_prompt,
-                    seed=seed,
-                    shape=shape,
-                    guidance_scale=guidance_scale,
-                ) as result:
-                    binary = await result.download()
+            retries = 5
+            delay = 4
+            for attempt in range(retries):
+                try:
+                    gen = pc.ImageGenerator()
+                    async with await gen.image(
+                        prompt,
+                        negative_prompt=negative_prompt,
+                        seed=seed,
+                        shape=shape,
+                        guidance_scale=guidance_scale,
+                    ) as result:
+                        binary = await result.download()
 
-                    # Debug step: Check if binary data is valid
-                    if binary is None:
-                        raise ValueError("Received empty binary data")
+                        # Debug step: Check if binary data is valid
+                        if binary is None:
+                            raise ValueError("Received empty binary data")
 
-                    try:
-                        image = Image.open(binary)
-                    except Exception as e:
-                        await interaction.followup.send(f"Error opening image: {e}")
+                        try:
+                            image = Image.open(binary)
+                        except Exception as e:
+                            await interaction.followup.send(f"Error opening image: {e}")
+                            return
+
+                        image_buffer = io.BytesIO()
+                        image.save(image_buffer, format="PNG")
+                        image_buffer.seek(0)  # Rewind the buffer to the beginning
+                        em = discord.Embed(description=description)
+                        em.color = discord.Color(8599000)
+                        em.timestamp = datetime.now()
+                        file = discord.File(fp=image_buffer, filename="image.png")
+                        em.set_image(url="attachment://image.png")
+
+                        await interaction.channel.send(
+                            content=f"{interaction.user.mention}, here is your generated image!",
+                            file=file,
+                            embed=em,
+                            reference=interaction.message,
+                        )
                         return
 
-                    image_buffer = io.BytesIO()
-                    image.save(image_buffer, format="PNG")
-                    image_buffer.seek(0)  # Rewind the buffer to the beginning
-                    em = discord.Embed(description=description)
-                    em.color = discord.Color(8599000)
-                    em.timestamp = datetime.now()
-                    file = discord.File(fp=image_buffer, filename="image.png")
-                    em.set_image(url="attachment://image.png")
+                except pc.errors.ConnectionError as e:
+                    if attempt < retries - 1:
+                        await asyncio.sleep(delay)  # Wait before retrying
+                        delay *= 2  # Exponential backoff
+                    else:
+                        await interaction.followup.send(
+                            f"Perchance API overloaded. Please try again in a few minutes.\n{e}"
+                        )
 
-                    # Send the embed
+                except ValueError as e:
+                    await interaction.followup.send(f"ValueError: {e}")
+                    return
+
+                except Exception as e:
                     await interaction.followup.send(
-                        file=discord.File(fp=image_buffer, filename="image.png"),
-                        embed=em,
+                        f"An unexpected error occurred. Please try again later.\n{e}"
                     )
-
-            except pc.errors.ConnectionError as e:
-                await interaction.followup.send(
-                    f"Perchance API overloaded. Please try again in a few minutes.\n{e}"
-                )
-                # await interaction.followup.send(f"ConnectionError: {e}")
-
-            except ValueError as e:
-                await interaction.followup.send(f"ValueError: {e}")
-
-            except Exception as e:
-                await interaction.followup.send(
-                    f"An unexpected error occurred. Please try again later.\n{e}"
-                )
+                    return
 
     @perchance.autocomplete("style")
     async def character_autocomplete(
