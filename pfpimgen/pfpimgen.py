@@ -1020,6 +1020,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def evidence(self, ctx, *, member: FuzzyMember = None):
+        """Here's the photographic evidence..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_evidence, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def taiko(self, ctx, *, member: FuzzyMember = None):
         """Taiko..."""
         if not member:
@@ -2894,6 +2911,32 @@ class PfpImgen(commands.Cog):
 
         pretendmask.close()
         blushmask.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "pretend.png")
+        fp.close()
+        return _file
+
+    def gen_evidence(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 724)
+
+        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (1436, 808), None)
+        evi_mask = Image.open(
+            f"{bundled_data_path(self)}/evidence/evidence_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (350, 60), member_avatar)
+
+        im.paste(evi_mask, (0, 0), evi_mask)
+
+        evi_mask.close()
+
         member_avatar.close()
 
         fp = BytesIO()
