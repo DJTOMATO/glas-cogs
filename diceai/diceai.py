@@ -133,11 +133,11 @@ class PerChance(commands.Cog):
         if guidance_scale != 7.0:
             description += f"\nGuidance Scale: {guidance_scale}"
 
-        await interaction.response.defer()
+        await interaction.response.defer(thinking=True)
 
         async with interaction.channel.typing():
-            retries = 5
-            delay = 4
+            retries = 10
+            delay = 6
             for attempt in range(retries):
                 try:
                     gen = pc.ImageGenerator()
@@ -169,11 +169,11 @@ class PerChance(commands.Cog):
                         file = discord.File(fp=image_buffer, filename="image.png")
                         em.set_image(url="attachment://image.png")
 
-                        await interaction.channel.send(
+
+                        await interaction.followup.send(
                             content=f"{interaction.user.mention}, here is your generated image!",
                             file=file,
                             embed=em,
-                            reference=interaction.message,
                         )
                         return
 
