@@ -28,7 +28,9 @@ async def scraper(url):
         scraped_data["Goal Title"] = goal_title.get_text()
 
     # Current Percentage
-    current_percentage = soup.select_one(".text-left > .kfds-font-bold")
+    current_percentage = soup.select_one(
+        "div.text-left.kfds-btm-mrgn-8 > span.kfds-font-bold"
+    )
     if current_percentage:
         scraped_data["Current Percentage"] = current_percentage.get_text()
 

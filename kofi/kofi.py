@@ -28,7 +28,6 @@ class Kofi(commands.Cog):
 
     # Set Kofi URL
     @commands.command()
-    @commands.is_owner()
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def setkofi(self, ctx, url):
         """
@@ -76,7 +75,7 @@ class Kofi(commands.Cog):
         if pro == "No" and gres == "Ne":
             embed.title = f"Check out it's Ko-fi!"
         else:
-            embed.title = f"Current Goal: {c} \n -- {pro}{gres}! --"
+            embed.title = f"Current Goal: {c}  \n -- {pro}{gres}! --"
         embed.url = kofi_url
         desc = results.get("Goal Description", "None")
         if desc == "None":
