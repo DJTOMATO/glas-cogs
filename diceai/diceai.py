@@ -10,7 +10,7 @@ from PIL import Image
 import io
 import argparse
 from .styles import styles, shapes
-
+import aiohttp
 
 class NoExitParser(argparse.ArgumentParser):
     def error(self, message):
@@ -92,7 +92,8 @@ class PerChance(commands.Cog):
         - --cfg-scale <scale>: Guidance scale for prompt accuracy, between 1 and 30 (optional, default is 7.0).
         - --style <style>: Style of the image.
         """
-
+         
+        await visit_and_close_url("https://perchance.org/ai-text-to-image-generator")
         parsed_args = {
             "prompt": prompt,
             "negative": negative,
@@ -136,8 +137,8 @@ class PerChance(commands.Cog):
         await interaction.response.defer(thinking=True)
 
         async with interaction.channel.typing():
-            retries = 10
-            delay = 6
+            retries = 5
+            delay = 3
             for attempt in range(retries):
                 try:
                     gen = pc.ImageGenerator()
@@ -219,3 +220,8 @@ class PerChance(commands.Cog):
             results += [ch for ch in shapes if current.lower() in ch[1:].lower()]
 
         return [app_commands.Choice(name=ch, value=ch) for ch in results][:25]
+
+async def visit_and_close_url(url: str):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            await response.text()  # Wait for the page to load
