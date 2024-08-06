@@ -918,6 +918,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def thisuser(self, ctx, *, member: FuzzyMember = None):
+        """This user makes me happy"""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_happy, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def competition(self, ctx, *, member: FuzzyMember = None):
         """When you're at a competition"""
         if not member:
@@ -2375,6 +2392,35 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "creatividad.png")
+        fp.close()
+        return _file
+
+    def gen_happy(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 400)
+
+        # Create a circular mask
+        mask = Image.new("L", member_avatar.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, member_avatar.size[0], member_avatar.size[1]), fill=255)
+
+        # Apply the circular mask to the avatar
+        member_avatar.putalpha(mask)
+
+        im = Image.new("RGBA", (640, 640), None)
+
+        muy = Image.open(
+            f"{bundled_data_path(self)}/happy/happy_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (10, 140), member_avatar)
+        im.paste(muy, (0, 0), muy)
+        member_avatar.close()
+        muy.close()
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "happy.png")
         fp.close()
         return _file
 
