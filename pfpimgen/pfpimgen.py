@@ -2407,10 +2407,10 @@ class PfpImgen(commands.Cog):
         member_avatar.putalpha(mask)
 
         im = Image.new("RGBA", (640, 640), None)
-
-        muy = Image.open(
-            f"{bundled_data_path(self)}/happy/happy_mask.png", mode="r"
-        ).convert("RGBA")
+        x = random.randint(1, 3)
+        muy = Image.open(f"{bundled_data_path(self)}/happy/{x}.png", mode="r").convert(
+            "RGBA"
+        )
 
         im.paste(member_avatar, (10, 140), member_avatar)
         im.paste(muy, (0, 0), muy)
