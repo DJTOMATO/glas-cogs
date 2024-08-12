@@ -2464,24 +2464,38 @@ class PfpImgen(commands.Cog):
         dff = target_avatar
         target_avatar2 = self.bytes_to_image(dff, 55)
         member_avatar = self.bytes_to_image(abc, 110)
-
+        target_name = target_name.capitalize()
         target_avatar = self.bytes_to_image(target_avatar, 520)
         fraud = Image.open(
             f"{bundled_data_path(self)}/fraud/fraud_template.png", mode="r"
         ).convert("RGBA")
         im = Image.new("RGBA", (1024, 693), None)
-        im.paste(target_avatar, (308, 10), target_avatar)
+        im.paste(target_avatar, (235, 10), target_avatar)
         im.paste(member_avatar, (20, 590), member_avatar)
         im.paste(target_avatar2, (110, 385), target_avatar2)
         im.paste(fraud, (0, 0), fraud)
 
         # Target
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/RobotoRegular.ttf", 41)
+        font_size = 43
+        max_width = 600
+
+        font = ImageFont.truetype(
+            f"{bundled_data_path(self)}/RobotoRegular.ttf", font_size
+        )
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(target_name, font, stroke_width=2)
+        targetname_final = target_name + ", He's a Fraud"
+        while canvas.textlength(targetname_final, font=font) > max_width:
+            font_size -= 1
+            font = ImageFont.truetype(
+                f"{bundled_data_path(self)}/RobotoRegular.ttf", font_size
+            )
+
+        text_width, text_height = canvas.textbbox((0, 0), targetname_final, font=font)[
+            2:4
+        ]
         canvas.text(
-            (393, 590),
-            target_name,
+            (401, 590),
+            targetname_final,
             font=font,
             fill=(0, 0, 0),
             align="center",
@@ -2489,6 +2503,7 @@ class PfpImgen(commands.Cog):
             stroke_fill=(0, 0, 0),
         )
         # Channel name
+
         font = ImageFont.truetype(f"{bundled_data_path(self)}/RobotoRegular.ttf", 35)
         canvas = ImageDraw.Draw(im)
         text_width, text_height = canvas.textsize(member_name, font, stroke_width=2)
@@ -2507,11 +2522,24 @@ class PfpImgen(commands.Cog):
         target_avatar2.close()
         member_avatar.close()
         # Left side text
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/Roboto-Black.ttf", 20)
+        font_size = 20
+        max_width = 85
+
+        font = ImageFont.truetype(
+            f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
+        )
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(target_name, font, stroke_width=0.5)
+
+        while canvas.textlength(target_name, font=font) > max_width:
+            font_size -= 1
+            font = ImageFont.truetype(
+                f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
+            )
+
+        text_width, text_height = canvas.textbbox((0, 0), target_name, font=font)[2:4]
         text_width = int(text_width)
         text_height = int(text_height)
+
         text_img = Image.new("RGBA", (text_width, text_height), (255, 255, 255, 0))
         text_canvas = ImageDraw.Draw(text_img)
         text_canvas.text(
@@ -2523,8 +2551,11 @@ class PfpImgen(commands.Cog):
             stroke_width=0,
             stroke_fill=(0, 0, 0),
         )
+
         rotated_text_img = text_img.rotate(5, resample=Image.BICUBIC, expand=1)
         im.paste(rotated_text_img, (2, 328), rotated_text_img)
+
+        # End
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
