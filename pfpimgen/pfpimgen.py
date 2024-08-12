@@ -2477,7 +2477,7 @@ class PfpImgen(commands.Cog):
 
         # Target
         font_size = 43
-        max_width = 600
+        max_width = 555
 
         font = ImageFont.truetype(
             f"{bundled_data_path(self)}/RobotoRegular.ttf", font_size
