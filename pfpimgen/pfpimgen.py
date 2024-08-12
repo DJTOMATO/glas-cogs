@@ -154,6 +154,41 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["mrbest"], cooldown_after_parsing=True)
+    async def fraud(self, ctx, *, member: FuzzyMember = None):
+        """He's a fraud..."""
+        if member:
+            async with ctx.typing():
+                # t = ctx.author
+                # avatar = await self.get_avatar(t)
+                # target = await self.get_avatar(member)
+                user = ctx.author
+                target = member
+
+                member_avatar = await self.get_avatar(ctx.author)
+                target_avatar = await self.get_avatar(target)
+
+                member_name = user.name
+                target_name = target.name
+
+                task = functools.partial(
+                    self.gen_fraud,
+                    ctx,
+                    member_avatar,
+                    member_name,
+                    target_avatar,
+                    target_name,
+                )
+                image = await self.generate_image(task)
+            if isinstance(image, str):
+                await ctx.send(image)
+            else:
+                await ctx.send(file=image)
+        else:
+            await ctx.send("You must target someone!")
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["fumopicture"], cooldown_after_parsing=True)
     async def fumopic(self, ctx, *, member: FuzzyMember = None):
         """Remilia caughts you in 4K..."""
@@ -2421,6 +2456,80 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "happy.png")
+        fp.close()
+        return _file
+
+    def gen_fraud(self, ctx, member_avatar, member_name, target_avatar, target_name):
+        abc = member_avatar
+        dff = target_avatar
+        target_avatar2 = self.bytes_to_image(dff, 55)
+        member_avatar = self.bytes_to_image(abc, 110)
+
+        target_avatar = self.bytes_to_image(target_avatar, 520)
+        fraud = Image.open(
+            f"{bundled_data_path(self)}/fraud/fraud_template.png", mode="r"
+        ).convert("RGBA")
+        im = Image.new("RGBA", (1024, 693), None)
+        im.paste(target_avatar, (308, 10), target_avatar)
+        im.paste(member_avatar, (20, 590), member_avatar)
+        im.paste(target_avatar2, (110, 385), target_avatar2)
+        im.paste(fraud, (0, 0), fraud)
+
+        # Target
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/RobotoRegular.ttf", 41)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(target_name, font, stroke_width=2)
+        canvas.text(
+            (393, 590),
+            target_name,
+            font=font,
+            fill=(0, 0, 0),
+            align="center",
+            stroke_width=0,
+            stroke_fill=(0, 0, 0),
+        )
+        # Channel name
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/RobotoRegular.ttf", 35)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(member_name, font, stroke_width=2)
+        canvas.text(
+            (152, 643),
+            member_name,
+            font=font,
+            fill=(87, 87, 87),
+            align="center",
+            stroke_width=0,
+            stroke_fill=(0, 0, 0),
+        )
+
+        fraud.close()
+        target_avatar.close()
+        target_avatar2.close()
+        member_avatar.close()
+        # Left side text
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/Roboto-Black.ttf", 20)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(target_name, font, stroke_width=0.5)
+        text_width = int(text_width)
+        text_height = int(text_height)
+        text_img = Image.new("RGBA", (text_width, text_height), (255, 255, 255, 0))
+        text_canvas = ImageDraw.Draw(text_img)
+        text_canvas.text(
+            (0, 0),
+            target_name,
+            font=font,
+            fill=(0, 0, 0),
+            align="left",
+            stroke_width=0,
+            stroke_fill=(0, 0, 0),
+        )
+        rotated_text_img = text_img.rotate(5, resample=Image.BICUBIC, expand=1)
+        im.paste(rotated_text_img, (2, 328), rotated_text_img)
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "fraud.png")
         fp.close()
         return _file
 
