@@ -5,6 +5,7 @@ from redbot.core import commands
 import logging
 from .functions import WebScraper
 import asyncio
+from aiohttp import ClientConnectorError
 
 
 def __init__(self, bot):
@@ -30,18 +31,23 @@ class Deals(commands.Cog):
         ) = None,
     ):
         """Returns a list of deals"""
-        # Send a "Bot is typing..." status
         async with ctx.typing():
-            # Perform your async task
             scraper = WebScraper()
             if gamename is None:
                 await ctx.send(
                     "You forgot the game name! Please try again. \n\n Example: !deals The Last of Us 2"
                 )
                 return
-            results = await scraper.scrape(ctx, gamename)
-            if results is None:
-                await ctx.send(f"Error: Game {gamename} not found")
+            try:
+                results = await scraper.scrape(ctx, gamename)
+                if results is None:
+                    await ctx.send(f"Error: Game {gamename} not found")
+                    return
+            except ClientConnectorError:
+                await ctx.send("Site under maintenance, please try later.")
+                return
+            except Exception as e:
+                await ctx.send(f"An unexpected error occurred: {str(e)}")
                 return
 
             formatted_data, all_deals_details, scraped_game_info = results
