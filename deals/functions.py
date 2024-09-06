@@ -352,6 +352,10 @@ class WebScraper:
             "https://img.gg.deals/32/d0/acd6afa24776b1eb578e4d22d24cf24669b4.svg": "Newegg",
             "https://img.gg.deals/43/5d/048b3ab04326f931059e735b45ee3760da96_90xt35_Q100.png": "PremiumCDKeys",
             "https://img.gg.deals/c9/cc/51fd616765c46c619e9f65b57987731739b9_90xt35_Q100.png": "PremiumCDKeys",
+            "https://img.gg.deals/ba/f8/ac55a33003c12dea18e851a90ce12a1b7bf9.svg": "GreenManGaming",
+            "https://img.gg.deals/3f/c7/232386017599a08e6395944ce80062b4ff99.svg": "GreenManGaming",
+            "https://img.gg.deals/dc/1f/8af436d14c21df1a992a88e431e28fb83f23_90xt35_Q100.png": "GamerThor",
+            "https://img.gg.deals/b3/03/a60a38b007532b8a52cdfe3913df944ce11e_90xt35_Q100.png": "GamerThor",
         }
 
         # Get the shop name based on the logo
@@ -965,6 +969,16 @@ class WebScraper:
             "\\* means Keyshop, beware there may be risks type ``{prefix}risks`` for details."
         ).format(prefix=ctx.clean_prefix)
         # Check if the list is not empty
+
+        embed2 = discord.Embed(
+            title="No Pricing Details",
+            description="No pricing information available.",
+        )
+        embed2.set_footer(
+            icon_url="https://bae.lena.moe/l9q3mnnat3i3.gif",
+            text="Powered by deals.gg",
+        )
+
         if all_deals_details:
             # Initialize description with an empty string
             description = ""
@@ -999,7 +1013,7 @@ class WebScraper:
                 icon_url="https://bae.lena.moe/l9q3mnnat3i3.gif",
                 text=f"Powered by deals.gg",
             )
-        embed2.add_field(name="Disclaimer", value=warning, inline=False)
+            embed2.add_field(name="Disclaimer", value=warning, inline=False)
 
         # Return the embeds
         return embed, embed2
