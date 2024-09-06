@@ -4,6 +4,9 @@ Umineko Screenshot Generator, using the **PS3** sprites and backgrounds.
 
 Based on [mochidaz/umineko-screenshot-generator-ps3](https://github.com/mochidaz/umineko-screenshot-generator-ps3)
 
+# IMPORTANT
+
+This cog uses a lot of data (+400 MB), download the asset folder from https://lena.moe/umineko.zip and paste it in the cog folder /CogManager/umineko/data/
 
 # Usage Syntax
  - Usage: `[p]umi text`
