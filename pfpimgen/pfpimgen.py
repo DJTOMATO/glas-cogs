@@ -170,7 +170,8 @@ class PfpImgen(commands.Cog):
 
                 member_name = user.name
                 target_name = target.name
-
+                if member_name == target_name:
+                    return await ctx.send("You can't target yourself!")
                 task = functools.partial(
                     self.gen_fraud,
                     ctx,
@@ -757,6 +758,23 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_naruto, ctx, avatar, username)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def ilove(self, ctx, *, member: FuzzyMember = None):
+        """I love..."""
+        if not member:
+            member = ctx.author
+        username = member.display_name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_ilove, ctx, avatar, username)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -2157,6 +2175,46 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "naruto.png")
+        fp.close()
+        return _file
+
+    def gen_ilove(self, ctx, member_avatar, username):
+        member_avatar = self.bytes_to_image(member_avatar, 455)
+
+        # base canvas
+        im = Image.new("RGBA", (853, 1045), None)
+        lovemask = Image.open(
+            f"{bundled_data_path(self)}/ilove/ilove_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (130, 510), member_avatar)
+        im.paste(lovemask, (0, 0), lovemask)
+        lovemask.close()
+        member_avatar.close()
+        text = username
+        font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
+        canvas = ImageDraw.Draw(im)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        text = text[:8]
+
+        canvas.text(
+            (615, 267),
+            text,
+            font=font,
+            fill=(0, 0, 0),
+            align="left",
+            stroke_width=1,
+            stroke_fill=(0, 0, 0),
+        )
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        # test
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "ilove.png")
         fp.close()
         return _file
 
