@@ -1,0 +1,14 @@
+{
+    "name": "Virtual YouTuber Wiki",
+    "short": "Obtains data from Virtual YouTuber Wiki!",
+    "description": "Search info on vtubers",
+    "install_msg": "Thanks for installing `vwiki` cog!",
+    "author": ["Glas"],
+    "tags": ["Vtuber", "Wiki", "Info"],
+    "hidden": false,
+    "disabled": false,
+    "requirements": ["unidecode"],
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}

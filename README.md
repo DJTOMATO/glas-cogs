@@ -58,6 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Vwiki   | Search Characters from the Virtual Youtuber Wiki! |                           Glas                           |        ✅        |
 |   DiceAI    | Generate images using AI API                   |                           Glas & [eeemoon](https://github.com/eeemoon/perchance)                     |        ✅        |
 |   RedBus    | Fetches detailed bus stop (Chile) information from an API                   |                           Glas                           |        ✅        |
 |   Ship    | Calculate the percentage of love compatibility between two people!                   |                           Glas                           |        ✅        |
