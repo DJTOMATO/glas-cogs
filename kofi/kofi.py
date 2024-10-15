@@ -21,6 +21,7 @@ class Kofi(commands.Cog):
         self.config = Config.get_conf(self, identifier="kofi")
         self.config.register_global(kofi_url=None)
         self.kofi_url = None
+        self.log = logging.getLogger("red.glas.kofi")
 
     async def initialize(self):
         kofi_url = await self.config.kofi_url()
@@ -49,8 +50,8 @@ class Kofi(commands.Cog):
         if kofi_url is None:
             await ctx.send("Kofi URL is not set. Use the `!setkofi` command to set it.")
             return
-        results = await scraper(kofi_url)
-
+        results = await scraper(self, kofi_url)
+        self.log.warning("Results: %s", results)
         name = results.get("Ko-fi User", "No Ko-fi User Found")
         embed = discord.Embed()
         c = results.get("Goal Title", "No Title Found")
