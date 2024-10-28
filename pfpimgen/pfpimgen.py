@@ -1107,6 +1107,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def feeling(self, ctx, *, member: FuzzyMember = None):
+        """Can I borrow a feeling..."""
+        if not member:
+            member = ctx.author
+        member_name = member.name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_feeling, ctx, avatar, member_name)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def taiko(self, ctx, *, member: FuzzyMember = None):
         """Taiko..."""
         if not member:
@@ -3188,5 +3205,65 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "pretend.png")
+        fp.close()
+        return _file
+
+    def gen_feeling(self, ctx, member_avatar, member_name):
+        member_avatar = self.bytes_to_image(member_avatar, 530)
+
+        member_avatar = member_avatar.rotate(390, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (1280, 720), None)
+        evi_mask = Image.open(
+            f"{bundled_data_path(self)}/feeling/feeling_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (150, -20), member_avatar)
+
+        im.paste(evi_mask, (0, 0), evi_mask)
+
+        evi_mask.close()
+        # print(member_name)
+        member_avatar.close()
+        # texto
+        # Left side text
+        font_size = 90
+        max_width = 290
+
+        font = ImageFont.truetype(
+            f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
+        )
+        canvas = ImageDraw.Draw(im)
+
+        while canvas.textlength(member_name, font=font) > max_width:
+            font_size -= 1
+            font = ImageFont.truetype(
+                f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
+            )
+
+        text_width, text_height = canvas.textbbox((0, 0), member_name, font=font)[2:4]
+        text_width = int(text_width)
+        text_height = int(text_height)
+
+        text_img = Image.new("RGBA", (text_width, text_height), (255, 255, 255, 0))
+        text_canvas = ImageDraw.Draw(text_img)
+        text_canvas.text(
+            (0, 0),
+            member_name,
+            font=font,
+            fill=(0, 0, 0),
+            align="left",
+            stroke_width=0,
+            stroke_fill=(0, 0, 0),
+        )
+
+        rotated_text_img = text_img.rotate(29, resample=Image.BICUBIC, expand=1)
+        im.paste(rotated_text_img, (180, 50), rotated_text_img)
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "feeling.png")
         fp.close()
         return _file
