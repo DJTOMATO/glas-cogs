@@ -137,6 +137,23 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(aliases=["amazon"], cooldown_after_parsing=True)
+    async def primeday(self, ctx, *, member: FuzzyMember = None):
+        """it's primeday!..."""
+        if not member:
+            member = ctx.author
+        username = member.display_name
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_prime, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["youu"], cooldown_after_parsing=True)
     async def you(self, ctx, *, member: FuzzyMember = None):
         """Make a you avatar..."""
@@ -3085,6 +3102,26 @@ class PfpImgen(commands.Cog):
         im.paste(member_avatar, (523, 235), member_avatar)
         discordmask.close()
         member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "discord.png")
+        fp.close()
+        return _file
+
+    def gen_prime(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+
+        im = Image.new("RGBA", (600, 314), None)
+        primemask = Image.open(
+            f"{bundled_data_path(self)}/prime/prime_mask.png", mode="r"
+        ).convert("RGBA")
+        im.paste(member_avatar, (228, 50), member_avatar)
+        im.paste(primemask, (0, 0), primemask)
+        member_avatar.close()
+        primemask.close()
 
         fp = BytesIO()
         im.save(fp, "PNG")
