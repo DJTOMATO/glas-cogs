@@ -58,7 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
-|   Rizz   | Rizzify your text. (I am so sorry) |                           Glas                           |        ✅        |
+|   Rizz   | Rizzify your text. (I am so sorry) |                           [PhasecoreX*](https://github.com/PhasecoreX/PCXCogs)                            |        ✅        |
 |   Vwiki   | Search Characters from the Virtual Youtuber Wiki! |                           Glas                           |        ✅        |
 |   DiceAI    | Generate images using AI API                   |                           Glas & [eeemoon](https://github.com/eeemoon/perchance)                     |        ✅        |
 |   RedBus    | Fetches detailed bus stop (Chile) information from an API                   |                           Glas                           |        ✅        |
