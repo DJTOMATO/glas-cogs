@@ -584,6 +584,36 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def delulu(self, ctx, *, member: FuzzyMember = None):
+        """Assign someone a delulu license."""
+        member = member or ctx.author
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_delulu, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def cute(self, ctx, *, member: FuzzyMember = None):
+        """Assign someone a cute license."""
+        member = member or ctx.author
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_cute, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def shutup(
         self,
         ctx,
@@ -1656,6 +1686,60 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "horny.png")
+        fp.close()
+        return _file
+
+    def gen_delulu(self, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 85)
+        # base canvas
+        im = Image.new("RGBA", (360, 300), None)
+        card = Image.open(
+            f"{bundled_data_path(self)}/horny/delulu.png", mode="r"
+        ).convert("RGBA")
+
+        # pasting the pfp
+        member_avatar = member_avatar.rotate(
+            angle=22, resample=Image.BILINEAR, expand=True
+        )
+        im.paste(member_avatar, (43, 117))
+        member_avatar.close()
+
+        # pasting the card
+        im.paste(card, (0, 0), card)
+        card.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "delulu.png")
+        fp.close()
+        return _file
+
+    def gen_cute(self, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 85)
+        # base canvas
+        im = Image.new("RGBA", (360, 300), None)
+        card = Image.open(
+            f"{bundled_data_path(self)}/horny/cute.png", mode="r"
+        ).convert("RGBA")
+
+        # pasting the pfp
+        member_avatar = member_avatar.rotate(
+            angle=22, resample=Image.BILINEAR, expand=True
+        )
+        im.paste(member_avatar, (43, 117))
+        member_avatar.close()
+
+        # pasting the card
+        im.paste(card, (0, 0), card)
+        card.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "cute.png")
         fp.close()
         return _file
 
