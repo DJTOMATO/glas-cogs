@@ -56,8 +56,9 @@ class StickBugged(commands.Cog):
             threads=4,
             preset="ultrafast",
             verbose=True,  # Enable logging for debugging
-            codec="libvpx-vp9",  # Use VP9 codec
-            audio_codec="libopus",  # Use Opus codec for audio
+            codec="libvpx-vp9",
+            audio_codec="libopus",
+            audio_bitrate="48k",
             temp_audiofile=audio_file,  # Use the valid audio file path
         )
         final_video.close()
