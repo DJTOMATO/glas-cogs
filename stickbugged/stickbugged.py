@@ -4,6 +4,7 @@ import logging
 import os
 from io import BytesIO
 from typing import Optional
+from moviepy.editor import concatenate_videoclips
 
 import aiohttp
 import discord
@@ -34,22 +35,29 @@ class StickBugged(commands.Cog):
         io = Image.open(io)
         self._stickbug.image = io
 
-        self._stickbug.video_resolution = max(min(1280, io.width), 128), max(
-            min(720, io.height), 72
-        )
+        # Lower video resolution for faster processing
+        self._stickbug.video_resolution = (512, 512)
         self._stickbug.lsd_scale = 0.35
         video = self._stickbug.video
-        video.write_videofile(
-            str(cog_data_path(self)) + f"/{id}stick2.mp4",
-            threads=1,
-            preset="superfast",
-            verbose=False,
-            logger=None,
-            codec="libx264",
-            audio_codec="aac",
-            temp_audiofile=str(cog_data_path(self) / f"{id}stick3.mp4"),
+
+        # Merge videos without converting
+        video_clips = [video]  # Add other video clips to this list if needed
+        final_video = concatenate_videoclips(video_clips, method="compose")
+
+        output_path = str(cog_data_path(self)) + f"/{id}stick_final.webm"
+        final_video.write_videofile(
+            output_path,
+            threads=4,
+            preset="ultrafast",
+            verbose=True,  # Enable logging for debugging
+            codec="libvpx",  # Try VP8 codec
+            temp_audiofile=str(
+                cog_data_path(self) / f"{id}.wav"
+            ),  # Replace with valid audio file or remove if not needed
         )
-        video.close()
+        final_video.close()
+
+        logging.warning(f"Video saved to {output_path}")
         return
 
     @commands.max_concurrency(1, commands.BucketType.default)
@@ -69,7 +77,9 @@ class StickBugged(commands.Cog):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(str(image)) as resp:
                         if resp.status != 200:
-                            return await ctx.send("The picture returned an unknown status code.")
+                            return await ctx.send(
+                                "The picture returned an unknown status code."
+                            )
                         io.write(await resp.read())
                         io.seek(0)
 
@@ -78,9 +88,9 @@ class StickBugged(commands.Cog):
             if img.width < 512 or img.height < 512:
                 img = img.resize((512, 512))
                 io = BytesIO()
-                img.save(io, format='PNG')
+                img.save(io, format="PNG")
                 io.seek(0)
-            
+
             await asyncio.sleep(0.2)
             fake_task = functools.partial(self.blocking, io=io, id=ctx.message.id)
             task = self.bot.loop.run_in_executor(None, fake_task)
@@ -94,9 +104,9 @@ class StickBugged(commands.Cog):
                 error_message = f"An error occurred during the creation of the stick bugged video: {str(e)} \n Try mentioning someone when using the command?"
                 return await ctx.send(error_message)
 
-            fp = cog_data_path(self) / f"{ctx.message.id}stick2.mp4"
-            
-            file = discord.File(str(fp), filename="stick2.mp4")
+            fp = cog_data_path(self) / f"{ctx.message.id}stick_final.webm"
+
+            file = discord.File(str(fp), filename="stick_final.webm")
             try:
                 await ctx.send(files=[file])
             except Exception as e:
