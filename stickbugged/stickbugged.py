@@ -44,16 +44,21 @@ class StickBugged(commands.Cog):
         video_clips = [video]  # Add other video clips to this list if needed
         final_video = concatenate_videoclips(video_clips, method="compose")
 
+        # Ensure this
+        # Video: VP90 512x512 30fps [V: English [eng] (vp9 profile 0, yuv420p, 512x512) [default]]
+        # Audio: Opus 48000Hz stereo 3072kbps [A: English [eng] (opus, 48000 Hz, stereo) [default]]
         output_path = str(cog_data_path(self)) + f"/{id}stick_final.webm"
+        # if not os.path.exists(audio_file):
+        #     raise FileNotFoundError(f"Audio file {audio_file} not found.")
+        audio_file = str(cog_data_path(self) / f"{id}.webm")
         final_video.write_videofile(
             output_path,
             threads=4,
             preset="ultrafast",
             verbose=True,  # Enable logging for debugging
-            codec="libvpx",  # Try VP8 codec
-            temp_audiofile=str(
-                cog_data_path(self) / f"{id}.wav"
-            ),  # Replace with valid audio file or remove if not needed
+            codec="libvpx-vp9",  # Use VP9 codec
+            audio_codec="libopus",  # Use Opus codec for audio
+            temp_audiofile=audio_file,  # Use the valid audio file path
         )
         final_video.close()
 
