@@ -18,6 +18,7 @@ from .converters import ImageFinder
 log = logging.getLogger("red.flare.stick")
 
 
+# could it be?¡
 class StickBugged(commands.Cog):
     __version__ = "0.0.1"
     __author__ = "flare#0001"
