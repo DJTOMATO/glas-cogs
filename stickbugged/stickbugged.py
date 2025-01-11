@@ -49,18 +49,17 @@ class StickBugged(commands.Cog):
         # Video: VP90 512x512 30fps [V: English [eng] (vp9 profile 0, yuv420p, 512x512) [default]]
         # Audio: Opus 48000Hz stereo 3072kbps [A: English [eng] (opus, 48000 Hz, stereo) [default]]
         output_path = str(cog_data_path(self)) + f"/{id}stick_final.webm"
-        # if not os.path.exists(audio_file):
-        #     raise FileNotFoundError(f"Audio file {audio_file} not found.")
-        audio_file = str(cog_data_path(self) / f"{id}.webm")
+        audio_file = str(cog_data_path(self) / f"{id}.opus")
+
+        resampled_audio_file = str(cog_data_path(self) / f"{id}_resampled.ogg")
+        os.system(f"ffmpeg -i {audio_file} -ar 48000 {resampled_audio_file}")
         final_video.write_videofile(
             output_path,
             threads=4,
             preset="ultrafast",
             verbose=True,  # Enable logging for debugging
-            codec="libvpx-vp9",
-            audio_codec="libopus",
-            audio_bitrate="48k",
-            temp_audiofile=audio_file,  # Use the valid audio file path
+            temp_audiofile=resampled_audio_file,  # Use the resampled audio file path
+            # Use the valid audio file path
         )
         final_video.close()
 
