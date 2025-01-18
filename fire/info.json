@@ -12,5 +12,5 @@
     "min_bot_version": "3.5.0",
     "requirements": [
         "yt-dlp==2025.1.15"
-    ],
+    ]
 }
