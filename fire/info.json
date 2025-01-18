@@ -9,5 +9,6 @@
     "disabled": false,
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
-    "min_bot_version": "3.5.0"
+    "min_bot_version": "3.5.0",
+    "requirements": "yt-dlp==2025.1.15"
 }
