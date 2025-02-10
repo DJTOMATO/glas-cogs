@@ -1154,6 +1154,59 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def twoguys(self, ctx, *, member: FuzzyMember = None):
+        """Two guys in a bus..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_twoguys, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def mulder(self, ctx, *, member: FuzzyMember = None):
+        """Shitposting License..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_mulder, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def dreaming(self, ctx, *, member: FuzzyMember = None):
+        """Dreaming of you..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_dreaming, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def feeling(self, ctx, *, member: FuzzyMember = None):
         """Can I borrow a feeling..."""
         if not member:
@@ -3386,5 +3439,77 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "feeling.png")
+        fp.close()
+        return _file
+
+    def gen_twoguys(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 270)
+
+        im = Image.new("RGBA", (675, 897), None)
+        evi_mask = Image.open(
+            f"{bundled_data_path(self)}/twoguys/twoguys_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (70, 700), member_avatar)
+
+        im.paste(evi_mask, (0, 0), evi_mask)
+
+        evi_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "twoguys.png")
+        fp.close()
+        return _file
+
+    def gen_mulder(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 170)
+
+        im = Image.new("RGBA", (600, 600), None)
+        evi_mask = Image.open(
+            f"{bundled_data_path(self)}/mulder/mulder_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (90, 200), member_avatar)
+
+        im.paste(evi_mask, (0, 0), evi_mask)
+
+        evi_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "mulder.png")
+        fp.close()
+        return _file
+
+    def gen_dreaming(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 710)
+
+        im = Image.new("RGBA", (1200, 1200), None)
+        evi_mask = Image.open(
+            f"{bundled_data_path(self)}/dreaming/dreaming_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (480, -50), member_avatar)
+
+        im.paste(evi_mask, (0, 0), evi_mask)
+
+        evi_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "dreaming.png")
         fp.close()
         return _file
