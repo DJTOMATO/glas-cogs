@@ -13,11 +13,13 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core import commands, data_manager
 
 import shutil
+import asyncio
 
 class MakeSweet(commands.Cog):
     """MakeSweet Commands"""
     def __init__(self, bot):
         self.bot = bot
+        self.lock = asyncio.Lock()
 
     async def generate_image(self, ctx, zip_template, user, gif_output):
        
@@ -74,6 +76,13 @@ class MakeSweet(commands.Cog):
                 "--in", temp_avatar_path, temp_text_path,
                 "--gif", str(gif_output)  # Convert the Path to a string
             ]
+        if "nesting-doll.zip" in zip_template:
+            reanimator_command = [
+                f"{data_manager.bundled_data_path(self)}/reanimator",
+                "--zip", zip_template,
+                "--in", temp_avatar_path, temp_avatar_path, temp_avatar_path,
+                "--gif", str(gif_output)  # Convert the Path to a string
+            ]
         else:
             reanimator_command = [
                 f"{data_manager.bundled_data_path(self)}/reanimator",
@@ -98,35 +107,173 @@ class MakeSweet(commands.Cog):
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def heart(self, ctx, member: FuzzyMember = commands.Author):
         """Make a heartlocket, my beloved"""
-        zip_template = f"{bundled_data_path(self) / 'templates' / 'heart-locket.zip'}"
-        gif_output = cog_data_path(self) / "animations" / f"animation_{member.id}.gif"
-        await self.process_command(ctx, zip_template, member, gif_output)
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'heart-locket.zip'}"
+            gif_output = cog_data_path(self) / "animations" / f"animation_{member.id}.gif"
+            await self.process_command(ctx, zip_template, member, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def flag2(self, ctx, member: FuzzyMember = commands.Author):
+        """Flagify (Older version)"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'flag.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def bears(self, ctx, member: FuzzyMember = commands.Author):
+        """Flying bear"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'flying-bear.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def fcookie(self, ctx, member: FuzzyMember = commands.Author):
+        """Fortune Cookify"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'fortune-cookie.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def ndoll(self, ctx, member: FuzzyMember = commands.Author):
+        """Nesting Dolls"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'nesting-doll.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def rubix(self, ctx, member: FuzzyMember = commands.Author):
+        """Rubix Cube someone!"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'rubix.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def toaster(self, ctx, member: FuzzyMember = commands.Author):
+        """Toastifier!"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'toaster.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def valentine(self, ctx, member: FuzzyMember = commands.Author):
+        """Valentine Wishes"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'valentine.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def tattoo(self, ctx, member: FuzzyMember = commands.Author):
+        """Tattoo someone!"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'back-tattoo.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def book(self, ctx, member: FuzzyMember = commands.Author):
+        """Bookify!"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'book.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def circuit(self, ctx, member: FuzzyMember = commands.Author):
+        """Put someone in a circuit board"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'circuitboard.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
+    @commands.command()
+    @commands.cooldown(1, 8, commands.BucketType.user)
+    async def circuit2(self, ctx, member: FuzzyMember = commands.Author):
+        """Put someone in a circuit board (Older version)"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'circuit-board.zip'}"
+
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def flag(self, ctx, member: FuzzyMember = commands.Author):
-        """The best flag in the world"""
-        zip_template = f"{bundled_data_path(self) / 'templates' / 'flag.zip'}"
+        """Flagarize yourself!"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'flag2.zip'}"
 
-        gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
+            gif_output = str(cog_data_path(self) / "animations" / f"animation_{member.id}.gif")
 
-        user = member or ctx.author
-        await self.process_command(ctx, zip_template, user, gif_output)
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
+
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def billboard(self, ctx, member: FuzzyMember = commands.Author):
-        """Don't miss it!"""
-        zip_template = f"{bundled_data_path(self) / 'templates' / 'billboard-cityscape.zip'}"
+        """Billboard yourself~"""
+        async with ctx.typing():
+            zip_template = f"{bundled_data_path(self) / 'templates' / 'billboard-cityscape.zip'}"
 
-        gif_output = cog_data_path(self) / "animations" / f"animation_{member.id}.gif"
-        user = member or ctx.author
-        await self.process_command(ctx, zip_template, user, gif_output)
+            gif_output = cog_data_path(self) / "animations" / f"animation_{member.id}.gif"
+            user = member or ctx.author
+            await self.process_command(ctx, zip_template, user, gif_output)
 
     async def process_command(self, ctx, zip_template, user, gif_output):
-        generated_image = await self.generate_image(ctx, zip_template, user, gif_output)
-        if generated_image:
-            await ctx.send(file=discord.File(generated_image))
+        async with self.lock:
+            async with ctx.typing():
+                generated_image = await self.generate_image(ctx, zip_template, user, gif_output)
+                if generated_image:
+                    await ctx.send(file=discord.File(generated_image))
 
     async def get_avatar(self, user: discord.User):
         if user.avatar.is_animated():
