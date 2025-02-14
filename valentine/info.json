@@ -1,0 +1,14 @@
+{
+    "name": "Valentine Cards",
+    "short": "Send valentine cards to users!",
+    "description": "Send love valentine cards to users",
+    "install_msg": "Thanks for installing `valentine` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["love", "meme", "valentine"],
+    "requirements": ["pillow==9.5.0", "unidecode", "rapidfuzz"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}
