@@ -1,0 +1,13 @@
+{
+    "name": "Quoter",
+    "short": "Make epic quotes!.",
+    "description": "Generates a quote based on a message !.",
+    "install_msg": "Thanks for installing `quoter` cog! Please enjoy it :D",
+    "author": ["Glas"],
+    "tags": ["image", "quote", "meme", "quotes"],
+    "hidden": false,
+    "disabled": false,
+    "type": "COG",
+    "end_user_data_statement": "This cog does not store end user data.",
+    "min_bot_version": "3.5.0"
+}

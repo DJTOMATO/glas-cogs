@@ -58,6 +58,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Quoter   | Make epic quotes!|                           Glas                           |        ✅        |
 |   Valentine   | Send Valentine letters to your friends!|                           Glas                           |        ✅        |
 |   Rizz   | Rizzify your text. (I am so sorry) |                           [PhasecoreX*](https://github.com/PhasecoreX/PCXCogs)                            |        ✅        |
 |   Vwiki   | Search Characters from the Virtual Youtuber Wiki! |                           Glas                           |        ✅        |
