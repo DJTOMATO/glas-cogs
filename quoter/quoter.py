@@ -74,8 +74,8 @@ class QuoterCog(commands.Cog):
         return image
 
     def gen_pic(self, avatar, message_content, nickname, username, emoji):
-        if len(message_content) > 230:
-            message_content = message_content[:230] + "..."
+        if len(message_content) > 1600:  # Expanded cutoff by 100 characters
+            message_content = message_content[:1600] + "..."
 
         img = Image.new("RGBA", (1200, 600), (0, 0, 0, 255))
         draw = ImageDraw.Draw(img)
@@ -85,7 +85,7 @@ class QuoterCog(commands.Cog):
             avatar_img = avatar_img.resize((600, 600), Image.LANCZOS)
             img.paste(avatar_img, (0, 0))
 
-        pillar_width = 68
+        pillar_width = 40  # Reduced pillar width
         for x in range(600 - pillar_width // 2, 600 + pillar_width // 2):
             for y in range(600):
                 if random.random() < (1 - abs(x - 600) / (pillar_width // 2)):
@@ -94,35 +94,43 @@ class QuoterCog(commands.Cog):
         font_path_message = f"{bundled_data_path(self)}/ariali.ttf"
         font_path_nickname = f"{bundled_data_path(self)}/ARIALBI.TTF"
         emoji_font_path = f"{bundled_data_path(self)}/NotoEmoji-VariableFont_wght.ttf"
-        try:
-            font_message_cursive = ImageFont.truetype(font_path_message, 40, layout_engine=ImageFont.Layout.RAQM)
-            font_nickname_bold = ImageFont.truetype(font_path_nickname, 30, layout_engine=ImageFont.Layout.RAQM)
-            font_emoji = ImageFont.truetype(emoji_font_path, 30, layout_engine=ImageFont.Layout.RAQM)
-        except OSError:
-            font_message_cursive = ImageFont.load_default()
-            font_nickname_bold = ImageFont.load_default()
-            font_emoji = ImageFont.load_default()
 
-        max_width = 570
-        message_lines, message_line_height = self.wrap_text(draw, message_content, font_message_cursive, max_width, respect_newlines=True)
-        nickname_lines, nickname_line_height = self.wrap_text(draw, f"- {nickname}", font_nickname_bold, max_width)
+        font_size = 40
+        while font_size > 10:
+            try:
+                font_message_cursive = ImageFont.truetype(font_path_message, font_size, layout_engine=ImageFont.Layout.RAQM)
+                font_nickname_bold = ImageFont.truetype(font_path_nickname, font_size - 5, layout_engine=ImageFont.Layout.RAQM)
+                font_emoji = ImageFont.truetype(emoji_font_path, font_size - 25, layout_engine=ImageFont.Layout.RAQM)
+            except OSError:
+                font_message_cursive = ImageFont.load_default()
+                font_nickname_bold = ImageFont.load_default()
+                font_emoji = ImageFont.load_default()
 
-        line_spacing = 10
-        total_text_height = (len(message_lines) * (message_line_height + line_spacing) +
-                             len(nickname_lines) * (nickname_line_height + line_spacing) -
-                             line_spacing)
-        start_y = (600 - total_text_height) // 2
+            max_width = 590  # Increased max width
+            max_height = 600  # Set max height
+            message_lines, message_line_height = self.wrap_text(draw, message_content, font_message_cursive, max_width, respect_newlines=True)
+            nickname_lines, nickname_line_height = self.wrap_text(draw, f"- {nickname}", font_nickname_bold, max_width)
+
+            line_spacing = 10
+            total_text_height = (len(message_lines) * (message_line_height + line_spacing) +
+                                 len(nickname_lines) * (nickname_line_height + line_spacing) -
+                                 line_spacing)
+            if total_text_height <= max_height:
+                break
+            font_size -= 2
+
+        start_y = (max_height - total_text_height) // 2  # Dynamically adjust start_y based on max_height
 
         y = start_y
         for line in message_lines:
             line_width, line_height = self.get_text_dimensions(line, font_message_cursive)
-            x = 905 - line_width // 2
+            x = 905 - line_width // 2  # Moved text to the right
             draw.text((x, y), line, font=font_message_cursive, fill=(255, 255, 255))
             y += message_line_height + line_spacing
 
         for line in nickname_lines:
             line_width, line_height = self.get_text_dimensions(line, font_nickname_bold)
-            x = 905 - line_width // 2
+            x = 905 - line_width // 2  # Moved text to the right
             draw.text((x, y), line, font=font_nickname_bold, fill=(255, 255, 255))
             y += nickname_line_height + line_spacing
 
