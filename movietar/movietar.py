@@ -8,7 +8,10 @@ from tempfile import NamedTemporaryFile
 import tempfile
 import os
 import pathlib
-from moviepy.editor import VideoClip as ImageClip
+from moviepy.video.VideoClip import VideoClip, ImageClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
+from moviepy.video.VideoClip import ColorClip, TextClip
 import subprocess
 import aiohttp
 import discord
@@ -19,7 +22,8 @@ from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.data_manager import cog_data_path
-import moviepy.editor
+
+
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 import io
@@ -28,19 +32,9 @@ from functools import partial
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
 from .converters import FuzzyMember
-import cv2
 import numpy as np
-from moviepy.editor import (
-    VideoFileClip,
-    ImageClip,
-    CompositeVideoClip,
-    ColorClip,
-    TextClip,
-)
 from moviepy.video.fx import all as vfx  # Import all video effects
-from moviepy.video.compositing.concatenate import concatenate_videoclips
-from moviepy.video.fx.all import resize, mask_color
-from moviepy.video.VideoClip import ImageClip
+
 from threading import Thread
 
 logging.captureWarnings(False)
@@ -71,18 +65,18 @@ class Movietar(commands.Cog):
     def add_image_to_clip(self, clip, image, start, duration, size, position):
         image_clip = (
             ImageClip(image)
-            .set_start(start)
-            .set_duration(duration)
+            .with_start(start)
+            .with_duration(duration)
             .resize(size)
-            .set_position(position)
+            .with_position(position)
         )
         return CompositeVideoClip([clip, image_clip])
 
     def add_text_to_clip(self, clip, text, fontsize, color, position):
         text_clip = (
             TextClip(text, fontsize=fontsize, color=color)
-            .set_position(position)
-            .set_duration(clip.duration)
+            .with_position(position)
+            .with_duration(clip.duration)
         )
         return CompositeVideoClip([clip, text_clip])
 
@@ -255,8 +249,8 @@ class Movietar(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["afeeling"], cooldown_after_parsing=True)
-    async def feeling(self, ctx, *, member: FuzzyMember = None):
+    @commands.command(aliases=["sentimiento"], cooldown_after_parsing=True)
+    async def afeeling(self, ctx, *, member: FuzzyMember = None):
         """We're talking about facts.."""
         if not member:
             member = ctx.author
@@ -481,16 +475,16 @@ class Movietar(commands.Cog):
             print("Video clip loaded")
 
             duration = clip.duration
-            clip = clip.volumex(1.0)
+            # clip = clip.volumex(1.0)
 
             def add_cat_clip(start, duration, pos, avisize, numpydata):
                 nonlocal clip
                 cat_clip = (
                     ImageClip(numpydata)  # Use numpydata directly as the image data
-                    .set_start(start)
-                    .set_duration(duration)
+                    .with_start(start)
+                    .with_duration(duration)
                     .resize(avisize)
-                    .set_position(pos)
+                    .with_position(pos)
                 )
                 clip = CompositeVideoClip([clip, cat_clip])
 
@@ -508,7 +502,7 @@ class Movietar(commands.Cog):
             # Text clip
             text_clip = TextClip(
                 text or "", fontsize=20, color="white", size=(avisize[0], 200)
-            ).set_duration(duration)
+            ).with_duration(duration)
             print("Text clip created")
 
             # Composite the clips
@@ -586,24 +580,25 @@ class Movietar(commands.Cog):
         else:
             member_avatar = self.bytes_to_image(member_avatar, 300)
         clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
-        clip = clip.volumex(1.0)
+        # clip = clip.fx(vfx.volumex, 1.0)
         numpydata = np.asarray(member_avatar)
         cat = (
             ImageClip(numpydata)
-            .set_duration(clip.duration)
-            .resize((avisize))
-            .set_position((pos))
+            .with_duration(clip.duration)  # Set the duration of the ImageClip
+            .resized((avisize))
+            .with_position(pos)  # Set the position of the ImageClip
         )
+        #   cat = resize(cat, avisize)
         clip = CompositeVideoClip([clip, cat])
+
         data = clip.write_videofile(
             str(fp),
             threads=1,
             preset="superfast",
-            verbose=False,
             logger=None,
             codec="libx264",
             audio_codec="aac",
-            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4")
+            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4"),
             # ffmpeg_params=['-struct -2'],
         )
         path = fp
@@ -616,7 +611,7 @@ class Movietar(commands.Cog):
             ayylmao = "huh.mp4"
             video_path = bundled_data_path(self) / ayylmao
             video = VideoFileClip(str(video_path))
-            video = video.set_duration(10)
+            video = video.with_duration(10)
             # Resize video to 600x600
             video = video.resize(height=400)
             image = Image.open(member_avatar)
@@ -626,10 +621,10 @@ class Movietar(commands.Cog):
             image_array = np.array(member_avatar)
             image_clip = (
                 ImageClip(image_array, transparent=False)
-                .set_start(0)
-                .set_position(("center", "center"))
+                .with_start(0)
+                .with_position(("center", "center"))
             )
-            image_clip = image_clip.set_duration(10)
+            image_clip = image_clip.with_duration(10)
 
             # Create a color mask based on green color
             mask_color_value = [2, 195, 10]
@@ -642,17 +637,16 @@ class Movietar(commands.Cog):
             )
 
             # Set the position
-            masked_clip = masked_clip.set_position((-500, 0), relative=False)
+            masked_clip = masked_clip.with_position((-500, 0), relative=False)
 
             # Composite the clips
-            final_clip = CompositeVideoClip([image_clip, masked_clip.set_duration(10)])
+            final_clip = CompositeVideoClip([image_clip, masked_clip.with_duration(10)])
 
             # Write the final result to a file
             final_clip.write_videofile(
                 str(fp),
                 threads=8,
                 preset="superfast",
-                verbose=False,
                 logger=None,
                 codec="libx264",
                 audio_codec="aac",
@@ -675,7 +669,7 @@ class Movietar(commands.Cog):
             ayylmao = "awshit.mp4"
             video_path = bundled_data_path(self) / ayylmao
             video = VideoFileClip(str(video_path))
-            video = video.set_duration(2.72)
+            video = video.with_duration(2.72)
             video = video.resize(height=400)
             image = Image.open(member_avatar)
 
@@ -684,9 +678,9 @@ class Movietar(commands.Cog):
             member_avatar = member_avatar.convert("RGB")
             image_array = np.array(member_avatar)
             image_clip = (
-                ImageClip(image_array).set_start(0).set_pos(("center", "center"))
+                ImageClip(image_array).with_start(0).set_pos(("center", "center"))
             )
-            image_clip = image_clip.set_duration(2.72)
+            image_clip = image_clip.with_duration(2.72)
 
             def chroma_key(video_path, color=[0, 255, 0], thr=1, s=1):
                 video = video_path
@@ -696,11 +690,11 @@ class Movietar(commands.Cog):
 
                 # Apply the mask to the video
                 masked_video = CompositeVideoClip(
-                    [video.set_position("center"), mask.set_position("center")]
+                    [video.with_position("center"), mask.with_position("center")]
                 )
 
                 # Set the duration to match the original video
-                masked_video = masked_video.set_duration(video.duration)
+                masked_video = masked_video.with_duration(video.duration)
 
                 # Write the final result to a file
                 return masked_video
@@ -717,7 +711,6 @@ class Movietar(commands.Cog):
                 str(fp),
                 threads=8,
                 preset="superfast",
-                verbose=False,
                 logger=None,
                 codec="libx264",
                 audio_codec="aac",
@@ -737,25 +730,25 @@ class Movietar(commands.Cog):
         clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
         duration = clip.duration
 
-        clip = clip.volumex(1.0)
+        # clip = clip.volumex(1.0)
         pos = (40, 20)
         numpydata = np.asarray(member_avatar)
         cat = (
             ImageClip(numpydata)
-            .set_start(0)
-            .set_duration(7.2)
+            .with_start(0)
+            .with_duration(7.2)
             .resize((avisize))
-            .set_position((pos))
+            .with_position((pos))
         )
         clip = CompositeVideoClip([clip, cat])
         avisize = (150, 150)
         pos = (0, 0)
         cat2 = (
             ImageClip(numpydata)
-            .set_start(12)
-            .set_duration(3.3)
+            .with_start(12)
+            .with_duration(3.3)
             .resize((avisize))
-            .set_position((pos))
+            .with_position((pos))
         )
 
         clip = CompositeVideoClip([clip, cat2])
@@ -764,11 +757,10 @@ class Movietar(commands.Cog):
             str(fp),
             threads=1,
             preset="superfast",
-            verbose=False,
             logger=None,
             codec="libx264",
             audio_codec="aac",
-            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4")
+            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4"),
             # ffmpeg_params=['-struct -2'],
         )
         path = fp
@@ -779,15 +771,15 @@ class Movietar(commands.Cog):
         clip = VideoFileClip(f"{bundled_data_path(self) / videotype}")
         duration = clip.duration
         avisize = (640, 360)
-        clip = clip.volumex(1.0)
+        # clip = clip.volumex(1.0)
         pos = (0, 0)
         numpydata = np.asarray(member_avatar)
         cat = (
             ImageClip(numpydata)
-            .set_start(2.83)
-            .set_duration(0.76)
-            .resize((avisize))
-            .set_position((pos))
+            .with_start(2.83)
+            .with_duration(0.76)
+            .resized(avisize)
+            .with_position((pos))
         )
         clip = CompositeVideoClip([clip, cat])
         avisize = (640, 360)
@@ -803,10 +795,10 @@ class Movietar(commands.Cog):
         numpydata2 = np.asarray(burned_image)
         cat2 = (
             ImageClip(numpydata2)
-            .set_start(5.2)
-            .set_duration(0.61)
-            .resize((avisize))
-            .set_position((pos))
+            .with_start(5.2)
+            .with_duration(0.61)
+            .resized((avisize))
+            .with_position((pos))
         )
 
         clip = CompositeVideoClip([clip, cat2])
@@ -815,11 +807,10 @@ class Movietar(commands.Cog):
             str(fp),
             threads=1,
             preset="superfast",
-            verbose=False,
             logger=None,
             codec="libx264",
             audio_codec="aac",
-            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4")
+            temp_audiofile=str(folder / f"{ctx.message.id}finals.mp4"),
             # ffmpeg_params=['-struct -2'],
         )
         path = fp
@@ -844,7 +835,6 @@ class Movietar(commands.Cog):
                 str(fp),
                 threads=1,
                 preset="superfast",
-                verbose=False,
                 logger=None,
                 codec="libx264",
                 audio_codec="aac",
@@ -874,10 +864,10 @@ class Movietar(commands.Cog):
         # Add cat clips directly
         cat_clips = [
             ImageClip(numpydata)
-            .set_start(start_time)
-            .set_duration(duration)
+            .with_start(start_time)
+            .with_duration(duration)
             .resize(resize_size)
-            .set_position(position)
+            .with_position(position)
             for start_time, duration, resize_size, position in [
                 (1.1, 0.9, (400, 400), (425, 200)),  # peinado
                 (2, 1.18, (250, 250), (470, 425)),  # garage puerta
@@ -919,9 +909,9 @@ class Movietar(commands.Cog):
 
         # Set top padding to the text
         text_clip = (
-            text_clip.set_position(("center", top_padding))
-            .set_start(0)
-            .set_duration(15)
+            text_clip.with_position(("center", top_padding))
+            .with_start(0)
+            .with_duration(15)
         )
 
         # Add the text clip to the list
