@@ -476,7 +476,8 @@ class Sekai(commands.Cog):
         # Calculate the total height required for the text
         total_text_height = 0
         for line in wrapped_text:
-            text_width, text_height = draw.textsize(line, font=font)
+            text_bbox = draw.textbbox((0, 0), line, font=font)
+            text_height = text_bbox[3] - text_bbox[1]
             total_text_height += text_height + line_spacing
 
         # Calculate the new image height
@@ -489,7 +490,8 @@ class Sekai(commands.Cog):
 
         text_y = int(texty)
         for line in wrapped_text:
-            text_width, text_height = draw.textsize(line, font=font)
+            text_bbox = draw.textbbox((0, 0), line, font=font)
+            text_height = text_bbox[3] - text_bbox[1]
             draw.text(
                 (int(textx), text_y),
                 line,
