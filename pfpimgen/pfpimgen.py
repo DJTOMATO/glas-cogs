@@ -1202,7 +1202,22 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def dark(self, ctx, *, member: FuzzyMember = None):
+        """Horrfying secret..."""
+        if not member:
+            member = ctx.author
 
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_dark, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -1645,7 +1660,7 @@ class PfpImgen(commands.Cog):
         # text
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=2)
+        text_width = canvas.textbbox((0, 0), text, font=font, stroke_width=2)[2]
         canvas.text(
             ((im.width - text_width) / 2, 285),
             text,
@@ -1693,7 +1708,7 @@ class PfpImgen(commands.Cog):
         y = 70
         pages = list(pagify(text, [" "], page_length=30))[:4]
         for page in pages:
-            text_width, text_height = canvas.textsize(page, font, stroke_width=2)
+            text_width = canvas.textbbox((0, 0), page, font=font, stroke_width=2)[2]
             x = ((im.width + 40) - text_width) / 2
             canvas.text(
                 (x, y),
@@ -1816,7 +1831,7 @@ class PfpImgen(commands.Cog):
         pages = list(pagify(text, [" "], page_length=40))[:2]
         y = 250 - (len(pages) * 25)
         for page in pages:
-            text_width, text_height = canvas.textsize(page, font, stroke_width=2)
+            text_width = canvas.textbbox((0, 0), page, font=font, stroke_width=2)[2]
             x = ((im.width - 300) - text_width) / 2
             canvas.text(
                 (x, y),
@@ -2327,7 +2342,7 @@ class PfpImgen(commands.Cog):
         text = username
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        bbox = canvas.textbbox((0, 0), text, font=font)
         canvas.text(
             (250, 530),
             text,
@@ -2365,7 +2380,7 @@ class PfpImgen(commands.Cog):
         text = username
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        bbox = canvas.textbbox((0, 0), text, font=font)
         text = text[:8]
 
         canvas.text(
@@ -2735,7 +2750,9 @@ class PfpImgen(commands.Cog):
 
         font = ImageFont.truetype(f"{bundled_data_path(self)}/RobotoRegular.ttf", 35)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(member_name, font, stroke_width=2)
+        bbox = canvas.textbbox((0, 0), member_name, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
         canvas.text(
             (152, 643),
             member_name,
@@ -2808,7 +2825,7 @@ class PfpImgen(commands.Cog):
         text = ctx.guild.name
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        bbox = canvas.textbbox((0, 0), text, font=font)
         canvas.text(
             (670, 712),
             text,
@@ -3160,7 +3177,7 @@ class PfpImgen(commands.Cog):
             f"{bundled_data_path(self)}/Magistral-Cond-W08-Bold.ttf", 60
         )
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        bbox = canvas.textbbox((0, 0), text, font=font)
         canvas.text(
             (330, 653),
             text,
@@ -3285,7 +3302,7 @@ class PfpImgen(commands.Cog):
         text = text.lower()
         font = ImageFont.truetype(f"{bundled_data_path(self)}/Calibri.ttf", 25)
         canvas = ImageDraw.Draw(im)
-        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
+        text_width = canvas.textbbox((0, 0), text, font=font, stroke_width=1)[2]
         canvas.text(
             ((im.width - text_width) / 2, 223),
             text,
@@ -3511,5 +3528,29 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "dreaming.png")
+        fp.close()
+        return _file
+
+    def gen_dark(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 335)
+
+        im = Image.new("RGBA", (1080, 802), None)
+        dark_mask = Image.open(
+            f"{bundled_data_path(self)}/dark/dark_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (158, 62), member_avatar)
+
+        im.paste(dark_mask, (0, 0), dark_mask)
+
+        dark_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "dark.png")
         fp.close()
         return _file
