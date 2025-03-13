@@ -13,6 +13,12 @@ class WebScraper:
         self.base_url = "https://gg.deals/games/?title="
         self.log = logging.getLogger("glas.glas-cogs.ggdeals-scraper")
 
+    def cog_unload(self):
+        """
+        Closes the HTTP session.
+        """
+        self.bot.loop.create_task(self.session.close())
+
     async def scrape(self, ctx, gamename):
         async with aiohttp.ClientSession() as session:
             gamename = gamename.rstrip().replace(" ", "+")
@@ -27,7 +33,7 @@ class WebScraper:
                     target_div = soup.select_one(
                         ".list-items div.hoverable-box:nth-child(1)"
                     )
-
+                    await session.close()
                     # If the div is found, you can extract its text or other information
                     if target_div:
                         # Extract and clean up the text content of the specific div
@@ -68,11 +74,13 @@ class WebScraper:
                         # self.log.warning(
                         #    f"Scraped game information: {scraped_game_info}"
                         # )
+
                         return formatted_data, all_deals_details, scraped_game_info
                     else:
                         a = "nnothing lol"
 
                 else:
+                    await session.close()
                     self.log.warning(
                         f"Failed to fetch content. Status code: {response.status_code}. - Report to Dev"
                     )
@@ -85,8 +93,10 @@ class WebScraper:
                     # Check if the response is a redirect
                     if response.status in {301, 302, 303, 307, 308}:
                         # Get the next URL from the 'Location' header
+                        await session.close()
                         url = response.headers["Location"]
                     else:
+                        await session.close()
                         # If it's not a redirect, this is the final URL
                         return url
 
@@ -154,9 +164,9 @@ class WebScraper:
 
     def extract_game_name(self, target_div):
         # Extract the game name using the provided CSS selector
-        game_name_div = target_div.find("a", class_="game-info-title")
-        if game_name_div:
-            game_name = game_name_div.get_text().strip()
+        game_name_link = target_div.find("a", class_="title-inner")
+        if game_name_link:
+            game_name = game_name_link.get_text().strip()
             return game_name
 
     def extract_compare_prices_url(self, target_div):
@@ -193,12 +203,13 @@ class WebScraper:
 
                         all_deal_details.append(deal_details)
 
+                    await session.close()
                     return all_deal_details
                 else:
                     self.log.warning(
                         f"Failed to fetch content from {compare_prices_url}. Status code: {response.status} - Report to dev"
                     )
-
+                    await session.close()
                     return None
 
     async def scrape_game_info(self, ctx, compare_prices_url):
@@ -263,9 +274,10 @@ class WebScraper:
                         related_links.append(image_link)
 
                     scrapped_game_info["related_links"] = related_links
-
+                    await session.close()
                     return scrapped_game_info
                 else:
+                    await session.close()
                     self.log.warning(
                         f"Failed to fetch content. Status code: {response.status} -Report to dev"
                     )
@@ -513,7 +525,7 @@ class WebScraper:
         deal_details["Platform"] = platform_name
 
         # Deal Date
-        deal_date_element = deal.select_one(".time-tag time")
+        deal_date_element = deal.select_one(".time-icon-tag tag")
         deal_date = deal_date_element.get_text().strip() if deal_date_element else ""
         deal_details["Deal Date"] = deal_date
 
@@ -563,7 +575,8 @@ class WebScraper:
         deal_details["DRM"] = drm_platform
 
         # Price
-        price_element = deal.select_one(".price-inner")
+        price_element = deal.select_one(".price-wrapper .price")
+        # self.log.warning(f"price_element: {price_element}")
         price = price_element.get_text().strip() if price_element else ""
         deal_details["Price"] = price
 
@@ -852,7 +865,7 @@ class WebScraper:
             "related_links": related_links,
             "game_description": game_description_text,
         }
-
+        await session.close()
         return extracted_info
 
     async def make_embed(
@@ -949,6 +962,8 @@ class WebScraper:
                         .replace("₽", "")
                         .replace(",", ".")  # Replace commas with dots
                         .rsplit(".", 1)[0]  # Replace only the last dot
+                        if details["Price"]
+                        else "0"
                     )
                 ),
                 "Formatted Price": details["Price"],
