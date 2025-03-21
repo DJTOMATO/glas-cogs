@@ -63,13 +63,11 @@
 |   Valentine   | Send Valentine letters to your friends!|                           Glas                           |        ✅        |
 |   Rizz   | Rizzify your text. (I am so sorry) |                           [PhasecoreX*](https://github.com/PhasecoreX/PCXCogs)                            |        ✅        |
 |   Vwiki   | Search Characters from the Virtual Youtuber Wiki! |                           Glas                           |        ✅        |
-|        ✅        |
 |   RedBus    | Fetches detailed bus stop (Chile) information from an API                   |                           Glas                           |        ✅        |
 |   Ship    | Calculate the percentage of love compatibility between two people!                   |                           Glas                           |        ✅        |
 |   Umineko   | Umineko Screenshot Generator. |                           Glas & [Holo](https://github.com/hollowstrawberry)                     |        ✅        |
 |   Deals   | Find videogame deals in several storefronts. |                           Glas                           |        ✅        |
 |   Letterdance   | Combine dancing letters horizontally! |                      Glas & [ntoskrn](https://github.com/ntoskrn/letterdance)                          |        ✅  
-|   Kofi   | Show target info and goals in Ko-fi! |                           Glas                           |        ✅        |
 |   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
 |   GoogleIt   | LMGTFY your users dumb questions! |                           Glas                           |        ✅        |
 |   MakeSweet   | Create amazing gifs with an avatar! |                           Glas                           |        ✅        |
