@@ -63,7 +63,7 @@
 |   Valentine   | Send Valentine letters to your friends!|                           Glas                           |        ✅        |
 |   Rizz   | Rizzify your text. (I am so sorry) |                           [PhasecoreX*](https://github.com/PhasecoreX/PCXCogs)                            |        ✅        |
 |   Vwiki   | Search Characters from the Virtual Youtuber Wiki! |                           Glas                           |        ✅        |
-|   DiceAI    | Generate images using AI API                   |                           Glas & [eeemoon](https://github.com/eeemoon/perchance)                     |        ✅        |
+|        ✅        |
 |   RedBus    | Fetches detailed bus stop (Chile) information from an API                   |                           Glas                           |        ✅        |
 |   Ship    | Calculate the percentage of love compatibility between two people!                   |                           Glas                           |        ✅        |
 |   Umineko   | Umineko Screenshot Generator. |                           Glas & [Holo](https://github.com/hollowstrawberry)                     |        ✅        |
@@ -73,14 +73,12 @@
 |   HoloWiki   | Grab VTuber Bio from Hololive.wiki! |                           Glas                           |        ✅        |
 |   GoogleIt   | LMGTFY your users dumb questions! |                           Glas                           |        ✅        |
 |   MakeSweet   | Create amazing gifs with an avatar! |                           Glas                           |        ✅        |
-|   Stickbugged   | Get stick bugged lol with a new video! |                           [flare](https://github.com/flaree/Flare-Cogs)\*      |        ✅        |
 |   Bubble   | Create a bubble speech from users and attachments! |                           Glas                           |        ✅        |
 |   Sekai    | Generate Project Sekai Stickers!                   |                           Glas                           |        ✅        |
 |  Ygocard   | Generate Yu-Gi-Oh Cards from users!                |                           Glas                           |        ✅        |
 |  Pokefuse  | Fusion Gen 1 Pokemon                               |                           Glas                           |        ✅        |
 |  Movietar  | Make videos with avatars!                          |                           Glas                           |        ✅        |
 | Youwouldnt | You wouldn't steal a car                           |                           Glas                           |        ✅        |
-| GuildID | Guild & Invite stats!                           |                           Glas                           |        ✅        |
 | Anime  | Get info about anime characters, shows, staff, studio and so much more  |   TheDiscordHistorian                           |        ✅        |
 | Watamelon  | Posts a random Watamelon image\*                   |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
 |  PfpImgen  | Make images with avatars! (+23 new images!)        | [PhenoM4n4n](https://github.com/phenom4n4n/phen-cogs/)\* |        ✅        |
