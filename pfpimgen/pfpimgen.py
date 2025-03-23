@@ -1222,6 +1222,23 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
+    async def pets(self, ctx, *, member: FuzzyMember = None):
+        """No Pets allowed..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_pets, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
     async def feeling(self, ctx, *, member: FuzzyMember = None):
         """Can I borrow a feeling..."""
         if not member:
@@ -1366,6 +1383,23 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_reliable, ctx, avatar, username)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def mikuphone(self, ctx, *, member: FuzzyMember = None):
+        """Miku phone..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_miku, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -3552,5 +3586,49 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "dark.png")
+        fp.close()
+        return _file
+
+    def gen_pets(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 190)
+
+        im = Image.new("RGBA", (681, 537), None)
+        pets_mask = Image.open(
+            f"{bundled_data_path(self)}/pets/pets_mask.png", mode="r"
+        ).convert("RGBA")
+        im.paste(pets_mask, (0, 0), pets_mask)
+        im.paste(member_avatar, (370, 232), member_avatar)
+
+        pets_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "pets.png")
+        fp.close()
+        return _file
+
+    def gen_miku(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 440)
+
+        im = Image.new("RGBA", (903, 498), None)
+        miku_mask = Image.open(
+            f"{bundled_data_path(self)}/miku/miku_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (60, 66), member_avatar)
+        im.paste(miku_mask, (0, 0), miku_mask)
+        miku_mask.close()
+
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "miku.png")
         fp.close()
         return _file
