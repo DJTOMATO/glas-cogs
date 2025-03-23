@@ -1,0 +1,16 @@
+{
+    "author": ["Glas"],
+    "install_msg": "Thank you for installing the HowLongToBeat cog! Use `[p]help howlong` to get started.",
+    "name": "HowLongToBeat",
+    "short": "Fetch game information from HowLongToBeat.com",
+    "requirements": [
+        "howlongtobeatpy"
+    ],
+    "tags": [
+        "games",
+        "utilities",
+        "fun"
+    ],
+    "description": "A cog to fetch game information such as playtime from HowLongToBeat.",
+    "type": "COG"
+}
