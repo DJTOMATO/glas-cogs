@@ -34,13 +34,17 @@ class Youwouldnt(commands.Cog):
     def cog_unload(self):
         asyncio.create_task(self.session.close())
 
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
+    async def red_delete_data_for_user(
+        self, *, requester: RequestType, user_id: int
+    ) -> None:
         return
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def youwo(self, ctx, *, text: commands.clean_content(fix_channel_mentions=True)):
+    async def youwo(
+        self, ctx, *, text: commands.clean_content(fix_channel_mentions=True)
+    ):
         """You wouln't steal a meme..."""
 
         async with ctx.typing():
@@ -69,7 +73,9 @@ class Youwouldnt(commands.Cog):
     def gen_wouldnt(self, ctx, text):
         # base canvas
         im = Image.new("RGBA", (818, 574), None)
-        image = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert("RGBA")
+        image = Image.open(f"{bundled_data_path(self)}/you/you.png", mode="r").convert(
+            "RGBA"
+        )
         im.paste(image, (0, 0), image)
 
         font = ImageFont.truetype(f"{bundled_data_path(self)}/xband-ro.ttf", 130)
@@ -89,7 +95,7 @@ class Youwouldnt(commands.Cog):
                 stroke_width=1,
                 stroke_fill=(169, 169, 169),
             )
-            offset += font.getsize(line)[1]
+            offset += font.getbbox(line)[3] + 30  # Add extra margin between lines
 
         fp = BytesIO()
         im.save(fp, "PNG")

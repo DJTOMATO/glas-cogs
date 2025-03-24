@@ -67,7 +67,7 @@ class Movietar(commands.Cog):
             ImageClip(image)
             .with_start(start)
             .with_duration(duration)
-            .resize(size)
+            .resized(size)
             .with_position(position)
         )
         return CompositeVideoClip([clip, image_clip])
@@ -463,16 +463,16 @@ class Movietar(commands.Cog):
 
     def generate_video(self, ctx, member_avatar, file_path, folder, text):
         try:
-            print("Start video generation")
+            # print("Start video generation")
 
             member_avatar = self.bytes_to_image(member_avatar, 200)
-            print("Avatar processed")
+            # print("Avatar processed")
 
             numpydata = np.asarray(member_avatar)
             avisize = (200, 200)
 
             clip = VideoFileClip(f"{bundled_data_path(self) / 'mewhen.mp4'}")
-            print("Video clip loaded")
+            # print("Video clip loaded")
 
             duration = clip.duration
             # clip = clip.volumex(1.0)
@@ -483,7 +483,7 @@ class Movietar(commands.Cog):
                     ImageClip(numpydata)  # Use numpydata directly as the image data
                     .with_start(start)
                     .with_duration(duration)
-                    .resize(avisize)
+                    .resized(avisize)
                     .with_position(pos)
                 )
                 clip = CompositeVideoClip([clip, cat_clip])
@@ -497,27 +497,27 @@ class Movietar(commands.Cog):
             add_cat_clip(10.09, 0.5, (100, 100), (200, 200), numpydata)
             add_cat_clip(12.08, 1.5, (100, 100), (200, 200), numpydata)
 
-            print("Cat clips added")
+            # print("Cat clips added")
 
             # Text clip
             text_clip = TextClip(
                 text or "", fontsize=20, color="white", size=(avisize[0], 200)
             ).with_duration(duration)
-            print("Text clip created")
+            # print("Text clip created")
 
             # Composite the clips
             final_clip = CompositeVideoClip(
                 [clip, text_clip.set_pos(("center", "top"))]
             )
-            print("Final clip created")
+            # print("Final clip created")
 
             video_buffer = BytesIO()
 
             # Add the following debug statements
-            print("FFMPEG Version:")
-            subprocess.run(["ffmpeg", "-version"], check=True)
+            # print("FFMPEG Version:")
+            # subprocess.run(["ffmpeg", "-version"], check=True)
 
-            print("Generating video file...")
+            # print("Generating video file...")
             final_clip.write_videofile(
                 str(file_path),  # Use the file path instead of BytesIO
                 {
@@ -532,11 +532,11 @@ class Movietar(commands.Cog):
 
             video_buffer.seek(0)
 
-            print("Video generation successful")
+            # print("Video generation successful")
             return video_buffer
 
         except Exception as e:
-            print(f"An error occurred: {e}")
+            # print(f"An error occurred: {e}")
             traceback.print_exc()  # Add this line to print the traceback
             return None
 
@@ -613,7 +613,7 @@ class Movietar(commands.Cog):
             video = VideoFileClip(str(video_path))
             video = video.with_duration(10)
             # Resize video to 600x600
-            video = video.resize(height=400)
+            video = video.resized(height=400)
             image = Image.open(member_avatar)
 
             # Resize Avatar
@@ -737,7 +737,7 @@ class Movietar(commands.Cog):
             ImageClip(numpydata)
             .with_start(0)
             .with_duration(7.2)
-            .resize((avisize))
+            .resized((avisize))
             .with_position((pos))
         )
         clip = CompositeVideoClip([clip, cat])
@@ -747,7 +747,7 @@ class Movietar(commands.Cog):
             ImageClip(numpydata)
             .with_start(12)
             .with_duration(3.3)
-            .resize((avisize))
+            .resized((avisize))
             .with_position((pos))
         )
 
@@ -833,7 +833,7 @@ class Movietar(commands.Cog):
             partial(
                 clip.write_videofile,
                 str(fp),
-                threads=1,
+                threads=2,
                 preset="superfast",
                 logger=None,
                 codec="libx264",
@@ -866,7 +866,7 @@ class Movietar(commands.Cog):
             ImageClip(numpydata)
             .with_start(start_time)
             .with_duration(duration)
-            .resize(resize_size)
+            .resized(resize_size)
             .with_position(position)
             for start_time, duration, resize_size, position in [
                 (1.1, 0.9, (400, 400), (425, 200)),  # peinado
@@ -897,14 +897,15 @@ class Movietar(commands.Cog):
 
         # Create the TextClip with the calculated font size and set the width to the video width
         text_clip = TextClip(
-            text,
-            color="black",
-            bg_color="transparent",
             font="Arial",
+            text=text,
+            color="black",
+            # bg_color="transparent",
             size=(clip.w, None),  # Set width to video width
             method="caption",
-            align="center",
-            fontsize=font_size,
+            text_align="center",
+            transparent="True",
+            font_size=font_size,
         )
 
         # Set top padding to the text
