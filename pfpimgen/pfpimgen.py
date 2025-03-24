@@ -599,7 +599,7 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def cute(self, ctx, *, member: FuzzyMember = None):
+    async def cutie(self, ctx, *, member: FuzzyMember = None):
         """Assign someone a cute license."""
         member = member or ctx.author
         async with ctx.typing():

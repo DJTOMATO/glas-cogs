@@ -59,6 +59,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   HowLongToBeat   | Obtain game completion stats from Hltb.com |                           Glas                           |        ✅        |
 |   Quoter   | Make epic quotes!|                           Glas                           |        ✅        |
 |   Valentine   | Send Valentine letters to your friends!|                           Glas                           |        ✅        |
 |   Rizz   | Rizzify your text. (I am so sorry) |                           [PhasecoreX*](https://github.com/PhasecoreX/PCXCogs)                            |        ✅        |
