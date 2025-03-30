@@ -1406,6 +1406,24 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def world(self, ctx, *, member: FuzzyMember = None):
+        """You're my world..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            author_avatar = await self.get_avatar(ctx.author)
+            task = functools.partial(self.gen_world, ctx, avatar, author_avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     # @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user)
     # @commands.command(cooldown_after_parsing=True)
@@ -3630,5 +3648,35 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "miku.png")
+        fp.close()
+        return _file
+
+    def gen_world(self, ctx, member_avatar, author_avatar):
+        self_avatar = self.bytes_to_image(author_avatar, 165)
+        member_avatar = self.bytes_to_image(member_avatar, 165)
+
+        im = Image.new("RGBA", (750, 1000), None)
+        world_mask = Image.open(
+            f"{bundled_data_path(self)}/world/world_mask.png", mode="r"
+        ).convert("RGBA")
+        im.paste(world_mask, (0, 0), world_mask)
+        im.paste(self_avatar, (95, 80), self_avatar)
+        im.paste(member_avatar, (480, 60), member_avatar)
+
+        im.paste(self_avatar, (89, 410), self_avatar)
+        im.paste(member_avatar, (480, 410), member_avatar)
+
+        im.paste(self_avatar, (95, 720), self_avatar)
+        im.paste(member_avatar, (485, 720), member_avatar)
+
+        world_mask.close()
+
+        member_avatar.close()
+        self_avatar.close()
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "world.png")
         fp.close()
         return _file
