@@ -170,21 +170,22 @@ class WebScraper:
             return game_name
 
     def extract_compare_prices_url(self, target_div):
-        # Extract the "Compare Prices" URL using the provided CSS selector
+        # Extract the "Compare Prices" URL using the updated CSS selector
         compare_prices_link = target_div.select_one(
-            "a.action-ext.action-desktop-btn.always-active.d-flex.flex-align-center.flex-justify-center.action-btn.cta-label-desktop span.cta-label"
+            "a.action-ext.action-desktop-btn.single-label"
         )
         if compare_prices_link:
-            # Get the parent 'a' tag and get the 'href' attribute value
-            compare_prices_url = compare_prices_link.find_parent("a").get("href", "")
+            # Get the 'href' attribute value
+            compare_prices_url = compare_prices_link.get("href", "")
             # Join the URL with the base URL if it is a relative URL
             if not compare_prices_url.startswith("http"):
                 compare_prices_url = f"https://gg.deals{compare_prices_url}"
             return compare_prices_url
         else:
             self.log.warning(
-                f"Compare Prices URL not found in the specified CSS selector - Report to Dev"
+                "Compare Prices URL not found in the specified CSS selector - Report to Dev"
             )
+            return None
 
     async def scrape_compare_prices_url(self, compare_prices_url):
         async with aiohttp.ClientSession() as session:
