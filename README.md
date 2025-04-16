@@ -59,6 +59,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Shibe   | Shibe Images |                           [grayconcaves*](https://github.com/grayconcaves/FanCogs/)                         |        ✅        |
 |   HowLongToBeat   | Obtain game completion stats from Hltb.com |                           Glas                           |        ✅        |
 |   Quoter   | Make epic quotes!|                           Glas                           |        ✅        |
 |   Valentine   | Send Valentine letters to your friends!|                           Glas                           |        ✅        |
