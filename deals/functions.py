@@ -12,6 +12,12 @@ class WebScraper:
     def __init__(self):
         self.base_url = "https://gg.deals/games/?title="
         self.log = logging.getLogger("glas.glas-cogs.ggdeals-scraper")
+        self.session = aiohttp.ClientSession()  # Initialize session
+
+    async def close_session(self):
+        """Closes the aiohttp session."""
+        if not self.session.closed:
+            await self.session.close()
 
     def cog_unload(self):
         """
@@ -20,70 +26,66 @@ class WebScraper:
         self.bot.loop.create_task(self.session.close())
 
     async def scrape(self, ctx, gamename):
-        async with aiohttp.ClientSession() as session:
-            gamename = gamename.rstrip().replace(" ", "+")
-            url = f"{self.base_url}{gamename}"
+        async with self.session.get(f"{self.base_url}{gamename.replace(' ', '+')}") as response:
+            if response.status == 200:
+                text = await response.text()
+                soup = BeautifulSoup(text, "lxml")
 
-            async with session.get(url) as response:
-                if response.status == 200:
-                    text = await response.text()
-                    soup = BeautifulSoup(text, "lxml")
+                # Find the first div with the specified CSS selector
+                target_div = soup.select_one(
+                    ".list-items div.hoverable-box:nth-child(1)"
+                )
+                await self.session.close()
+                # If the div is found, you can extract its text or other information
+                if target_div:
+                    # Extract and clean up the text content of the specific div
+                    div_text = target_div.get_text(separator="\n").strip()
 
-                    # Find the first div with the specified CSS selector
-                    target_div = soup.select_one(
-                        ".list-items div.hoverable-box:nth-child(1)"
+                    # Process the text to format as "Key: Value" pairs
+                    formatted_data = self.format_data(div_text)
+
+                    # Include additional information
+                    formatted_data["Icon"] = self.extract_icon(target_div)
+                    formatted_data["Game Image (URL)"] = (
+                        self.extract_game_image_url(target_div)
                     )
-                    await session.close()
-                    # If the div is found, you can extract its text or other information
-                    if target_div:
-                        # Extract and clean up the text content of the specific div
-                        div_text = target_div.get_text(separator="\n").strip()
+                    formatted_data["Game name"] = self.extract_game_name(target_div)
+                    # title = soup.select_one(".active span[itemprop='name']")
+                    # self.log.warning("Title new" + str(formatted_data["Game name"]))
+                    # Extract "Compare Prices" URL
 
-                        # Process the text to format as "Key: Value" pairs
-                        formatted_data = self.format_data(div_text)
+                    compare_prices_url = self.extract_compare_prices_url(target_div)
+                    compare_prices_url = compare_prices_url.replace("%7D", "}")
 
-                        # Include additional information
-                        formatted_data["Icon"] = self.extract_icon(target_div)
-                        formatted_data["Game Image (URL)"] = (
-                            self.extract_game_image_url(target_div)
-                        )
-                        formatted_data["Game name"] = self.extract_game_name(target_div)
-                        # title = soup.select_one(".active span[itemprop='name']")
-                        # self.log.warning("Title new" + str(formatted_data["Game name"]))
-                        # Extract "Compare Prices" URL
+                    formatted_data["Compare Prices URL"] = compare_prices_url
 
-                        compare_prices_url = self.extract_compare_prices_url(target_div)
-                        compare_prices_url = compare_prices_url.replace("%7D", "}")
+                    # Scrape further details from the "Compare Prices URL"
+                    all_deals_details = await self.scrape_compare_prices_url(
+                        compare_prices_url
+                    )
 
-                        formatted_data["Compare Prices URL"] = compare_prices_url
+                    scraped_game_info = await self.scrape_game_info(
+                        compare_prices_url
+                    )
 
-                        # Scrape further details from the "Compare Prices URL"
-                        all_deals_details = await self.scrape_compare_prices_url(
-                            compare_prices_url
-                        )
+                    if scraped_game_info is None:
+                        # If scraped_game_info is None, raise a custom exception
+                        raise ValueError("No information available for this game.")
 
-                        scraped_game_info = await self.scrape_game_info(
-                            compare_prices_url
-                        )
+                    # Log only when there is valid information
+                    # self.log.warning(
+                    #    f"Scraped game information: {scraped_game_info}"
+                    # )
 
-                        if scraped_game_info is None:
-                            # If scraped_game_info is None, raise a custom exception
-                            raise ValueError("No information available for this game.")
-
-                        # Log only when there is valid information
-                        # self.log.warning(
-                        #    f"Scraped game information: {scraped_game_info}"
-                        # )
-
-                        return formatted_data, all_deals_details, scraped_game_info
-                    else:
-                        a = "nnothing lol"
-
+                    return formatted_data, all_deals_details, scraped_game_info
                 else:
-                    await session.close()
-                    self.log.warning(
-                        f"Failed to fetch content. Status code: {response.status_code}. - Report to Dev"
-                    )
+                    a = "nnothing lol"
+
+            else:
+                await self.session.close()
+                self.log.warning(
+                    f"Failed to fetch content. Status code: {response.status} - Report to Dev"
+                )
 
     # THIS FUNCTION HANGS THE BOT, maybe too many async calls needs further research
     async def follow_redirects(self, url):
@@ -902,15 +904,20 @@ class WebScraper:
         max_length = 1024  # Maximum length for a field in Discord embed
         a = scraped_game_info.get("tags")
         developer_publisher = scraped_game_info.get("developer_publisher", "")
+       
         first_publisher = developer_publisher.split(" / ")[
             0
         ]  # Get the first part before " / "
-        embed.add_field(name="Dev/Pub", value=first_publisher, inline=True)
-        embed.add_field(
-            name="Tags",
-            value=" - ".join([f"{tag}" for tag in scraped_game_info.get("tags")]),
-            inline=True,
-        )
+        self.log.warning(f"first_publisher: {first_publisher}")
+        if first_publisher and first_publisher != "None":
+            embed.add_field(name="Dev/Pub", value=first_publisher, inline=True)
+        self.log.warning(a)
+        if a and a != "":
+            embed.add_field(
+                name="Tags",
+                value=" - ".join([f"{tag}" for tag in scraped_game_info.get("tags")]),
+                inline=True,
+            )
         features = scraped_game_info.get("features")
         if features:
             embed.add_field(
@@ -918,11 +925,14 @@ class WebScraper:
                 value=" - ".join([f"{feature}" for feature in features]),
                 inline=True,
             )
-        embed.add_field(
-            name="Reviews",
-            value=f"{scraped_game_info.get('reviews')}",
-            inline=True,
-        )
+        
+        b = scraped_game_info.get("reviews")
+        if b and b != "None":
+            embed.add_field(
+                name="Reviews",
+                value=f"{scraped_game_info.get('reviews')}",
+                inline=True,
+            )
         description = (
             # f"\n__Keyshops__: {formatted_data.get('Keyshops')} - __Official Stores__: {formatted_data.get('Official Stores')}\n\n"
             f"\nOnly 4 Official & Keyshops will be displayed below. For the full list [Press Here]({formatted_data.get('Compare Prices URL')})\n"

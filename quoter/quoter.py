@@ -8,6 +8,10 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from redbot.core.data_manager import bundled_data_path
 import aiohttp
+import logging
+
+# Initialize logger
+log = logging.getLogger("red.quoter")
 
 
 class QuoterCog(commands.Cog):
@@ -15,8 +19,8 @@ class QuoterCog(commands.Cog):
         self.bot = bot
         self.session = aiohttp.ClientSession()
 
-    def cog_unload(self):
-        asyncio.create_task(self.session.close())
+    async def cog_unload(self):
+        await self.session.close()  # Properly await session closure
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -25,7 +29,9 @@ class QuoterCog(commands.Cog):
         if ctx.message.reference:
             replied_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
             avatar = await self.get_avatar(replied_message.author)
-            message_content = self.remove_emojis(replied_message.content)
+            message_content = await self.resolve_mentions(ctx, replied_message.content)
+            message_content = self.process_urls(message_content)
+            message_content = self.remove_emojis(message_content)
             nickname = replied_message.author.display_name
             username = replied_message.author.name
             emoji = self.extract_first_emoji(replied_message.content)
@@ -47,7 +53,11 @@ class QuoterCog(commands.Cog):
         try:
             image = await asyncio.wait_for(task, timeout=60)
         except asyncio.TimeoutError:
+            log.error("Image generation timed out.")
             return "An error occurred while generating this image. Try again later."
+        except Exception as e:
+            log.exception("Unexpected error during image generation.")
+            return f"An unexpected error occurred: {e}"
         else:
             return image
 
@@ -59,12 +69,15 @@ class QuoterCog(commands.Cog):
 
     async def get_avatar_from_url(self, url: str):
         avatar = BytesIO()
-        async with self.session.get(url) as response:
-            if response.status != 200:
-                raise commands.BadArgument("Invalid image URL.")
-            avatar_bytes = await response.read()
-            avatar.write(avatar_bytes)
-            avatar.seek(0)
+        try:
+            async with self.session.get(url) as response:
+                if response.status != 200:
+                    raise commands.BadArgument("Invalid image URL.")
+                avatar_bytes = await response.read()
+                avatar.write(avatar_bytes)
+                avatar.seek(0)
+        except aiohttp.ClientError as e:
+            raise commands.BadArgument(f"Failed to fetch avatar: {e}")
         return avatar
 
     @staticmethod
@@ -86,10 +99,10 @@ class QuoterCog(commands.Cog):
             img.paste(avatar_img, (0, 0))
 
         pillar_width = 40  # Reduced pillar width
-        for x in range(600 - pillar_width // 2, 600 + pillar_width // 2):
-            for y in range(600):
+        for x in range(600 - pillar_width // 2, 600 + pillar_width // 2, 2):  # Reduce iterations
+            for y in range(0, 600, 2):  # Reduce iterations
                 if random.random() < (1 - abs(x - 600) / (pillar_width // 2)):
-                    img.putpixel((x, y), (0, 0, 0, 0))
+                    img.putpixel((x, y), (0, 0, 0, 0))  # Optimized loop
 
         font_path_message = f"{bundled_data_path(self)}/ariali.ttf"
         font_path_nickname = f"{bundled_data_path(self)}/ARIALBI.TTF"
@@ -200,3 +213,37 @@ class QuoterCog(commands.Cog):
         )
         match = emoji_pattern.search(text)
         return match.group(0) if match else None
+
+    @staticmethod
+    def process_urls(content: str) -> str:
+        """
+        Remove all URLs and convert emoji URLs into text.
+        """
+        # Regex to match URLs
+        url_pattern = re.compile(r"https?://\S+")
+        matches = url_pattern.findall(content)
+
+        for url in matches:
+            # Check if the URL is a Discord emoji URL
+            if "cdn.discordapp.com/emojis/" in url:
+                # Extract the emoji name from the URL
+                emoji_name_match = re.search(r"name=([^&]+)", url)
+                if emoji_name_match:
+                    emoji_name = emoji_name_match.group(1).split('%')[0]  # Decode the name
+                    content = content.replace(url, f":{emoji_name}:")
+            else:
+                # Remove non-emoji URLs
+                content = content.replace(url, "")
+
+        return content
+
+    async def resolve_mentions(self, ctx: commands.Context, content: str) -> str:
+        """
+        Replace user mentions in the content with their display names.
+        """
+        for user_id in re.findall(r"<@!?(\d+)>", content):
+            user = ctx.guild.get_member(int(user_id))
+            if user:
+                content = content.replace(f"<@{user_id}>", f"@{user.display_name}")
+                content = content.replace(f"<@!{user_id}>", f"@{user.display_name}")
+        return content
