@@ -26,7 +26,9 @@ class WebScraper:
         self.bot.loop.create_task(self.session.close())
 
     async def scrape(self, ctx, gamename):
-        async with self.session.get(f"{self.base_url}{gamename.replace(' ', '+')}") as response:
+        async with self.session.get(
+            f"{self.base_url}{gamename.replace(' ', '+')}"
+        ) as response:
             if response.status == 200:
                 text = await response.text()
                 soup = BeautifulSoup(text, "lxml")
@@ -46,8 +48,8 @@ class WebScraper:
 
                     # Include additional information
                     formatted_data["Icon"] = self.extract_icon(target_div)
-                    formatted_data["Game Image (URL)"] = (
-                        self.extract_game_image_url(target_div)
+                    formatted_data["Game Image (URL)"] = self.extract_game_image_url(
+                        target_div
                     )
                     formatted_data["Game name"] = self.extract_game_name(target_div)
                     # title = soup.select_one(".active span[itemprop='name']")
@@ -64,9 +66,7 @@ class WebScraper:
                         compare_prices_url
                     )
 
-                    scraped_game_info = await self.scrape_game_info(
-                        compare_prices_url
-                    )
+                    scraped_game_info = await self.scrape_game_info(compare_prices_url)
 
                     if scraped_game_info is None:
                         # If scraped_game_info is None, raise a custom exception
@@ -371,6 +371,9 @@ class WebScraper:
             "https://img.gg.deals/3f/c7/232386017599a08e6395944ce80062b4ff99.svg": "GreenManGaming",
             "https://img.gg.deals/dc/1f/8af436d14c21df1a992a88e431e28fb83f23_90xt35_Q100.png": "GamerThor",
             "https://img.gg.deals/b3/03/a60a38b007532b8a52cdfe3913df944ce11e_90xt35_Q100.png": "GamerThor",
+            "https://img.gg.deals/cd/b7/4774ca8e256b0d11114ea982389eaf4649a5_90xt35_Q100.png": "KeyCense",
+            "https://img.gg.deals/a2/a6/07b915b57163f742620b85079adfec60502b_90xt35_Q100.png": "DifMark",
+            "https://img.gg.deals/8a/0a/c2b880ca4d909e70b0e6affc703fdbbf6888_90xt35_Q100.png": "DifMark",
         }
 
         # Get the shop name based on the logo
@@ -904,7 +907,7 @@ class WebScraper:
         max_length = 1024  # Maximum length for a field in Discord embed
         a = scraped_game_info.get("tags")
         developer_publisher = scraped_game_info.get("developer_publisher", "")
-       
+
         first_publisher = developer_publisher.split(" / ")[
             0
         ]  # Get the first part before " / "
@@ -925,7 +928,7 @@ class WebScraper:
                 value=" - ".join([f"{feature}" for feature in features]),
                 inline=True,
             )
-        
+
         b = scraped_game_info.get("reviews")
         if b and b != "None":
             embed.add_field(
