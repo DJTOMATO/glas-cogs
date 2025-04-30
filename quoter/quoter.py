@@ -27,20 +27,37 @@ class QuoterCog(commands.Cog):
     @commands.command(aliases=["epicquote"], cooldown_after_parsing=True)
     async def quoter(self, ctx: commands.Context):
         if ctx.message.reference:
-            replied_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            replied_message = await ctx.channel.fetch_message(
+                ctx.message.reference.message_id
+            )
+            if replied_message.content.strip() in ["!quoter", "Reloaded `quoter`."]:
+                await ctx.send(
+                    "ah you're so funny huh <:moustache:1362530256111665232>"
+                )
+                return
+
             avatar = await self.get_avatar(replied_message.author)
             message_content = await self.resolve_mentions(ctx, replied_message.content)
             message_content = self.process_urls(message_content)
             message_content = self.remove_emojis(message_content)
+
+            # Check if the message content is empty after processing
+            if not message_content.strip():
+                await ctx.send("quote a message dummy <:moustache:1362530256111665232>")
+                return
+
             nickname = replied_message.author.display_name
             username = replied_message.author.name
-            emoji = self.extract_first_emoji(replied_message.content)
+            emoji = None
+            # emoji = self.extract_first_emoji(replied_message.content)
         else:
             await ctx.send("Please use this command as a reply to a message.")
             return
 
         async with ctx.typing():
-            task = functools.partial(self.gen_pic, avatar, message_content, nickname, username, emoji)
+            task = functools.partial(
+                self.gen_pic, avatar, message_content, nickname, username, emoji
+            )
             image = await self.generate_image(task)
 
         if isinstance(image, str):
@@ -63,7 +80,9 @@ class QuoterCog(commands.Cog):
 
     async def get_avatar(self, member: discord.abc.User):
         avatar = BytesIO()
-        display_avatar: discord.Asset = member.display_avatar.replace(size=512, static_format="png")
+        display_avatar: discord.Asset = member.display_avatar.replace(
+            size=512, static_format="png"
+        )
         await display_avatar.save(avatar, seek_begin=True)
         return avatar
 
@@ -99,7 +118,9 @@ class QuoterCog(commands.Cog):
             img.paste(avatar_img, (0, 0))
 
         pillar_width = 40  # Reduced pillar width
-        for x in range(600 - pillar_width // 2, 600 + pillar_width // 2, 2):  # Reduce iterations
+        for x in range(
+            600 - pillar_width // 2, 600 + pillar_width // 2, 2
+        ):  # Reduce iterations
             for y in range(0, 600, 2):  # Reduce iterations
                 if random.random() < (1 - abs(x - 600) / (pillar_width // 2)):
                     img.putpixel((x, y), (0, 0, 0, 0))  # Optimized loop
@@ -111,9 +132,17 @@ class QuoterCog(commands.Cog):
         font_size = 40
         while font_size > 10:
             try:
-                font_message_cursive = ImageFont.truetype(font_path_message, font_size, layout_engine=ImageFont.Layout.RAQM)
-                font_nickname_bold = ImageFont.truetype(font_path_nickname, font_size - 5, layout_engine=ImageFont.Layout.RAQM)
-                font_emoji = ImageFont.truetype(emoji_font_path, font_size - 25, layout_engine=ImageFont.Layout.RAQM)
+                font_message_cursive = ImageFont.truetype(
+                    font_path_message, font_size, layout_engine=ImageFont.Layout.RAQM
+                )
+                font_nickname_bold = ImageFont.truetype(
+                    font_path_nickname,
+                    font_size - 5,
+                    layout_engine=ImageFont.Layout.RAQM,
+                )
+                font_emoji = ImageFont.truetype(
+                    emoji_font_path, font_size - 25, layout_engine=ImageFont.Layout.RAQM
+                )
             except OSError:
                 font_message_cursive = ImageFont.load_default()
                 font_nickname_bold = ImageFont.load_default()
@@ -121,22 +150,36 @@ class QuoterCog(commands.Cog):
 
             max_width = 590  # Increased max width
             max_height = 600  # Set max height
-            message_lines, message_line_height = self.wrap_text(draw, message_content, font_message_cursive, max_width, respect_newlines=True)
-            nickname_lines, nickname_line_height = self.wrap_text(draw, f"- {nickname}", font_nickname_bold, max_width)
+            message_lines, message_line_height = self.wrap_text(
+                draw,
+                message_content,
+                font_message_cursive,
+                max_width,
+                respect_newlines=True,
+            )
+            nickname_lines, nickname_line_height = self.wrap_text(
+                draw, f"- {nickname}", font_nickname_bold, max_width
+            )
 
             line_spacing = 10
-            total_text_height = (len(message_lines) * (message_line_height + line_spacing) +
-                                 len(nickname_lines) * (nickname_line_height + line_spacing) -
-                                 line_spacing)
+            total_text_height = (
+                len(message_lines) * (message_line_height + line_spacing)
+                + len(nickname_lines) * (nickname_line_height + line_spacing)
+                - line_spacing
+            )
             if total_text_height <= max_height:
                 break
             font_size -= 2
 
-        start_y = (max_height - total_text_height) // 2  # Dynamically adjust start_y based on max_height
+        start_y = (
+            max_height - total_text_height
+        ) // 2  # Dynamically adjust start_y based on max_height
 
         y = start_y
         for line in message_lines:
-            line_width, line_height = self.get_text_dimensions(line, font_message_cursive)
+            line_width, line_height = self.get_text_dimensions(
+                line, font_message_cursive
+            )
             x = 905 - line_width // 2  # Moved text to the right
             draw.text((x, y), line, font=font_message_cursive, fill=(255, 255, 255))
             y += message_line_height + line_spacing
@@ -149,7 +192,12 @@ class QuoterCog(commands.Cog):
 
         if emoji:
             emoji_width, emoji_height = self.get_text_dimensions(emoji, font_emoji)
-            draw.text((x + line_width + 10, y - line_height), emoji, font=font_emoji, fill=(255, 255, 255))
+            draw.text(
+                (x + line_width + 10, y - line_height),
+                emoji,
+                font=font_emoji,
+                fill=(255, 255, 255),
+            )
 
         with BytesIO() as fp:
             img.save(fp, "PNG")
@@ -160,21 +208,24 @@ class QuoterCog(commands.Cog):
 
     def wrap_text(self, draw, text, font, max_width, respect_newlines=False):
         lines = []
-        line_height = self.get_text_dimensions('A', font)[1]
+        line_height = self.get_text_dimensions("A", font)[1]
         if respect_newlines:
-            paragraphs = text.split('\n')
+            paragraphs = text.split("\n")
         else:
             paragraphs = [text]
 
         for paragraph in paragraphs:
             words = paragraph.split()
             while words:
-                line = ''
-                while words and self.get_text_dimensions(line + words[0], font)[0] <= max_width:
-                    line += (words.pop(0) + ' ')
+                line = ""
+                while (
+                    words
+                    and self.get_text_dimensions(line + words[0], font)[0] <= max_width
+                ):
+                    line += words.pop(0) + " "
                 lines.append(line.strip())
             if respect_newlines:
-                lines.append('')
+                lines.append("")
 
         return lines, line_height
 
@@ -187,27 +238,29 @@ class QuoterCog(commands.Cog):
     def remove_emojis(text):
         emoji_pattern = re.compile(
             "["
-            "\U0001F600-\U0001F64F"
-            "\U0001F300-\U0001F5FF"
-            "\U0001F680-\U0001F6FF"
-            "\U0001F1E0-\U0001F1FF"
-            "\U00002702-\U000027B0"
-            "\U000024C2-\U0001F251"
+            "\U0001f600-\U0001f64f"
+            "\U0001f300-\U0001f5ff"
+            "\U0001f680-\U0001f6ff"
+            "\U0001f1e0-\U0001f1ff"
+            "\U00002702-\U000027b0"
+            "\U000024c2-\U0001f251"
             "]+",
             flags=re.UNICODE,
         )
-        return emoji_pattern.sub(r'', text).replace('\n', '\n')
+        text = emoji_pattern.sub(r"", text).replace("\n", "\n")
+        text = re.sub(r"-#?", "", text)  # Remove '-' and '-#'
+        return text
 
     @staticmethod
     def extract_first_emoji(text):
         emoji_pattern = re.compile(
             "["
-            "\U0001F600-\U0001F64F"
-            "\U0001F300-\U0001F5FF"
-            "\U0001F680-\U0001F6FF"
-            "\U0001F1E0-\U0001F1FF"
-            "\U00002702-\U000027B0"
-            "\U000024C2-\U0001F251"
+            "\U0001f600-\U0001f64f"
+            "\U0001f300-\U0001f5ff"
+            "\U0001f680-\U0001f6ff"
+            "\U0001f1e0-\U0001f1ff"
+            "\U00002702-\U000027b0"
+            "\U000024c2-\U0001f251"
             "]+",
             flags=re.UNICODE,
         )
@@ -229,11 +282,17 @@ class QuoterCog(commands.Cog):
                 # Extract the emoji name from the URL
                 emoji_name_match = re.search(r"name=([^&]+)", url)
                 if emoji_name_match:
-                    emoji_name = emoji_name_match.group(1).split('%')[0]  # Decode the name
+                    emoji_name = emoji_name_match.group(1).split("%")[
+                        0
+                    ]  # Decode the name
                     content = content.replace(url, f":{emoji_name}:")
             else:
                 # Remove non-emoji URLs
                 content = content.replace(url, "")
+
+        # Remove custom Discord emojis (e.g., <:DogeLUL:1338202384303915019>)
+        custom_emoji_pattern = re.compile(r"<a?:\w+:\d+>")
+        content = custom_emoji_pattern.sub("", content)
 
         return content
 
