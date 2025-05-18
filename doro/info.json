@@ -1,0 +1,15 @@
+{
+  "author": ["Glas"],
+  "description": "A cog that dorifies user avatars.",
+  "disabled": false,
+  "end_user_data_statement": "This cog does not store any end user data.",
+  "hidden": false,
+  "install_msg": "Thank you for installing the Dorifier Cog! Enjoy dorifying user avatars.",
+  "min_bot_version": "3.5.3",
+  "min_python_version": [3, 10, 0],
+  "required_cogs": {},
+  "requirements": [],
+  "short": "Dorifier Cog",
+  "tags": ["fun", "avatar", "doro", "nikke"],
+  "type": "COG"
+}
