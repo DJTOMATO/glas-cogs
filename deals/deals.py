@@ -95,26 +95,42 @@ class Deals(commands.Cog):
                 prices = api_game_data.get("prices", {})
                 currency = prices.get("currency", "-")
                 currency = f" {currency}" if currency != "-" else ""
-                embed2.add_field(
-                    name="Current Retail",
-                    value=f"${prices.get('currentRetail', '-')}{currency}",
-                    inline=True,
-                )
-                embed2.add_field(
-                    name="Current Keyshops",
-                    value=f"${prices.get('currentKeyshops', '-')}{currency}",
-                    inline=True,
-                )
-                embed2.add_field(
-                    name="Historical Retail",
-                    value=f"${prices.get('historicalRetail', '-')}{currency}",
-                    inline=True,
-                )
-                embed2.add_field(
-                    name="Historical Keyshops",
-                    value=f"${prices.get('historicalKeyshops', '-')}{currency}",
-                    inline=True,
-                )
+
+                # Only add fields if the price is not 0 or 0.00
+                def valid_price(val):
+                    return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None)
+
+                current_retail = prices.get("currentRetail", "-")
+                if valid_price(current_retail):
+                    embed2.add_field(
+                        name="Current Retail",
+                        value=f"${current_retail}{currency}",
+                        inline=True,
+                    )
+
+                current_keyshops = prices.get("currentKeyshops", "-")
+                if valid_price(current_keyshops):
+                    embed2.add_field(
+                        name="Current Keyshops",
+                        value=f"${current_keyshops}{currency}",
+                        inline=True,
+                    )
+
+                historical_retail = prices.get("historicalRetail", "-")
+                if valid_price(historical_retail):
+                    embed2.add_field(
+                        name="Historical Retail",
+                        value=f"${historical_retail}{currency}",
+                        inline=True,
+                    )
+
+                historical_keyshops = prices.get("historicalKeyshops", "-")
+                if valid_price(historical_keyshops):
+                    embed2.add_field(
+                        name="Historical Keyshops",
+                        value=f"${historical_keyshops}{currency}",
+                        inline=True,
+                    )
             elif api_result and "error" in api_result:
                 embed2.add_field(
                     name="gg.deals API error",
