@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import re
 import logging
 import discord
+from PIL import Image, ImageDraw, ImageFont
 
 # from redbot.core.data_manager import bundled_data_path
 
@@ -37,6 +38,7 @@ class WebScraper:
                 target_div = soup.select_one(
                     ".list-items div.hoverable-box:nth-child(1)"
                 )
+                gameinfoside = soup.select_one("#game-info-side")
                 await self.session.close()
                 # If the div is found, you can extract its text or other information
                 if target_div:
@@ -72,12 +74,20 @@ class WebScraper:
                         # If scraped_game_info is None, raise a custom exception
                         raise ValueError("No information available for this game.")
 
-                    # Log only when there is valid information
+                    # Try to extract Steam App ID from the soup
+                    steam_app_id = self.extract_steam_app_id(gameinfoside)
                     # self.log.warning(
-                    #    f"Scraped game information: {scraped_game_info}"
+                    #    "Steam App ID after extract_steam_app_id: " + str(steam_app_id)
                     # )
-
-                    return formatted_data, all_deals_details, scraped_game_info
+                    if steam_app_id is None:
+                        # If steam_app_id is None, raise a custom exception
+                        self.log.warning("No Steam App ID found.")
+                    return (
+                        formatted_data,
+                        all_deals_details,
+                        scraped_game_info,
+                        steam_app_id,
+                    )
                 else:
                     a = "nnothing lol"
 
@@ -531,8 +541,26 @@ class WebScraper:
         deal_details["Platform"] = platform_name
 
         # Deal Date
-        deal_date_element = deal.select_one(".time-icon-tag tag")
-        deal_date = deal_date_element.get_text().strip() if deal_date_element else ""
+        deal_date_element = deal.select_one(".time-icon-tag span.value time")
+        # self.log.warning(f"deal: {deal}")
+        # self.log.warning(f"deal_date_element: {deal_date_element}")
+        import datetime
+
+        if deal_date_element:
+            deal_date_raw = deal_date_element.get(
+                "datetime", deal_date_element.get_text()
+            ).strip()
+            try:
+                deal_date_dt = datetime.datetime.fromisoformat(
+                    deal_date_raw.replace("Z", "+00:00")
+                )
+                unix_ts = int(deal_date_dt.timestamp())
+                deal_date = f"<t:{unix_ts}:R>"
+            except Exception as e:
+                self.log.warning(f"Failed to parse deal date: {deal_date_raw} ({e})")
+                deal_date = deal_date_raw
+        else:
+            deal_date = ""
         deal_details["Deal Date"] = deal_date
 
         # DRM Icon
@@ -726,51 +754,14 @@ class WebScraper:
             "span", class_="game-info-details-section game-info-details-section-reviews"
         )
         reviews = None  # Initialize reviews to avoid UnboundLocalError
-
-        reviews_element = game_info_widget.find(
-            "div", class_="game-info-details-section game-info-details-section-reviews"
+        reviews_element = game_info_widget.select_one(
+            "div.game-info-score-section.game-info-steam-score-section span.reviews-label"
         )
-
-        # self.log.warning(f"reviews_element: {reviews_element}")
-
+        reviews = None  # Initialize reviews to avoid UnboundLocalError
         if reviews_element:
-            reviews_label = reviews_element.find("span", class_="reviews-label")
-
-            if reviews_label:
-                reviews = reviews_label.text.strip()
-            else:
-                reviews_section = reviews_element
-
-                if reviews_section:
-                    reviews_header = reviews_section.find(
-                        "span", class_="game-info-inner-heading"
-                    )
-
-                    if reviews_header and reviews_header.text.strip() == "Reviews":
-                        meta_score_element = reviews_section.find(
-                            "div", class_="game-score-meta-value"
-                        )
-                        opencritic_score_element = reviews_section.find(
-                            "div",
-                            class_="large no-margin game-score-meta-value game-score-circle no-score",
-                        )
-
-                        if all([meta_score_element, opencritic_score_element]):
-                            meta_score = meta_score_element.text.strip()
-                            opencritic_score = opencritic_score_element.text.strip()
-
-                            reviews = f"MetaCritic Score: {meta_score}\nOpenCritic Score: {opencritic_score}"
-                            self.log.warning(f"Reviews: {reviews}")
-                        else:
-                            self.log.warning("Some score elements not found.")
-                    else:
-                        self.log.warning(
-                            "Reviews section found, but header does not match."
-                        )
-                else:
-                    self.log.warning("Reviews section not found.")
+            reviews = reviews_element.get_text(strip=True)
         else:
-            self.log.warning("Reviews element not found.")
+            self.log.warning("Reviews label not found in Steam score section.")
 
         game_info_genres = soup.select_one("#game-info-genres")
 
@@ -874,6 +865,38 @@ class WebScraper:
         await session.close()
         return extracted_info
 
+    def extract_steam_app_id(self, soup):
+        """
+        Extract the Steam App ID from the soup if present in the Steam score section.
+        Returns the app id as int, or None if not found.
+        Adds debug logging for troubleshooting.
+        """
+        # self.log.warning("Extracting Steam App ID from soup.")
+        # Find all score sections
+        score_sections = soup.select(
+            "div.game-info-details-section.game-info-score-section"
+        )
+        for section in score_sections:
+            heading = section.find("span", class_="game-info-inner-heading")
+            if heading and heading.get_text(strip=True).startswith("Steam"):
+                link = section.select_one("a.score-grade")
+                if link and link.has_attr("href"):
+                    href = link["href"]
+                    # self.log.warning(f"Found Steam link: {href}")
+                    match = re.search(r"/app/(\d+)/", href)  # <-- FIX: single backslash
+                    if match:
+                        app_id = int(match.group(1))
+                        # self.log.warning(f"Extracted Steam App ID: {app_id}")
+                        return app_id
+                    else:
+                        pass
+                        # self.log.warning("No App ID found in Steam link.")
+                else:
+                    # self.log.warning("No valid href found in score-grade link.")
+                    pass
+        # self.log.warning("Steam score link not found in soup.")
+        return None
+
     async def make_embed(
         self, ctx, formatted_data, all_deals_details, scraped_game_info
     ):
@@ -885,7 +908,7 @@ class WebScraper:
 
         # ['Release Date', 'Genres', 'Official Stores',
         #  'Keyshops', 'Icon', 'Game Image (URL)', 'Game name', 'Compare Prices URL']
-
+        # self.log.warning(f"columns: {columns}")
         for column_name in columns:
             # Skip certain columns that are not to be added as fields
             if column_name not in [
@@ -895,6 +918,7 @@ class WebScraper:
                 "Icon",
                 "Keyshops",
                 "Official Stores",
+                "From",
             ]:
                 # Get the value from formatted_data or set to "N/A" if not present
                 column_value = formatted_data.get(column_name, "N/A")
@@ -911,10 +935,10 @@ class WebScraper:
         first_publisher = developer_publisher.split(" / ")[
             0
         ]  # Get the first part before " / "
-        self.log.warning(f"first_publisher: {first_publisher}")
+        # self.log.warning(f"first_publisher: {first_publisher}")
         if first_publisher and first_publisher != "None":
             embed.add_field(name="Dev/Pub", value=first_publisher, inline=True)
-        self.log.warning(a)
+        # self.log.warning(a)
         if a and a != "":
             embed.add_field(
                 name="Tags",
@@ -938,7 +962,7 @@ class WebScraper:
             )
         description = (
             # f"\n__Keyshops__: {formatted_data.get('Keyshops')} - __Official Stores__: {formatted_data.get('Official Stores')}\n\n"
-            f"\nOnly 4 Official & Keyshops will be displayed below. For the full list [Press Here]({formatted_data.get('Compare Prices URL')})\n"
+            f"\nOnly four storefronts & Keyshops will be displayed.\n[Press here for the full list]({formatted_data.get('Compare Prices URL')})\n"
         )
         # await ctx.send(f"{scraped_game_info.get('game_description')}")
         first_paragraph = scraped_game_info.get("game_description").split("\n")[0]
@@ -947,7 +971,7 @@ class WebScraper:
         # Build the final description
         filled_description = f"{first_paragraph}\n {description}"
         # trim filled_descipriton to 1024
-        filled_description = filled_description[:1024]
+        filled_description = filled_description[:1500]
 
         embed.add_field(name="Description", value=filled_description, inline=False)
 
@@ -1040,9 +1064,71 @@ class WebScraper:
             )
             embed2.set_footer(
                 icon_url="https://bae.lena.moe/l9q3mnnat3i3.gif",
-                text=f"Powered by deals.gg",
+                text=f"Powered by gg.deals",
             )
             embed2.add_field(name="Disclaimer", value=warning, inline=False)
 
         # Return the embeds
         return embed, embed2
+
+    async def get_ggdeals_api_prices_by_steamid(self, bot, steam_app_ids, region=None):
+        """
+        Fetch price data from gg.deals API by Steam App ID(s) using Red shared API tokens.
+        Returns a dict of {appid: price_data or None}.
+        """
+        api_tokens = await bot.get_shared_api_tokens("ggdeals")
+        api_key = api_tokens.get("api_key")
+        if not api_key:
+            return {
+                "error": "The gg.deals API key has not been set. Please set it with `[p]set api ggdeals api_key,<your_key>`\n If you need it, obtain it from https://gg.deals/settings/."
+            }
+        ids = ",".join(str(i) for i in steam_app_ids)
+        url = f"https://api.gg.deals/v1/prices/by-steam-app-id/?ids={ids}&key={api_key}"
+        if region:
+            url += f"&region={region}"
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(url) as resp:
+                    if resp.status == 429:
+                        data = await resp.json()
+                        return {
+                            "error": f"Rate limit exceeded: {data.get('data', {}).get('message', 'Too Many Requests')}."
+                        }
+                    if resp.status != 200:
+                        return {"error": f"API error: {resp.status} {resp.reason}"}
+                    # Always return a dict, even if data is missing
+                    try:
+                        data = await resp.json()
+                    except Exception as e:
+                        return {"error": f"Failed to parse JSON: {e}"}
+                    if not isinstance(data, dict):
+                        return {"error": "API did not return a dict response."}
+                    return data
+            except Exception as e:
+                return {"error": f"API request failed: {e}"}
+
+
+async def get_steam_app_id_from_name(bot, game_name):
+    """
+    Try to get the Steam App ID for a given game name using the Steam API and Red shared tokens.
+    Returns the appid as int, or None if not found or no API key set.
+    """
+    steamapi = await bot.get_shared_api_tokens("steam")
+    api_key = steamapi.get("api_key")
+    if not api_key:
+        return {
+            "error": "The Steam API key has not been set. Please set it with `[p]set api steam api_key,<your_key>\n if you need it obtain it from https://steamcommunity.com/dev/apikey`."
+        }
+
+    # Get the app list
+    api_url = f"https://api.steampowered.com/IStoreService/GetAppList/v1/?key={api_key}&max_results=50000"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_url) as response:
+            if response.status != 200:
+                return None
+            data = await response.json()
+            app_list = data.get("response", {}).get("apps", [])
+            for app in app_list:
+                if app.get("name", "").lower() == game_name.lower():
+                    return app.get("appid")
+    return None
