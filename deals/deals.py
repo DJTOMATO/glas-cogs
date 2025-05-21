@@ -151,7 +151,7 @@ class Deals(commands.Cog):
                         )
             elif api_result and "error" in api_result:
                 embed.add_field(
-                    name="gg.deals API error",
+                    name="API error",
                     value=api_result["error"],
                     inline=False,
                 )

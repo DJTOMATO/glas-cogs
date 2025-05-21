@@ -1083,6 +1083,13 @@ async def get_ggdeals_api_prices_by_steamid(bot, steam_app_ids, region=None):
         return {
             "error": "The gg.deals API key has not been set. Please set it with `[p]set api ggdeals api_key,<your_key>`\n If you need it, obtain it from https://gg.deals/settings/."
         }
+    steamapi = await bot.get_shared_api_tokens("steam")
+    api_key_steam = steamapi.get("api_key")
+    if not api_key_steam:
+        return {
+            "error": "The Steam API key has not been set. Please set it with `[p]set api steam api_key,<your_key>`\n If you need it, obtain it from https://steamcommunity.com/dev/apikey."
+        }
+
     ids = ",".join(str(i) for i in steam_app_ids)
     url = f"https://api.gg.deals/v1/prices/by-steam-app-id/?ids={ids}&key={api_key}"
     if region:
