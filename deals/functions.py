@@ -1118,32 +1118,25 @@ async def get_ggdeals_api_prices_by_steamid(bot, steam_app_ids, region=None):
 
 async def get_steam_app_id_from_name(bot, game_name):
     """
-    Try to get the Steam App ID for a given game name using the Steam API and Red shared tokens.
-    Returns the appid as int, or None if not found or no API key set.
+    Try to get the Steam App ID for a given game name using the Steam Storefront search API (undocumented, but used by the Steam website).
+    Returns the appid as int, or None if not found.
+    This is more accurate for user queries than local fuzzy matching.
     """
-    steamapi = await bot.get_shared_api_tokens("steam")
-    api_key = steamapi.get("api_key")
-    if not api_key:
-        return {
-            "error": "The Steam API key has not been set. Please set it with `[p]set api steam api_key,<your_key>`\n If you need it, obtain it from https://steamcommunity.com/dev/apikey."
-        }
-    api_url = f"https://api.steampowered.com/IStoreService/GetAppList/v1/?key={api_key}&max_results=50000"
+    import aiohttp
+    import urllib.parse
+
+    query = urllib.parse.quote(game_name)
+    url = f"https://store.steampowered.com/api/storesearch/?term={query}&l=en&cc=US"
     async with aiohttp.ClientSession() as session:
-        async with session.get(api_url) as response:
-            if response.status != 200:
+        async with session.get(url) as resp:
+            if resp.status != 200:
                 return None
-            data = await response.json()
-            apps = data.get("response", {}).get("apps", [])
-            # Case-insensitive search for best match
-            game_name_lower = game_name.lower()
-            for app in apps:
-                if app["name"].lower() == game_name_lower:
-                    return app["appid"]
-            # Fallback: partial match
-            for app in apps:
-                if game_name_lower in app["name"].lower():
-                    return app["appid"]
-    return None
+            data = await resp.json()
+            items = data.get("items", [])
+            if not items:
+                return None
+            # Return the first result's appid
+            return items[0].get("id")
 
 
 async def get_steam_game_details(appid):
