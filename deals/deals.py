@@ -9,6 +9,7 @@ from .functions import (
     get_steam_game_details,
     get_ggdeals_bundles_by_steam_app_id,
 )
+import html
 
 import asyncio
 from aiohttp import ClientConnectorError
@@ -76,11 +77,12 @@ class Deals(commands.Cog):
                 steam_details = await get_steam_game_details(steam_app_id)
                 if steam_details:
                     if steam_details.get("image"):
-                        embed.set_thumbnail(url=steam_details["image"])
+                        embed.set_image(url=steam_details["image"])
                     if steam_details.get("description"):
+                        desc = html.unescape(steam_details["description"])
                         embed.add_field(
                             name="Description",
-                            value=steam_details["description"][:1024],
+                            value=desc[:1024],
                             inline=False,
                         )
                     if steam_details.get("genres"):

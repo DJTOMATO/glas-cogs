@@ -925,7 +925,7 @@ class WebScraper:
                 # Add field to the embed
                 embed.add_field(name=column_name, value=column_value, inline=True)
 
-        embed.set_thumbnail(url=formatted_data["Game Image (URL)"])
+        embed.set_image(url=formatted_data["Game Image (URL)"])
         columns = list(formatted_data.keys())
         # ['release_date', 'playable_on', 'developer_publisher', 'reviews', 'genres', 'tags', 'features', 'related_links', 'game_description']
         max_length = 1024  # Maximum length for a field in Discord embed
