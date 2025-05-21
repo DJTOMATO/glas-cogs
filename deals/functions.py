@@ -1168,3 +1168,39 @@ async def get_steam_game_details(appid):
                 "reviews": game_data.get("recommendations", {}).get("total"),
                 "name": game_data.get("name"),
             }
+
+
+async def get_ggdeals_bundles_by_steam_app_id(bot, steam_app_ids, region=None):
+    """
+    Fetch bundle data from gg.deals API by Steam App ID(s) using Red shared API tokens.
+    Returns a dict of {appid: bundle_data or None}.
+    """
+    api_tokens = await bot.get_shared_api_tokens("ggdeals")
+    api_key = api_tokens.get("api_key")
+    if not api_key:
+        return {
+            "error": "The gg.deals API key has not been set. Please set it with `[p]set api ggdeals api_key,<your_key>`\n If you need it, obtain it from https://gg.deals/settings/."
+        }
+    ids = ",".join(str(i) for i in steam_app_ids)
+    url = f"https://api.gg.deals/v1/bundles/by-steam-app-id/?ids={ids}&key={api_key}"
+    if region:
+        url += f"&region={region}"
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url) as resp:
+                if resp.status == 429:
+                    data = await resp.json()
+                    return {
+                        "error": f"Rate limit exceeded: {data.get('data', {}).get('message', 'Too Many Requests')}."
+                    }
+                if resp.status != 200:
+                    return {"error": f"API error: {resp.status} {resp.reason}"}
+                try:
+                    data = await resp.json()
+                except Exception as e:
+                    return {"error": f"Failed to parse JSON: {e}"}
+                if not isinstance(data, dict):
+                    return {"error": "API did not return a dict response."}
+                return data
+        except Exception as e:
+            return {"error": f"API request failed: {e}"}

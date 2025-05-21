@@ -7,6 +7,7 @@ from .functions import (
     get_steam_app_id_from_name,
     get_ggdeals_api_prices_by_steamid,
     get_steam_game_details,
+    get_ggdeals_bundles_by_steam_app_id,
 )
 
 import asyncio
@@ -161,6 +162,55 @@ class Deals(commands.Cog):
             # Optionally, you can also send a message if no Steam details were found
             if not steam_details:
                 await ctx.send("ℹ️ No extra Steam info found for this game.")
+
+            # Fetch bundle data from GG.deals and send as a separate embed if bundles exist
+            bundles_result = await get_ggdeals_bundles_by_steam_app_id(
+                self.bot, [steam_app_id]
+            )
+            bundle_info = None
+            if bundles_result and "data" in bundles_result:
+                bundle_info = bundles_result["data"].get(
+                    str(steam_app_id)
+                ) or bundles_result["data"].get(int(steam_app_id))
+            if bundle_info and bundle_info.get("bundles"):
+                bundle_lines = []
+                for bundle in bundle_info["bundles"][:3]:  # Show up to 3 bundles
+                    bundle_title = bundle.get("title", "?")
+                    bundle_url = bundle.get("url")
+                    date_from = bundle.get("dateFrom")
+                    date_to = bundle.get("dateTo")
+                    # Format dates to YYYY-MM-DD only
+                    if date_from:
+                        date_from = date_from.split(" ")[0]
+                    if date_to:
+                        date_to = date_to.split(" ")[0]
+                    tiers = bundle.get("tiers", [])
+                    tier_lines = []
+                    for tier in tiers:
+                        price = tier.get("price")
+                        currency = tier.get("currency")
+                        games_count = tier.get("gamesCount")
+                        tier_desc = f"{price} {currency}"
+                        if games_count:
+                            tier_desc += f" ({games_count} games)"
+                        tier_lines.append(tier_desc)
+                    tier_str = ", ".join(tier_lines)
+                    if bundle_url:
+                        bundle_line = f"[{bundle_title}]({bundle_url}) | {tier_str}"
+                    else:
+                        bundle_line = f"{bundle_title} | {tier_str}"
+                    if date_from:
+                        bundle_line += f"\nFrom: {date_from}"
+                    if date_to:
+                        bundle_line += f" to {date_to}"
+                    bundle_lines.append(bundle_line)
+                bundle_embed = discord.Embed(title="Bundles")
+                bundle_embed.description = "\n\n".join(bundle_lines)
+                await ctx.send(embed=bundle_embed)
+            elif bundle_info and not bundle_info.get("bundles"):
+                await ctx.send("No bundles found for this game.")
+            elif bundles_result and "error" in bundles_result:
+                await ctx.send(f"Bundles API error: {bundles_result['error']}")
 
     @commands.command()
     async def risks(self, ctx):
