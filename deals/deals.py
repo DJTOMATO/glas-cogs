@@ -102,12 +102,17 @@ class Deals(commands.Cog):
                             inline=True,
                         )
                 # Add link to all deals at the top
-                deals_url = (
-                    f"https://gg.deals/games/?title={gamename.replace(' ', '+')}"
-                )
+                if steam_details and steam_details.get("name"):
+                    deals_url = f"https://gg.deals/game/{steam_details['name'].replace(' ', '-')}"
+                else:
+                    deals_url = f"https://gg.deals/game/{gamename.replace(' ', '-')}"
+
+                warning = (
+                    "Buying from keyshops it may have risks type ``{prefix}risks`` for details."
+                ).format(prefix=ctx.clean_prefix)
                 embed.add_field(
                     name="Check all deals in current shops",
-                    value=f"[Click here]({deals_url})",
+                    value=f"[Clicking here]({deals_url}) \n\n{warning}",
                     inline=False,
                 )
                 # Add prices/fees at the bottom
