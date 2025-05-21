@@ -1117,7 +1117,9 @@ async def get_steam_app_id_from_name(bot, game_name):
     steamapi = await bot.get_shared_api_tokens("steam")
     api_key = steamapi.get("api_key")
     if not api_key:
-        return None
+        return {
+            "error": "The Steam API key has not been set. Please set it with `[p]set api steam api_key,<your_key>`\n If you need it, obtain it from https://steamcommunity.com/dev/apikey."
+        }
     api_url = f"https://api.steampowered.com/IStoreService/GetAppList/v1/?key={api_key}&max_results=50000"
     async with aiohttp.ClientSession() as session:
         async with session.get(api_url) as response:
