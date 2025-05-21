@@ -1071,41 +1071,42 @@ class WebScraper:
         # Return the embeds
         return embed, embed2
 
-    async def get_ggdeals_api_prices_by_steamid(self, bot, steam_app_ids, region=None):
-        """
-        Fetch price data from gg.deals API by Steam App ID(s) using Red shared API tokens.
-        Returns a dict of {appid: price_data or None}.
-        """
-        api_tokens = await bot.get_shared_api_tokens("ggdeals")
-        api_key = api_tokens.get("api_key")
-        if not api_key:
-            return {
-                "error": "The gg.deals API key has not been set. Please set it with `[p]set api ggdeals api_key,<your_key>`\n If you need it, obtain it from https://gg.deals/settings/."
-            }
-        ids = ",".join(str(i) for i in steam_app_ids)
-        url = f"https://api.gg.deals/v1/prices/by-steam-app-id/?ids={ids}&key={api_key}"
-        if region:
-            url += f"&region={region}"
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(url) as resp:
-                    if resp.status == 429:
-                        data = await resp.json()
-                        return {
-                            "error": f"Rate limit exceeded: {data.get('data', {}).get('message', 'Too Many Requests')}."
-                        }
-                    if resp.status != 200:
-                        return {"error": f"API error: {resp.status} {resp.reason}"}
-                    # Always return a dict, even if data is missing
-                    try:
-                        data = await resp.json()
-                    except Exception as e:
-                        return {"error": f"Failed to parse JSON: {e}"}
-                    if not isinstance(data, dict):
-                        return {"error": "API did not return a dict response."}
-                    return data
-            except Exception as e:
-                return {"error": f"API request failed: {e}"}
+
+async def get_ggdeals_api_prices_by_steamid(bot, steam_app_ids, region=None):
+    """
+    Fetch price data from gg.deals API by Steam App ID(s) using Red shared API tokens.
+    Returns a dict of {appid: price_data or None}.
+    """
+    api_tokens = await bot.get_shared_api_tokens("ggdeals")
+    api_key = api_tokens.get("api_key")
+    if not api_key:
+        return {
+            "error": "The gg.deals API key has not been set. Please set it with `[p]set api ggdeals api_key,<your_key>`\n If you need it, obtain it from https://gg.deals/settings/."
+        }
+    ids = ",".join(str(i) for i in steam_app_ids)
+    url = f"https://api.gg.deals/v1/prices/by-steam-app-id/?ids={ids}&key={api_key}"
+    if region:
+        url += f"&region={region}"
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url) as resp:
+                if resp.status == 429:
+                    data = await resp.json()
+                    return {
+                        "error": f"Rate limit exceeded: {data.get('data', {}).get('message', 'Too Many Requests')}."
+                    }
+                if resp.status != 200:
+                    return {"error": f"API error: {resp.status} {resp.reason}"}
+                # Always return a dict, even if data is missing
+                try:
+                    data = await resp.json()
+                except Exception as e:
+                    return {"error": f"Failed to parse JSON: {e}"}
+                if not isinstance(data, dict):
+                    return {"error": "API did not return a dict response."}
+                return data
+        except Exception as e:
+            return {"error": f"API request failed: {e}"}
 
 
 async def get_steam_app_id_from_name(bot, game_name):
@@ -1116,19 +1117,45 @@ async def get_steam_app_id_from_name(bot, game_name):
     steamapi = await bot.get_shared_api_tokens("steam")
     api_key = steamapi.get("api_key")
     if not api_key:
-        return {
-            "error": "The Steam API key has not been set. Please set it with `[p]set api steam api_key,<your_key>\n if you need it obtain it from https://steamcommunity.com/dev/apikey`."
-        }
-
-    # Get the app list
+        return None
     api_url = f"https://api.steampowered.com/IStoreService/GetAppList/v1/?key={api_key}&max_results=50000"
     async with aiohttp.ClientSession() as session:
         async with session.get(api_url) as response:
             if response.status != 200:
                 return None
             data = await response.json()
-            app_list = data.get("response", {}).get("apps", [])
-            for app in app_list:
-                if app.get("name", "").lower() == game_name.lower():
-                    return app.get("appid")
+            apps = data.get("response", {}).get("apps", [])
+            # Case-insensitive search for best match
+            game_name_lower = game_name.lower()
+            for app in apps:
+                if app["name"].lower() == game_name_lower:
+                    return app["appid"]
+            # Fallback: partial match
+            for app in apps:
+                if game_name_lower in app["name"].lower():
+                    return app["appid"]
     return None
+
+
+async def get_steam_game_details(appid):
+    """
+    Fetch game details (image, description, genres, reviews, release date) from the Steam API.
+    Returns a dict with the relevant info or None if not found.
+    """
+    url = f"https://store.steampowered.com/api/appdetails?appids={appid}&l=en"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                return None
+            data = await resp.json()
+            if not data or not data.get(str(appid), {}).get("success"):
+                return None
+            game_data = data[str(appid)]["data"]
+            return {
+                "image": game_data.get("header_image"),
+                "description": game_data.get("short_description"),
+                "genres": [g["description"] for g in game_data.get("genres", [])],
+                "release_date": game_data.get("release_date", {}).get("date"),
+                "reviews": game_data.get("recommendations", {}).get("total"),
+                "name": game_data.get("name"),
+            }

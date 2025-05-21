@@ -3,7 +3,11 @@ import random
 from datetime import datetime
 from redbot.core import commands
 import logging
-from .functions import WebScraper, get_steam_app_id_from_name
+from .functions import (
+    get_steam_app_id_from_name,
+    get_ggdeals_api_prices_by_steamid,
+    get_steam_game_details,
+)
 
 import asyncio
 from aiohttp import ClientConnectorError
@@ -33,113 +37,130 @@ class Deals(commands.Cog):
     ):
         """Returns a list of deals"""
         async with ctx.typing():
-            scraper = WebScraper()
             if gamename is None:
                 await ctx.send(
                     "You forgot the game name! Please try again. \n\n Example: !deals The Last of Us 2"
                 )
                 return
-            # Scrape first to get all info and possibly the steamid from the website
-            results = None
-            steam_app_id = None
+            steam_app_id = await get_steam_app_id_from_name(self.bot, gamename)
+            if not steam_app_id:
+                await ctx.send(f"Error: Game {gamename} not found on Steam.")
+                return
+            # Use the API to get deals/prices
             try:
-                results = await scraper.scrape(ctx, gamename)
-                if results is None:
-                    await ctx.send(f"Error: Game {gamename} not found")
-                    return
-                # Unpack the new return value
-                if len(results) == 4:
-                    (
-                        formatted_data,
-                        all_deals_details,
-                        scraped_game_info,
-                        steam_app_id,
-                    ) = results
-                else:
-                    formatted_data, all_deals_details, scraped_game_info = results
+                api_result = await get_ggdeals_api_prices_by_steamid(
+                    self.bot, [steam_app_id]
+                )
             except ClientConnectorError:
                 await ctx.send("Site under maintenance, please try later.")
                 return
             except Exception as e:
                 await ctx.send(f"An unexpected error occurred: {str(e)}")
                 return
-            # If not found in scrape, try fallback
-            if not steam_app_id:
-                steam_app_id = await get_steam_app_id_from_name(self.bot, gamename)
-                # await ctx.send(f"Steam ID after search is :{steam_app_id}")
-            api_result = None
-            if steam_app_id:
-                # await ctx.send(f"Steam ID is :{steam_app_id}")
-                api_result = await scraper.get_ggdeals_api_prices_by_steamid(
-                    self.bot, [steam_app_id]
-                )
-                # self.log.warning(f"API result for {steam_app_id}: {api_result}")
-                # Debug: log keys if data exists
-                # if api_result and "data" in api_result:
-                # self.log.warning(
-                #    f"API data keys: {list(api_result['data'].keys())}"
-                # )
             # Create the embed
-            embed, embed2 = await scraper.make_embed(
-                ctx, formatted_data, all_deals_details, scraped_game_info
-            )
-            # If API data is available, add it to the first embed
+            # Use the Steam game title if available
+            title = gamename
+            steam_details = await get_steam_game_details(steam_app_id)
+            if steam_details and steam_details.get("name"):
+                title = steam_details["name"]
+            embed = discord.Embed(title=f"Deals for {title}")
             api_game_data = None
             if api_result and "data" in api_result:
-                # Try both string and int keys for steam_app_id
                 api_data = api_result["data"]
-                api_game_data = api_data.get(str(steam_app_id))
-                if not api_game_data:
-                    api_game_data = api_data.get(int(steam_app_id))
+                api_game_data = api_data.get(str(steam_app_id)) or api_data.get(
+                    int(steam_app_id)
+                )
             if api_game_data:
-                prices = api_game_data.get("prices", {})
-                currency = prices.get("currency", "-")
-                currency = f" {currency}" if currency != "-" else ""
+                # Fetch Steam game details for image, description, genres, reviews, release date
+                steam_details = await get_steam_game_details(steam_app_id)
+                if steam_details:
+                    if steam_details.get("image"):
+                        embed.set_thumbnail(url=steam_details["image"])
+                    if steam_details.get("description"):
+                        embed.add_field(
+                            name="Description",
+                            value=steam_details["description"][:1024],
+                            inline=False,
+                        )
+                    if steam_details.get("genres"):
+                        embed.add_field(
+                            name="Genres",
+                            value=", ".join(steam_details["genres"]),
+                            inline=True,
+                        )
+                    if steam_details.get("release_date"):
+                        embed.add_field(
+                            name="Release Date",
+                            value=steam_details["release_date"],
+                            inline=True,
+                        )
+                    if steam_details.get("reviews"):
+                        embed.add_field(
+                            name="Steam Reviews",
+                            value=str(steam_details["reviews"]),
+                            inline=True,
+                        )
+                # Add link to all deals at the top
+                deals_url = (
+                    f"https://gg.deals/games/?title={gamename.replace(' ', '+')}"
+                )
+                embed.add_field(
+                    name="Check all deals in current shops",
+                    value=f"[Click here]({deals_url})",
+                    inline=False,
+                )
+                # Add prices/fees at the bottom
+                if api_game_data:
+                    prices = api_game_data.get("prices", {})
+                    currency = prices.get("currency", "-")
+                    currency = f" {currency}" if currency != "-" else ""
 
-                # Only add fields if the price is not 0 or 0.00
-                def valid_price(val):
-                    return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None)
+                    def valid_price(val):
+                        return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None)
 
-                current_retail = prices.get("currentRetail", "-")
-                if valid_price(current_retail):
-                    embed2.add_field(
-                        name="Current Retail",
-                        value=f"${current_retail}{currency}",
-                        inline=True,
-                    )
+                    current_retail = prices.get("currentRetail", "-")
+                    if valid_price(current_retail):
+                        embed.add_field(
+                            name="Current Retail",
+                            value=f"${current_retail}{currency}",
+                            inline=True,
+                        )
 
-                current_keyshops = prices.get("currentKeyshops", "-")
-                if valid_price(current_keyshops):
-                    embed2.add_field(
-                        name="Current Keyshops",
-                        value=f"${current_keyshops}{currency}",
-                        inline=True,
-                    )
+                    current_keyshops = prices.get("currentKeyshops", "-")
+                    if valid_price(current_keyshops):
+                        embed.add_field(
+                            name="Current Keyshops",
+                            value=f"${current_keyshops}{currency}",
+                            inline=True,
+                        )
 
-                historical_retail = prices.get("historicalRetail", "-")
-                if valid_price(historical_retail):
-                    embed2.add_field(
-                        name="Historical Retail",
-                        value=f"${historical_retail}{currency}",
-                        inline=True,
-                    )
+                    historical_retail = prices.get("historicalRetail", "-")
+                    if valid_price(historical_retail):
+                        embed.add_field(
+                            name="Historical Retail",
+                            value=f"${historical_retail}{currency}",
+                            inline=True,
+                        )
 
-                historical_keyshops = prices.get("historicalKeyshops", "-")
-                if valid_price(historical_keyshops):
-                    embed2.add_field(
-                        name="Historical Keyshops",
-                        value=f"${historical_keyshops}{currency}",
-                        inline=True,
-                    )
+                    historical_keyshops = prices.get("historicalKeyshops", "-")
+                    if valid_price(historical_keyshops):
+                        embed.add_field(
+                            name="Historical Keyshops",
+                            value=f"${historical_keyshops}{currency}",
+                            inline=True,
+                        )
             elif api_result and "error" in api_result:
-                embed2.add_field(
+                embed.add_field(
                     name="gg.deals API error",
                     value=api_result["error"],
                     inline=False,
                 )
-            # Send the final embed and remove the "Bot is typing..." status
+            else:
+                embed.description = "No deals found."
             await ctx.send(embed=embed)
-            await ctx.send(embed=embed2)
+            # Optionally, you can also send a message if no Steam details were found
+            if not steam_details:
+                await ctx.send("ℹ️ No extra Steam info found for this game.")
 
     @commands.command()
     async def risks(self, ctx):
