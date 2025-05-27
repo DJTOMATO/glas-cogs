@@ -26,14 +26,16 @@ async def get_font(self):
 
 async def wrap_text(self, draw, text, x, y, max_width):
     font = await get_font(self)
-    line_height = font.getsize("A")[1]
+    # Calculate line height using getbbox instead of getsize
+    bbox = font.getbbox("A")
+    line_height = bbox[3] - bbox[1]
 
     shadow_offset = 2  # Adjust the shadow offset as needed
     shadow_color = "gray"  # Adjust the shadow color as needed
 
     current_x, current_y = x, y
 
-    for line in text.split("\\n"):
+    for line in text.split("\n"):
         self.log.error("Line: %s", line)
         words = re.findall(r"(\w+)?;(.*?)(?=\w+;|$)|([^\s]+)", line)
         self.log.error("Words: %s", words)
@@ -116,14 +118,11 @@ async def wrap_text(self, draw, text, x, y, max_width):
                     font=font,
                 )
                 # Draw main text
-                draw.text(
-                    (current_x, current_y), line, fill="white", font=font
-                )
+                draw.text((current_x, current_y), line, fill="white", font=font)
                 current_x += length + draw.textlength("", font=font)
 
         current_y += line_height
         current_x = x
-
 
 
 COLOR_CHOICES = {
@@ -136,7 +135,6 @@ COLOR_CHOICES = {
 
 META_CHOICES = {
     "true": "true",
-
 }
 
 LOCATION_CHOICES = {
@@ -308,7 +306,7 @@ async def generate(self, ctx, **parameters):
             imageContainer.append((position, character))
 
     if parameters["meta"] == "true":
-        canvas.paste(meta_image,(0,0),meta_image)
+        canvas.paste(meta_image, (0, 0), meta_image)
     brightness = 0.55
     enhancer = ImageEnhance.Brightness(canvas)
     canvas = enhancer.enhance(brightness)
@@ -316,7 +314,6 @@ async def generate(self, ctx, **parameters):
     for position, character in imageContainer:
         if character.mode != "RGBA":
             character = character.convert("RGBA")
-
 
         if position == "left":
             canvas.paste(
@@ -364,9 +361,7 @@ async def generate(self, ctx, **parameters):
     # Replace accented characters in the text
     text = text.translate(translation_table)
     # Wrap text using the new function
-    await wrap_text(
-        self, draw, text, text_position[0], text_position[1], max_width
-    )
+    await wrap_text(self, draw, text, text_position[0], text_position[1], max_width)
 
     # Convert the canvas to an Image object
     image = convert_to_image(canvas)
@@ -380,14 +375,11 @@ CHOICE_DESC = {
     "right": "Right character.",
     "text": "Top text.",
     "meta": "Meta World",
-
 }
 
 CHOICES = {
     "bg": [
         Choice(name=title, value=value) for value, title in LOCATION_CHOICES.items()
     ],
-        "meta": [
-        Choice(name=title, value=value) for value, title in META_CHOICES.items()
-    ],
+    "meta": [Choice(name=title, value=value) for value, title in META_CHOICES.items()],
 }
