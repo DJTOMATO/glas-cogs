@@ -4,13 +4,14 @@
     "name": "HowLongToBeat",
     "short": "Fetch game information from HowLongToBeat.com",
     "requirements": [
-        "howlongtobeatpy"
+        "howlongtobeatpy", "fake-useragent>=2.0.3", "fuzzywuzzy"
     ],
     "tags": [
         "games",
         "utilities",
         "fun"
     ],
+    "min_python_version": [3, 9, 0],
     "description": "A cog to fetch game information such as playtime from HowLongToBeat.",
     "type": "COG"
 }

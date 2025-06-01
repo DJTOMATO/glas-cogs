@@ -1,0 +1,60 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2025-06-01 14:53-0400\n"
+"PO-Revision-Date: 2025-06-01 15:02-0400\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.4.2\n"
+"X-Generator: Poedit 3.6\n"
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/redbus/redbus.py:19
+msgid "I don't have permission to embed links in this channel."
+msgstr "No tengo permiso para incrustar enlaces en este canal."
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/redbus/redbus.py:23
+msgid "Please provide a valid bus stop ID. Like PAXXX (Ex: PA417)"
+msgstr ""
+"Por favor, proporcione una identificación válida de la parada "
+"de autobús. Como PAXXX (Ex: PA417)"
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/redbus/redbus.py:32
+msgid "Failed to retrieve data. Status code: {status}"
+msgstr "Error al recuperar los datos. Código de estado: {status}"
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/redbus/redbus.py:59
+msgid ""
+"\n"
+"    ID: {bus_id}, Distance: {meters_distance}m, Arrival: "
+"**{min_arrival_time}-{max_arrival_time} minutes**"
+msgstr ""
+"\n"
+"    ID: {bus_id}, Distancia: {meters_distance}m, Llegada: "
+"**{min_arrival_time}-{max_arrival_time} minutos**"
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/redbus/redbus.py:72
+msgid ""
+"\n"
+"Bus: {service_id}, Status: {service_status}{buses_info}\n"
+msgstr ""
+"\n"
+"Bus: {service_id}, Estado: {service_status}{buses_info}\n"
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/redbus/redbus.py:81
+msgid ""
+"__Stop ID__: {stop_id}\n"
+"__Name__: {stop_name}\n"
+"__Status__: {status_description}\n"
+"\n"
+"__**Incoming Buses**__:{services_info}"
+msgstr ""
+"Paradero: {stop_id}\n"
+"Nombre: {stop_name}\n"
+"__Estado__: {status_description}\n"
+"\n"
+"Buses en camino: {services_info}"

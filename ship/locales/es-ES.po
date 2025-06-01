@@ -1,0 +1,118 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2025-06-01 15:09-0400\n"
+"PO-Revision-Date: 2025-06-01 16:00-0400\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.4.2\n"
+"X-Generator: Poedit 3.6\n"
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/ship/ship.py:55
+msgid "Calculate the percentage of love compatibility between two people.\n"
+"\n"
+"        Example usage: `[p]ship @user1 @user2`\n"
+"        This command generates a ship name and a compatibility rate based on the names of the users.\n"
+"        "
+msgstr "Calcula el porcentaje de compatibilidad amorosa entre dos personas.\n"
+"\n"
+"        Ejemplo de uso: `[p]ship @usuario1 @usuario2`\n"
+"        Este comando genera un nombre de ship y un porcentaje de compatibilidad basado en los nombres de los usuarios."
+
+
+#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/ship/ship.py:88
+msgid "❤️ | The ship name is {ship_name} ❤️ | The compatibility rate is {rate}%"
+msgstr "❤️ | El nombre del ship es {ship_name} ❤️ | La compatibilidad es {rate}%"
+
+#: ship_rate_0
+msgid "ship_rate_0"
+msgstr "No... simplemente no."
+
+#: ship_rate_5
+msgid "ship_rate_5"
+msgstr "Esto no va a funcionar."
+
+#: ship_rate_10
+msgid "ship_rate_10"
+msgstr "Podrían ser buenos amigos, pero no más."
+
+#: ship_rate_15
+msgid "ship_rate_15"
+msgstr "No hay mucha chispa aquí."
+
+#: ship_rate_20
+msgid "ship_rate_20"
+msgstr "Hay una chispa aquí, ¡quizás podría encenderse!"
+
+#: ship_rate_25
+msgid "ship_rate_25"
+msgstr "Podría funcionar... con mucho esfuerzo."
+
+#: ship_rate_30
+msgid "ship_rate_30"
+msgstr "No está mal, pero no es ideal."
+
+#: ship_rate_35
+msgid "ship_rate_35"
+msgstr "Pueden llevarse bien si lo intentan."
+
+#: ship_rate_40
+msgid "ship_rate_40"
+msgstr "Algo está comenzando a surgir."
+
+#: ship_rate_45
+msgid "ship_rate_45"
+msgstr "Tal vez tengan una conexión sutil."
+
+#: ship_rate_50
+msgid "ship_rate_50"
+msgstr "¡Una pareja perfectamente promedio!"
+
+#: ship_rate_55
+msgid "ship_rate_55"
+msgstr "Tienen potencial, solo necesitan tiempo."
+
+#: ship_rate_60
+msgid "ship_rate_60"
+msgstr "¡Esto podría funcionar muy bien!"
+
+#: ship_rate_65
+msgid "ship_rate_65"
+msgstr "Una combinación bastante sólida."
+
+#: ship_rate_70
+msgid "ship_rate_70"
+msgstr "¡Vaya, qué química tan buena!"
+
+#: ship_rate_75
+msgid "ship_rate_75"
+msgstr "¡Están hechos el uno para el otro!"
+
+#: ship_rate_80
+msgid "ship_rate_80"
+msgstr "¡Una pareja casi perfecta!"
+
+#: ship_rate_85
+msgid "ship_rate_85"
+msgstr "¡Amor verdadero a la vista!"
+
+#: ship_rate_90
+msgid "ship_rate_90"
+msgstr "¡Almas gemelas! ¡Esto es real!"
+
+#: ship_rate_100
+msgid "ship_rate_100"
+msgstr "Esto es un milagro"
+
+#: command_error_same_person
+msgid "You cannot ship a user with themselves!"
+msgstr "¡No puedes emparejar a un usuario consigo mismo!"
+
+
+msgid "ship_error_no_messages"
+msgstr "Error: Los mensajes de compatibilidad de ship no están definidos."

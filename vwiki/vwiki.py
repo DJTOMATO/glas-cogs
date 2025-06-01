@@ -1,4 +1,4 @@
-from vtuberwiki import AioVwiki
+from .aiovwiki import AioVwiki
 from redbot.core import commands
 import discord
 import logging
@@ -18,19 +18,27 @@ class Vwiki(commands.Cog):
         self.log = logging.getLogger("glas.glas-cogs.Vwiki")
 
     async def search(self, chuuba: str):
+
         async with AioVwiki() as vwiki:
             sm = await vwiki.summary(vtuber=f"{chuuba}")
             tr = await vwiki.trivia(vtuber=f"{chuuba}")
             qt = await vwiki.quote(vtuber=f"{chuuba}")
             nm = vwiki.name
             img = vwiki.image
-            return sm, tr, qt, nm, img
+            all_data = await vwiki.all(f"{chuuba}")
+
+            return sm, tr, qt, nm, img, all_data
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def vsearch(self, ctx, *, chuuba: str):
+        """Search vtubers at vtuberwiki
 
-        sm, tr, qt, nm, img = await self.search(chuuba)
+        Example: [p]vsearch Usada Pekora"""
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            await ctx.send("I don't have permission to embed links in this channel.")
+            return
+        sm, tr, qt, nm, img, all_data = await self.search(chuuba)
         if not nm:
             await ctx.send("No information found. Please try again!")
             return
@@ -39,6 +47,42 @@ class Vwiki(commands.Cog):
         nm = nm.replace("_", " ")
         embed = discord.Embed(title=f"{nm}'s Profile", description=sm_txt)
         embed.set_image(url=img)
+
+        all_data = all_data.copy()
+        self.log.warning(f"All data: {all_data}")
+        # Example structure of all_data['infobox_details']:
+        # {'Debut Date': 'YouTube: 2019/07/17', 'Channel': [{'text': 'YouTube', 'url': '...'}, ...], ... }
+
+        # Add infobox details to the embed
+        infobox_details_data = all_data.get("infobox_details")
+        if infobox_details_data and isinstance(infobox_details_data, dict):
+            self.log.debug(f"Processing infobox_details: {infobox_details_data}")
+            for key, value in infobox_details_data.items():
+                field_value_str = ""
+                if isinstance(value, str):
+                    field_value_str = value
+                elif isinstance(value, list):  # Expected for 'Channel', 'Website', etc.
+                    link_display_parts = []
+                    for item_in_list in value:
+                        if (
+                            isinstance(item_in_list, dict)
+                            and item_in_list.get("text")
+                            and item_in_list.get("url")
+                        ):
+                            link_display_parts.append(
+                                f"[{item_in_list['text']}]({item_in_list['url']})"
+                            )
+                        elif isinstance(
+                            item_in_list, str
+                        ):  # Fallback for a list of simple strings
+                            link_display_parts.append(item_in_list)
+                    if link_display_parts:
+                        field_value_str = "\n".join(link_display_parts)
+
+                if field_value_str:  # Only add field if there's a value to show
+                    embed.add_field(
+                        name=str(key), value=trim(field_value_str, 1024), inline=True
+                    )
 
         tr_txt = "- " + trim("\n- ".join(tr), max_fchars)
         tr_txt = trim(tr_txt, max_fchars - 700)

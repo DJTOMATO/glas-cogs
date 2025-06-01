@@ -9,10 +9,10 @@ from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
 
-log = logging.getLogger("red.glascogs-doro")
+log = logging.getLogger("red.glas-cogs-Doro")
 
 
-class doro(commands.Cog):
+class Doro(commands.Cog):
     """Description"""
 
     __author__ = "[Glas](https://github.com/dj_tomato/glas-cogs)"
@@ -47,13 +47,13 @@ class doro(commands.Cog):
 
     async def get_avatar(self, member: discord.abc.User):
         """Fetch and return the avatar of a member as a BytesIO object."""
+
         avatar = BytesIO()
         display_avatar: discord.Asset = member.display_avatar.replace(
             size=512, static_format="png"
         )
         await display_avatar.save(avatar, seek_begin=True)
         return avatar
-
 
     async def process_avatar(
         self, ctx: commands.Context, target: discord.Member = None
@@ -143,13 +143,20 @@ class doro(commands.Cog):
             output_buffer = BytesIO()
             base_image.save(output_buffer, format="PNG")
             output_buffer.seek(0)
-
+            if not ctx.channel.permissions_for(ctx.me).attach_files:
+                await ctx.send(
+                    "I don't have permission to attach files in this channel."
+                )
+                return
             # Send the modified image in the channel
             file = discord.File(output_buffer, filename="processed_avatar.png")
             await ctx.send(file=file)
 
     @commands.command()
     async def doro(self, ctx: commands.Context, target: discord.Member = None):
-        """Dorify an user."""
+        """Dorify an user.
+
+        Creates a Doro-style image for the user or a specified target based on it's profile picture colors.
+        """
         async with ctx.typing():
             await self.process_avatar(ctx, target)

@@ -4,13 +4,12 @@ by https://github.com/ntoskrn/letterdance
 """
 
 from PIL import Image
-import imageio
 import os
 from redbot.core.data_manager import bundled_data_path
-import tempfile
+import tempfile  # Keep tempfile for output
 
 
-class LetterDance:
+class LetterDanceFunctions:
     """
     Class to create a dance animation by combining letter GIFs horizontally.
     """
@@ -131,23 +130,34 @@ class LetterDance:
                         letter = "qm"
 
                     syspath = f"{bundled_data_path(self)}"
-                    gif = imageio.get_reader(os.path.join(syspath, letter + ".gif"))
-                    frame = gif.get_data(i)
+                    letter_gif_path = os.path.join(syspath, letter + ".gif")
 
-                    frame_width, frame_height = frame.shape[1], frame.shape[0]
-                    frame_image = Image.fromarray(frame).convert("RGBA")
+                    with Image.open(letter_gif_path) as gif_image:
+                        # Ensure we don't go out of bounds for GIFs with fewer frames
+                        # and loop the animation of the letter.
+                        current_frame_index = i % gif_image.n_frames
+                        gif_image.seek(current_frame_index)
+                        # Ensure the frame is RGBA for proper transparency handling
+                        frame_image = gif_image.convert("RGBA")
 
-                    if scale_factor > 1:
-                        frame_image = frame_image.resize(
-                            (frame_width * scale_factor, frame_height * scale_factor)
+                        frame_width, frame_height = frame_image.size
+
+                        if scale_factor > 1:
+                            frame_image = frame_image.resize(
+                                (
+                                    int(frame_width * scale_factor),
+                                    int(frame_height * scale_factor),
+                                )
+                            )
+
+                        # Paste the frame, using its alpha channel as a mask for transparency
+                        frame_buffer.paste(
+                            frame_image,
+                            (x_offset, int((max_height - frame_image.height) / 2)),
+                            frame_image,
                         )
 
-                    frame_buffer.paste(
-                        frame_image,
-                        (x_offset, int((max_height - frame_image.height) / 2)),
-                    )
-
-                    x_offset += frame_image.width
+                        x_offset += frame_image.width
 
                 except (IndexError, EOFError):
                     # print("Error: " + letter + ".gif")

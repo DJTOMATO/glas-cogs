@@ -2,18 +2,27 @@ import discord
 import random
 from datetime import datetime
 from redbot.core import commands
-from redbot.core.i18n import get_locale
+from redbot.core.i18n import Translator
 import re
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
-import functools
 from random import choice
 from redbot.core.data_manager import bundled_data_path
 from os import listdir
 from redbot.core import Config
 
 
+_ = Translator("Valentine", __file__)
+
+
 class Valentine(commands.Cog):
+    """
+    Send virtual Valentine's Day cards to other users.
+
+    This cog allows users to generate and send a personalized image
+    as a Valentine's card to another member in the server.
+    """
+
     def __init__(self):
         self.config = Config.get_conf(self, identifier=1234567890)
         default_global = {"letters_received": {}}
@@ -25,23 +34,19 @@ class Valentine(commands.Cog):
     async def valentines(self, ctx, user2: discord.Member):
         """Send love letter to an user!.."""
         async with ctx.typing():
-            user1 = ctx.author  
-            locale = get_locale()
+            user1 = ctx.author
             name1 = self.sanitize_name(user1.display_name)
             name2 = self.sanitize_name(user2.display_name)
             if name1 == name2:
-                if locale == "es-ES":
-                    await ctx.send("No puedes enviarte una carta a ti mismo!")
-                else:
-                    await ctx.send("You cannot valentine yourself!")
+                await ctx.send(_("You cannot valentine yourself!"))
                 return
 
             avatar1 = await self.get_avatar(user1)
-            #avatar2 = await self.get_avatar(user2)
-            if locale == "es-ES":
-                message = f"{name1} ha enviado una carta de San Valentín a {user2.mention}!"
-            else:
-                message = f"{user2.mention} has received a valentine card from {name1}!"
+            # avatar2 = await self.get_avatar(user2)
+
+            message = _(
+                "{user2_mention} has received a valentine card from {name1}!"
+            ).format(user2_mention=user2.mention, name1=name1)
 
             # Update the count of letters received
             async with self.config.letters_received() as letters_received:
@@ -52,17 +57,17 @@ class Valentine(commands.Cog):
 
             image = self.generate_image(ctx, avatar1, name1, name2)
             embed = discord.Embed(
-                
                 description=f"** {message} **",
                 color=discord.Colour.from_rgb(255, 105, 180),
             )
 
             embed.set_image(url="attachment://valentine.png")
-            embed.set_footer(text=f"{user2.display_name} has received {received_count} valentine letters.")
-
+            embed.set_footer(
+                text=_("{display_name} has received {count} valentine letters.").format(
+                    display_name=user2.display_name, count=received_count
+                )
+            )
             await ctx.send(file=image, embed=embed)
-
-
 
     async def get_avatar(self, member: discord.abc.User):
         avatar = BytesIO()
@@ -98,20 +103,19 @@ class Valentine(commands.Cog):
         font = ImageFont.truetype(
             f"{bundled_data_path(self)}/Lato-Bold.ttf", size=32, encoding="utf-8"
         )
-        draw = ImageDraw.Draw(image)
 
         x1, y1 = 156, 285
-        draw.text((x1-1, y1-1), name1, font=font, fill="black")
-        draw.text((x1+1, y1-1), name1, font=font, fill="black")
-        draw.text((x1-1, y1+1), name1, font=font, fill="black")
-        draw.text((x1+1, y1+1), name1, font=font, fill="black")
+        draw.text((x1 - 1, y1 - 1), name1, font=font, fill="black")
+        draw.text((x1 + 1, y1 - 1), name1, font=font, fill="black")
+        draw.text((x1 - 1, y1 + 1), name1, font=font, fill="black")
+        draw.text((x1 + 1, y1 + 1), name1, font=font, fill="black")
         draw.text((x1, y1), name1, font=font, fill="white")
 
         x2, y2 = 103, 250
-        draw.text((x2-1, y2-1), name2, font=font, fill="black")
-        draw.text((x2+1, y2-1), name2, font=font, fill="black")
-        draw.text((x2-1, y2+1), name2, font=font, fill="black")
-        draw.text((x2+1, y2+1), name2, font=font, fill="black")
+        draw.text((x2 - 1, y2 - 1), name2, font=font, fill="black")
+        draw.text((x2 + 1, y2 - 1), name2, font=font, fill="black")
+        draw.text((x2 - 1, y2 + 1), name2, font=font, fill="black")
+        draw.text((x2 + 1, y2 + 1), name2, font=font, fill="black")
         draw.text((x2, y2), name2, font=font, fill="white")
 
         fp = BytesIO()

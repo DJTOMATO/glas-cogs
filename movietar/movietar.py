@@ -1,18 +1,14 @@
 import asyncio
-from email.mime import image
 import functools
 from io import BytesIO
 from typing import Literal, Optional
 import logging
-from tempfile import NamedTemporaryFile
 import tempfile
-import os
 import pathlib
-from moviepy.video.VideoClip import VideoClip, ImageClip
+from moviepy.video.VideoClip import ImageClip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from moviepy.video.VideoClip import ColorClip, TextClip
-import subprocess
+from moviepy.video.VideoClip import TextClip
 import aiohttp
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
@@ -20,13 +16,9 @@ from redbot.core import commands, app_commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.data_manager import bundled_data_path
-from redbot.core.utils.chat_formatting import pagify
-from redbot.core.data_manager import cog_data_path
 
 
-import traceback
 from concurrent.futures import ThreadPoolExecutor
-import io
 from functools import partial
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
@@ -35,15 +27,15 @@ from .converters import FuzzyMember
 import numpy as np
 from moviepy.video.fx import all as vfx  # Import all video effects
 
-from threading import Thread
-
 logging.captureWarnings(False)
-log = logging.getLogger("red.glas-cogs.movietar")
+# log = logging.getLogger("red.glas-cogs.movietar") # File-scoped logger, unused
 
 
 class Movietar(commands.Cog):
     """
     Make trash videos with your avatar
+
+    You can also use /makevideo to make videos with an avatar.
     """
 
     __version__ = "1.0.0"
@@ -82,6 +74,7 @@ class Movietar(commands.Cog):
 
     @commands.hybrid_command(description="Make meme videos with people's avatars.")
     @app_commands.guild_only()
+    @commands.guild_only()
     @app_commands.describe(
         video="The video you want to make.",
         avatar="The user whose avatar you want in the video.",
@@ -105,6 +98,11 @@ class Movietar(commands.Cog):
     async def makevideo(
         self, ctx: commands.Context, video: str, avatar: discord.Member
     ):
+        """Make meme videos with people's avatars.
+
+        This command is primarily intended for use as a slash command.
+        Using the text command version will prompt you to use the slash command.
+        """
         if not ctx.interaction:
             return await ctx.reply("Please use the slash command.")
         await self.__dict__[video](ctx, member=avatar)
@@ -301,8 +299,8 @@ class Movietar(commands.Cog):
         if not member:
             member = ctx.author
         videotype = "place.mp4"
-        pos = (215, 210)
-        avisize = (170, 170)
+        pos = (220, 205)
+        avisize = (180, 180)
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -463,24 +461,17 @@ class Movietar(commands.Cog):
 
     def generate_video(self, ctx, member_avatar, file_path, folder, text):
         try:
-            # print("Start video generation")
-
             member_avatar = self.bytes_to_image(member_avatar, 200)
-            # print("Avatar processed")
-
             numpydata = np.asarray(member_avatar)
             avisize = (200, 200)
 
             clip = VideoFileClip(f"{bundled_data_path(self) / 'mewhen.mp4'}")
-            # print("Video clip loaded")
-
             duration = clip.duration
-            # clip = clip.volumex(1.0)
 
             def add_cat_clip(start, duration, pos, avisize, numpydata):
                 nonlocal clip
                 cat_clip = (
-                    ImageClip(numpydata)  # Use numpydata directly as the image data
+                    ImageClip(numpydata)
                     .with_start(start)
                     .with_duration(duration)
                     .resized(avisize)
@@ -488,7 +479,6 @@ class Movietar(commands.Cog):
                 )
                 clip = CompositeVideoClip([clip, cat_clip])
 
-            # Add cat clips
             add_cat_clip(1.98, 1.2, (100, 100), (200, 200), numpydata)
             add_cat_clip(2.04, 1.61, (100, 100), (200, 200), numpydata)
             add_cat_clip(5.05, 0.8, (100, 100), (200, 200), numpydata)
@@ -497,47 +487,28 @@ class Movietar(commands.Cog):
             add_cat_clip(10.09, 0.5, (100, 100), (200, 200), numpydata)
             add_cat_clip(12.08, 1.5, (100, 100), (200, 200), numpydata)
 
-            # print("Cat clips added")
-
-            # Text clip
             text_clip = TextClip(
                 text or "", fontsize=20, color="white", size=(avisize[0], 200)
             ).with_duration(duration)
-            # print("Text clip created")
 
-            # Composite the clips
             final_clip = CompositeVideoClip(
                 [clip, text_clip.set_pos(("center", "top"))]
             )
-            # print("Final clip created")
 
-            video_buffer = BytesIO()
-
-            # Add the following debug statements
-            # print("FFMPEG Version:")
-            # subprocess.run(["ffmpeg", "-version"], check=True)
-
-            # print("Generating video file...")
             final_clip.write_videofile(
-                str(file_path),  # Use the file path instead of BytesIO
-                {
-                    "threads": 1,
-                    "preset": "superfast",
-                    "verbose": True,
-                    "logger": None,
-                    "codec": "libx264",
-                    "audio_codec": "aac",
-                },
+                str(file_path),
+                threads=1,
+                preset="superfast",
+                verbose=False,  # Set to True for debugging ffmpeg, False for less console noise
+                logger=None,
+                codec="libx264",
+                audio_codec="aac",
             )
-
-            video_buffer.seek(0)
-
-            # print("Video generation successful")
-            return video_buffer
-
+            return file_path
         except Exception as e:
-            # print(f"An error occurred: {e}")
-            traceback.print_exc()  # Add this line to print the traceback
+            self.log.exception(
+                "An error occurred during video generation in generate_video:"
+            )
             return None
 
     # ads

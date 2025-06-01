@@ -13,7 +13,7 @@ from PIL import ImageChops
 from aiohttp import ClientSession
 
 
-class BubbleCog(commands.Cog):
+class Bubble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
@@ -22,37 +22,42 @@ class BubbleCog(commands.Cog):
         asyncio.create_task(self.session.close())
 
     async def get_last_image_attachment(self, channel):
-        async for message in channel.history(limit=10):  # Adjust the limit as needed
-            for attachment in message.attachments:
-                if any(
-                    ext in attachment.filename.lower() for ext in ("png", "jpg", "jpeg", "gif")
-                ):
-                    return attachment.url
-
-            # Check for image URLs in message content
-            for word in message.content.split():
-                if word.startswith(("http://", "https://")):
-                    # Check if the URL contains a recognized image file extension
-                    if any(ext in word.lower() for ext in ("png", "jpg", "jpeg", "gif")):
-                        return word
-
-            # Check for a message containing "!bubble" and an image attachment
-            if "!bubble" in message.content.lower() and message.attachments:
+        async for message in channel.history(
+            limit=10
+        ):  # You can adjust the limit as needed
+            # Priority 1: Message has !bubble and an image attachment
+            if "!bubble" in message.content.lower():
                 for attachment in message.attachments:
-                    if any(
-                        ext in attachment.filename.lower() for ext in ("png", "jpg", "jpeg", "gif")
+                    if attachment.filename.lower().endswith(
+                        ("png", "jpg", "jpeg", "gif")
                     ):
                         return attachment.url
 
+        # Priority 2: Any image attachment
+        async for message in channel.history(limit=10):
+            for attachment in message.attachments:
+                if attachment.filename.lower().endswith(("png", "jpg", "jpeg", "gif")):
+                    return attachment.url
+
+        # Priority 3: Any image URL in message content
+        async for message in channel.history(limit=10):
+            for word in message.content.split():
+                if word.startswith(("http://", "https://")) and word.lower().endswith(
+                    ("png", "jpg", "jpeg", "gif")
+                ):
+                    return word
+
         return None
 
-    @commands.bot_has_permissions(attach_files=True, manage_messages=True)  #
+    @commands.bot_has_permissions(attach_files=True)  #
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=["bubble"], cooldown_after_parsing=True)
     async def speech(self, ctx: commands.Context, member: discord.Member = None):
-        """Make a Speech bubble..."""
-        """Example: !bubble @User/username"""
-        """Use it without mention to grab last image/attachment in a channel."""
+        """Make a speech bubble.
+
+        Example: ``!bubble @User/username``
+
+        Use it alone mention to grab the last image/attachment in a channel."""
 
         if member:
             avatar = await self.get_avatar(member)
@@ -75,9 +80,6 @@ class BubbleCog(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-
-        # Delete the message of the user who called the command
-        await ctx.message.delete()
 
     async def generate_image(self, task: functools.partial):
         task = self.bot.loop.run_in_executor(None, task)

@@ -1,10 +1,10 @@
 {
     "name": "Speech Bubble!",
-    "short": "Generates a bubble speech on images!.",
-    "description": "Generates a bubble speech on images!.",
-    "install_msg": "Thanks for installing `bubble` cog! Please enjoy it :D",
+    "description": "Generates a bubble speech on images!",
+    "install_msg": "Thanks for installing `bubble` cog!\nThis Cog contains Bundled data.\nPlease enjoy it :D",
     "author": ["TrustyJaid", "Glas"],
     "tags": ["image", "bubble", "meme"],
+    "requirements": ["Pillow"],
     "hidden": false,
     "disabled": false,
     "type": "COG",

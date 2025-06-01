@@ -3,7 +3,7 @@
     "short": "Letter Dance Animation!",
     "description": "Dance with letters!",
     "install_msg": "Thanks for installing `Letterdance` cog!",
-    "author": ["Glas"],
+    "author": ["ntoskrn", "Glas"],
     "tags": ["meme", "gif", "letterdance"],
     "hidden": false,
     "disabled": false,
