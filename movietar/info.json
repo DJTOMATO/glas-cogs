@@ -8,7 +8,7 @@
     "hidden": false,
     "disabled": false,
     "requirements": ["moviepy==2.1.2","numpy>=1.25.0", "rapidfuzz", "Unidecode"],
-    "min_python_version": "3.11.0",
+    "min_python_version": [3, 11, 0],
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
     "min_bot_version": "3.5.0"
