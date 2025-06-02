@@ -6,10 +6,10 @@
   "hidden": false,
   "install_msg": "Thank you for installing the Dorifier Cog! Enjoy dorifying user avatars.\nThis Cog contains Bundled data.",
   "min_bot_version": "3.5.3",
-  "min_python_version": [3, 10, 0],
+  "min_python_version": [3, 11, 0],
   "required_cogs": {},
   "requirements": ["Pillow"],
   "short": "Dorifier Cog",
-  "tags": ["fun", "avatar", "doro", "nikke", ],
+  "tags": ["fun", "avatar", "doro", "nikke"],
   "type": "COG"
 }
