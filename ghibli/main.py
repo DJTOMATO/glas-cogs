@@ -23,16 +23,33 @@ class Ghibli(commands.Cog):
         self.bot: Red = bot
 
     @commands.command()
-    async def ghibli(self, ctx: commands.Context, user: discord.User = None):
-        """Generate a Ghibli-style image from your avatar or a mentioned user's avatar."""
+    async def ghibli(self, ctx: commands.Context, user_or_url: str = None):
+        """Generate a Ghibli-style image from your avatar, a mentioned user's avatar, or an image URL.
+        Usage: [p]ghibli [user|image_url]
+        """
+        user = None
+        image_url = None
+        # Try to resolve as user mention or ID
+        if user_or_url:
+            # Try to get user by mention or ID
+            try:
+                user = await commands.UserConverter().convert(ctx, user_or_url)
+            except Exception:
+                # Not a user, check if it's a URL
+                if user_or_url.lower().startswith(
+                    "http://"
+                ) or user_or_url.lower().startswith("https://"):
+                    image_url = user_or_url
+                else:
+                    return await ctx.send("Invalid user or URL provided.")
         target = user or ctx.author
-        avatar_url = target.display_avatar.url
+        avatar_url = image_url or target.display_avatar.url
         await ctx.send("Generating your Ghibli-style image, please wait...")
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(avatar_url) as resp:
                     if resp.status != 200:
-                        return await ctx.send("Failed to download avatar image.")
+                        return await ctx.send("Failed to download image.")
                     with tempfile.NamedTemporaryFile(
                         delete=False, suffix=".png"
                     ) as tmp:
