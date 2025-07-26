@@ -24,18 +24,21 @@ class Ghibli(commands.Cog):
 
     @commands.command()
     async def ghibli(self, ctx: commands.Context, user_or_url: str = None):
-        """Generate a Ghibli-style image from your avatar, a mentioned user's avatar, or an image URL.
-        Usage: [p]ghibli [user|image_url]
-        """
+        """Generate a Ghibli-style image from your avatar, a mentioned user's avatar, an image URL, or an attached image.\nUsage: [p]ghibli [user|image_url] or attach an image."""
         user = None
         image_url = None
+        attachment_url = None
+        # Check for image attachment
+        if ctx.message.attachments:
+            for att in ctx.message.attachments:
+                if att.content_type and att.content_type.startswith("image"):
+                    attachment_url = att.url
+                    break
         # Try to resolve as user mention or ID
-        if user_or_url:
-            # Try to get user by mention or ID
+        if not attachment_url and user_or_url:
             try:
                 user = await commands.UserConverter().convert(ctx, user_or_url)
             except Exception:
-                # Not a user, check if it's a URL
                 if user_or_url.lower().startswith(
                     "http://"
                 ) or user_or_url.lower().startswith("https://"):
@@ -43,7 +46,7 @@ class Ghibli(commands.Cog):
                 else:
                     return await ctx.send("Invalid user or URL provided.")
         target = user or ctx.author
-        avatar_url = image_url or target.display_avatar.url
+        avatar_url = attachment_url or image_url or target.display_avatar.url
         await ctx.send("Generating your Ghibli-style image, please wait...")
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
