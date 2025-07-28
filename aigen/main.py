@@ -321,3 +321,78 @@ class AiGen(commands.Cog):
                     await ctx.send(f"\U0001f5bc Image Analysis:\n{text}")
                 except Exception:
                     await ctx.send("Received unexpected response:\n" + str(api_result))
+
+    @commands.command(name="img2img")
+    async def img2img(
+        self, ctx: commands.Context, image: str = None, *, prompt: str = None
+    ):
+        """
+        Image-to-Image generation via Pollinations AI (kontext model).
+        Usage: !img2img <url/attachment/usermention> "prompt"
+        """
+        image_url = None
+        if ctx.message.attachments:
+            image_url = ctx.message.attachments[0].url
+        elif ctx.message.mentions:
+            user = ctx.message.mentions[0]
+            image_url = (
+                user.display_avatar.url
+                if hasattr(user, "display_avatar")
+                else user.avatar_url
+            )
+        elif image and (image.startswith("http://") or image.startswith("https://")):
+            image_url = image.strip()
+        elif image and image.strip().isdigit():
+            user_id = int(image.strip())
+            user = ctx.guild.get_member(user_id) if ctx.guild else None
+            if not user:
+                try:
+                    user = await self.bot.fetch_user(user_id)
+                except Exception:
+                    user = None
+            if user:
+                image_url = (
+                    user.display_avatar.url
+                    if hasattr(user, "display_avatar")
+                    else user.avatar_url
+                )
+            else:
+                await ctx.send("Could not find user with that ID.")
+                return
+        else:
+            await ctx.send(
+                "Please provide an image attachment, a direct image URL, or mention a user."
+            )
+            return
+
+        if not prompt:
+            await ctx.send("Please provide a prompt after the image.")
+            return
+
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = pollinations_keys.get("token") if pollinations_keys else None
+        params = {
+            "width": 1024,
+            "height": 1024,
+            "seed": 43,
+            "model": "kontext",
+            "nologo": "True",
+            "private": "True",
+            "enhance": "True",
+            "image": image_url,
+        }
+
+        encoded_prompt = quote(prompt)
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers) as resp:
+                    if resp.status != 200:
+                        await ctx.send(f"Failed to fetch image: {resp.status}")
+                        return
+                    data = await resp.read()
+                    file = BytesIO(data)
+                    file.seek(0)
+                    await ctx.send(file=File(file, filename="img2img.png"))
