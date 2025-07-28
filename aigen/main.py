@@ -328,40 +328,64 @@ class AiGen(commands.Cog):
     ):
         """
         Image-to-Image generation via Pollinations AI (kontext model).
-        Usage: !img2img <url/attachment/usermention> "prompt"
+        Usage: !img2img <url/attachment/usermention/reply> "prompt"
         """
         image_url = None
-        if ctx.message.attachments:
-            image_url = ctx.message.attachments[0].url
-        elif ctx.message.mentions:
-            user = ctx.message.mentions[0]
-            image_url = (
-                user.display_avatar.url
-                if hasattr(user, "display_avatar")
-                else user.avatar_url
-            )
-        elif image and (image.startswith("http://") or image.startswith("https://")):
-            image_url = image.strip()
-        elif image and image.strip().isdigit():
-            user_id = int(image.strip())
-            user = ctx.guild.get_member(user_id) if ctx.guild else None
-            if not user:
-                try:
-                    user = await self.bot.fetch_user(user_id)
-                except Exception:
-                    user = None
-            if user:
+
+        # 1. Check if replying to a message with an image
+        if ctx.message.reference:
+            try:
+                replied = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                # Prefer attachments
+                if replied.attachments:
+                    image_url = replied.attachments[0].url
+                # Or image embeds
+                elif replied.embeds:
+                    for embed in replied.embeds:
+                        if embed.image and embed.image.url:
+                            image_url = embed.image.url
+                            break
+            except Exception:
+                pass
+
+        # 2. Fallback to normal logic if not found in reply
+        if not image_url:
+            if ctx.message.attachments:
+                image_url = ctx.message.attachments[0].url
+            elif ctx.message.mentions:
+                user = ctx.message.mentions[0]
                 image_url = (
                     user.display_avatar.url
                     if hasattr(user, "display_avatar")
                     else user.avatar_url
                 )
-            else:
-                await ctx.send("Could not find user with that ID.")
-                return
-        else:
+            elif image and (
+                image.startswith("http://") or image.startswith("https://")
+            ):
+                image_url = image.strip()
+            elif image and image.strip().isdigit():
+                user_id = int(image.strip())
+                user = ctx.guild.get_member(user_id) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(user_id)
+                    except Exception:
+                        user = None
+                if user:
+                    image_url = (
+                        user.display_avatar.url
+                        if hasattr(user, "display_avatar")
+                        else user.avatar_url
+                    )
+                else:
+                    await ctx.send("Could not find user with that ID.")
+                    return
+
+        if not image_url:
             await ctx.send(
-                "Please provide an image attachment, a direct image URL, or mention a user."
+                "Please provide an image attachment, a direct image URL, mention a user, or reply to a message with an image."
             )
             return
 
