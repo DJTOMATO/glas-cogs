@@ -1,0 +1,16 @@
+{
+  "author": ["Glas"],
+  "description": "A cog for generating images using various AI models.",
+  "disabled": false,
+  "end_user_data_statement": "",
+  "hidden": false,
+  "install_msg": "Thank you for installing! \n Set your API key with [p]set api pollinations token,<your_token>\nGet a Token at https://auth.pollinations.ai/",
+  "min_bot_version": "3.5.3",
+  "min_python_version": [3, 10, 0],
+  "permissions": ["administrator"],
+  "required_cogs": {},
+  "requirements": ["gradio_client", "requests", "aiohttp", "pillow", "numpy"],
+  "short": "AI Image Generation",
+  "tags": ["AI", "Image Generation", "Pollinations"],
+  "type": "COG"
+}
