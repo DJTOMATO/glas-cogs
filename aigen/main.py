@@ -237,3 +237,87 @@ class AiGen(commands.Cog):
         endpoint = "https://huggingface.co/spaces/neta-art/NetaLumina_T2I_Playground/"
         async with ctx.typing():
             await self._generate_hf_image(ctx, prompt, endpoint)
+
+    @commands.command()
+    async def analyze(self, ctx: commands.Context, *, arg: str = None):
+        """Analyze an image: provide an attachment, URL, or mention a user (for avatar)."""
+        image_url = None
+        if ctx.message.attachments:
+            image_url = ctx.message.attachments[0].url
+        elif arg and ctx.message.mentions:
+            user = ctx.message.mentions[0]
+            image_url = (
+                user.display_avatar.url
+                if hasattr(user, "display_avatar")
+                else user.avatar_url
+            )
+        elif arg and (arg.startswith("http://") or arg.startswith("https://")):
+            image_url = arg.strip()
+        elif arg and arg.strip().isdigit():
+            user_id = int(arg.strip())
+            user = ctx.guild.get_member(user_id) if ctx.guild else None
+            if not user:
+                try:
+                    user = await self.bot.fetch_user(user_id)
+                except Exception:
+                    user = None
+            if user:
+                image_url = (
+                    user.display_avatar.url
+                    if hasattr(user, "display_avatar")
+                    else user.avatar_url
+                )
+            else:
+                await ctx.send("Could not find user with that ID.")
+                return
+        else:
+            await ctx.send(
+                "Please provide an image attachment, a direct image URL, or mention a user."
+            )
+            return
+
+        question = "What's in this image?"
+        url = "https://text.pollinations.ai/openai"
+        headers = {"Content-Type": "application/json"}
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        poll_token = pollinations_keys.get("token") if pollinations_keys else None
+        if poll_token:
+            headers["Authorization"] = f"Bearer {poll_token}"
+        payload = {
+            "model": "openai",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": question},
+                        {"type": "image_url", "image_url": {"url": image_url}},
+                    ],
+                }
+            ],
+            "max_tokens": 500,
+        }
+
+        async with ctx.typing():
+            api_result = None
+            error = None
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=payload) as resp:
+                    if resp.status != 200:
+                        error = f"Error: {resp.status}"
+                    else:
+                        try:
+                            api_result = await resp.json()
+                        except Exception as e:
+                            error = f"Received unexpected response:\n{str(e)}"
+            try:
+                await ctx.send(image_url)
+            except Exception:
+                pass
+            if error:
+                await ctx.send(error)
+            elif api_result:
+                try:
+                    text = api_result["choices"][0]["message"]["content"]
+                    await ctx.send(f"\U0001f5bc Image Analysis:\n{text}")
+                except Exception:
+                    await ctx.send("Received unexpected response:\n" + str(api_result))
