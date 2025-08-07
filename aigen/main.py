@@ -56,7 +56,7 @@ class AiGen(commands.Cog):
         ref = await self.config.referrer()
         if ref == "none":
             await ctx.send(
-                "Pollinations referrer not set. Use `[p]aigen referrer <your_referrer>` (bot owner only).\n Obtain your referrer from https://auth.pollinations.ai/"
+                "Pollinations referrer not set. Use `[p]referrer <your_referrer>` (bot owner only).\n Obtain your referrer from https://auth.pollinations.ai/"
             )
         if not token:
             await ctx.send(
@@ -252,6 +252,21 @@ class AiGen(commands.Cog):
         image_url = None
         if ctx.message.attachments:
             image_url = ctx.message.attachments[0].url
+        elif ctx.message.reference:
+            # The command is replying to another message
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    image_url = referenced.attachments[0].url
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            image_url = embed.image.url
+                            break
+            except Exception:
+                pass
         elif arg and ctx.message.mentions:
             user = ctx.message.mentions[0]
             image_url = (
@@ -318,7 +333,7 @@ class AiGen(commands.Cog):
                         except Exception as e:
                             error = f"Received unexpected response:\n{str(e)}"
             try:
-                await ctx.send(image_url)
+                a = 1  # await ctx.send(image_url)
             except Exception:
                 pass
             if error:
@@ -504,7 +519,7 @@ class AiGen(commands.Cog):
         ref = await self.config.referrer()
         if ref == "none":
             await ctx.send(
-                "Pollinations referrer not set. Use `[p]aigen referrer <your_referrer>` (bot owner only).\nObtain your referrer from https://auth.pollinations.ai/"
+                "Pollinations referrer not set. Use `[p]referrer <your_referrer>` (bot owner only).\nObtain your referrer from https://auth.pollinations.ai/"
             )
             return
         # Base URL without parameters
