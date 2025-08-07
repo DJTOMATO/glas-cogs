@@ -8,8 +8,9 @@ import discord  # Added for File sending
 import aiohttp
 from discord import File
 from io import BytesIO
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 import urllib
+import random
 
 log = logging.getLogger("red.glas-cogs-aigen")
 
@@ -96,6 +97,13 @@ class AiGen(commands.Cog):
     async def pkontext(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (kontext model)."""
         await self._pollinations_generate(ctx, "kontext", prompt)
+
+    @commands.command()
+    @commands.is_owner()
+    async def referrer(self, ctx: commands.Context, *, new_referrer: str):
+        """Set the global referrer used in Pollinations API requests."""
+        await self.config.referrer.set(new_referrer)
+        await ctx.send(f"✅ Referrer has been set to: `{new_referrer}`")
 
     @commands.command(name="pturbo")
     async def pturbo(self, ctx: commands.Context, *, prompt: str):
@@ -411,108 +419,119 @@ class AiGen(commands.Cog):
                 "Please provide an image attachment, a direct image URL, mention a user, or reply to a message with an image."
             )
             return
-
+        # await ctx.send(f"📷 Using image URL: `{image_url}`")
         if not prompt:
             await ctx.send("Please provide a prompt after the image.")
             return
-
+        # await ctx.send(f"📝 Prompt: `{prompt}`")
         encoded_prompt = quote(prompt)
-        encoded_image_url = quote(image_url, safe=":/")
+        encoded_image_url = image_url  # Do not encode it here
 
         pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
         token = pollinations_keys.get("token") if pollinations_keys else None
-        params = {
+
+        encoded_prompt = quote(prompt)
+        encoded_image_url = quote(
+            image_url, safe=":/"
+        )  # keep URL safe chars like / and :
+        seed = random.randint(0, 1000000)
+        query_params = {
             "width": 512,
             "height": 512,
-            "seed": 43,
+            "seed": seed,
             "model": "kontext",
             "referrer": await self.config.referrer(),
             "nologo": "True",
             "private": "True",
-            "enhance": "True",
-            "image": encoded_image_url,
+            "enhance": "False",
+            "image": image_url,
         }
 
-        encoded_prompt = quote(prompt)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+        # Build full URL with query string
+        full_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?{urlencode(query_params)}"
+
+        # await ctx.send(f"🌐 Sending to Pollinations full URL:\n`{full_url}`")
+
         headers = {"Authorization": f"Bearer {token}"} if token else {}
-        # await ctx.send(f"Encoded prompt: {encoded_prompt}")
-        # await ctx.send(f"Full URL: {url}")
-        # await ctx.send(f"Query Params: {params}")
+
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params, headers=headers) as resp:
+                async with session.get(full_url, headers=headers) as resp:
+                    # await ctx.send(f"📡 Pollinations response status: `{resp.status}`")
+
                     if resp.status != 200:
-                        # error_text = await resp.text()
-                        # await ctx.send(
-                        #     f"❌ Failed to fetch image: {resp.status}\n```{error_text}```"
-                        # )
-                        await ctx.send(f"Failed to fetch image: {resp.status}")
+                        text = await resp.text()
+                        await ctx.send(
+                            f"❌ Failed to fetch image: {resp.status}\n```\n{text}\n```"
+                        )
                         return
+
                     data = await resp.read()
                     file = BytesIO(data)
                     file.seek(0)
-                    await ctx.send(file=File(file, filename="img2img.png"))
+                    await ctx.send(
+                        "✅ Here is your generated image:",
+                        file=File(file, filename="img2img.png"),
+                    )
 
     @commands.command()
-    async def geminisearch(self, ctx: commands.Context, *, query: str):
+    async def gemini(self, ctx: commands.Context, *, query: str):
         """
-        Query GeminiSearch model at Pollinations with a search prompt.
+        Query the Gemini model at Pollinations with a text prompt.
         """
-        base_url = "https://text.pollinations.ai"
+        ref = await self.config.referrer()
+        if ref == "none":
+            await ctx.send(
+                "Pollinations referrer not set. Use `[p]referrer <your_referrer>` (bot owner only).\nObtain your referrer from https://auth.pollinations.ai/"
+            )
+            return
+        # Base URL without parameters
+        base_url = "https://text.pollinations.ai/"
+
+        # URL-encode the user's query
+        encoded_query = urllib.parse.quote(query)
+
+        # Prepare headers and parameters
         headers = {}
+        params = {"model": "gemini", "referrer": await self.config.referrer()}
+
+        # Fetch API token and add it to headers if it exists
         pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
         poll_token = pollinations_keys.get("token") if pollinations_keys else None
+
         if poll_token:
             headers["Authorization"] = f"Bearer {poll_token}"
-
-        params = {
-            "model": "geminisearch",
-            "referrer": await self.config.referrer(),
-            "json": "false",
-            "query": query,  # Pass query here instead of encoding it in the URL path
-        }
+            # Add 'private=true' for authenticated requests
+            params["private"] = "true"
 
         async with ctx.typing():
             try:
                 async with aiohttp.ClientSession() as session:
+                    # Make the request using the base URL, encoded prompt, headers, and params
                     async with session.get(
-                        base_url, headers=headers, params=params
+                        f"{base_url}{encoded_query}", headers=headers, params=params
                     ) as resp:
-                        content_type = resp.headers.get("Content-Type", "")
                         body = await resp.text()
 
-                        if resp.status != 200:
-                            await ctx.send(
-                                f"❌ HTTP {resp.status} Error\n```{body[:1000]}```"
-                            )
-                            return
-
-                        if "application/json" in content_type:
-                            try:
-                                json_data = await resp.json()
-                                text = (
-                                    json_data.get("text")
-                                    or json_data.get("response")
-                                    or str(json_data)
-                                )
-                                await ctx.send(f"🔍 GeminiSearch result:\n{text}")
-                            except Exception as e:
-                                await ctx.send(
-                                    f"⚠️ Failed to parse JSON\n```{body[:1000]}```\nError: {e}"
-                                )
+                        # Check for a successful response (HTTP 200)
+                        if resp.status == 200:
+                            # Use a consistent and clean output format
+                            await ctx.send(f"{body[:2000]}")
                         else:
-                            # fallback to plain text
+                            # Handle HTTP errors with a clear message
                             await ctx.send(
-                                f"🔍 GeminiSearch result:\n```{body[:1500]}```"
+                                f"❌ **API Error:** Received HTTP {resp.status} status.\n"
+                                f"```\n{body[:1000]}\n```"
                             )
-
-            except Exception as e:
-                await ctx.send(f"❌ Request failed:\n`{e}`")
+            except aiohttp.ClientError as e:
+                # Handle client-side request errors
+                await ctx.send(
+                    f"❌ **Request Failed:** An error occurred while contacting the API.\n`{e}`"
+                )
 
     # This would be inside your Cog class
     @commands.command()
-    async def gemini(self, ctx: commands.Context, *, query: str):
+    async def geminisearch(self, ctx: commands.Context, *, query: str):
         """
         Query the GeminiSearch model at Pollinations with a search prompt.
         """
@@ -565,10 +584,3 @@ class AiGen(commands.Cog):
                 await ctx.send(
                     f"❌ **Request Failed:** An error occurred while contacting the API.\n`{e}`"
                 )
-
-    @commands.command()
-    @commands.is_owner()
-    async def referrer(self, ctx: commands.Context, *, new_referrer: str):
-        """Set the global referrer used in Pollinations API requests."""
-        await self.config.referrer.set(new_referrer)
-        await ctx.send(f"✅ Referrer has been set to: `{new_referrer}`")
