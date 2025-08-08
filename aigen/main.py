@@ -460,10 +460,8 @@ class AiGen(commands.Cog):
                     # await ctx.send(f"📡 Pollinations response status: `{resp.status}`")
 
                     if resp.status != 200:
-                        text = await resp.text()
-                        await ctx.send(
-                            f"❌ Failed to fetch image: {resp.status}\n```\n{text}\n```"
-                        )
+                        # text = await resp.text()
+                        await ctx.send(f"❌ Failed to fetch image: {resp.status}\n")
                         return
 
                     data = await resp.read()
@@ -584,3 +582,104 @@ class AiGen(commands.Cog):
                 await ctx.send(
                     f"❌ **Request Failed:** An error occurred while contacting the API.\n`{e}`"
                 )
+
+    @commands.command()
+    async def gpt5(self, ctx: commands.Context, *, query: str = None):
+        """
+        Query the GPT-5 Nano model at Pollinations with optional image input.
+        Usage:
+          [p]gpt5 <prompt> [attach image]
+        Examples:
+          [p]gpt5 Tell me a joke
+          [p]gpt5 Describe this in detail (attach an image)
+          [p]gpt5 (just attach an image)
+        """
+        MODEL_INFO = {
+            "name": "gpt-5-nano",
+            "description": "OpenAI GPT-5 Nano",
+            "provider": "azure",
+            "tier": "anonymous",
+            "community": False,
+            "aliases": ["gpt-5-nano"],
+            "input_modalities": ["text", "image"],
+            "output_modalities": ["text"],
+            "tools": True,
+            "vision": True,
+            "audio": False,
+        }
+
+        # Referrer check
+        referrer = await self.config.referrer()
+        if not referrer or referrer.lower() == "none":
+            await ctx.send(
+                "⚠️ Pollinations referrer not set.\n"
+                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
+                "Obtain your referrer from: <https://auth.pollinations.ai/>"
+            )
+            return
+
+        # Default prompt if only image is given
+        if not query and ctx.message.attachments:
+            query = "Describe this image"
+        if not query and not ctx.message.attachments:
+            await ctx.send("❌ Please provide a prompt or attach an image.")
+            return
+
+        # Collect image URLs
+        image_urls = []
+        if ctx.message.attachments and "image" in MODEL_INFO["input_modalities"]:
+            for attachment in ctx.message.attachments:
+                if attachment.content_type and attachment.content_type.startswith(
+                    "image/"
+                ):
+                    image_urls.append(attachment.url)
+
+        # Prepare headers & params
+        headers = {"Content-Type": "application/json"}
+        params = {"model": MODEL_INFO["name"], "referrer": referrer}
+
+        # Auth
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        poll_token = pollinations_keys.get("token") if pollinations_keys else None
+        if poll_token:
+            headers["Authorization"] = f"Bearer {poll_token}"
+            params["private"] = "true"
+
+        # Build messages array in OpenAI-style format
+        content_parts = [{"type": "text", "text": query}]
+        for url in image_urls:
+            content_parts.append({"type": "image_url", "image_url": {"url": url}})
+
+        payload = {"messages": [{"role": "user", "content": content_parts}]}
+
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        "https://text.pollinations.ai/",
+                        headers=headers,
+                        params=params,
+                        json=payload,
+                    ) as resp:
+                        text = await resp.text()
+
+                        if resp.status == 200:
+                            for i in range(0, len(text), 2000):
+                                embed = discord.Embed(
+                                    title="📡 GPT-5 Nano Response",
+                                    description=text[i : i + 2000],
+                                    color=discord.Color.blue(),
+                                )
+                                embed.set_footer(
+                                    text=f"Model: {MODEL_INFO['name']} | Provider: {MODEL_INFO['provider']} | Powered by pollinations.ai"
+                                )
+                                await ctx.send(embed=embed)
+                        else:
+                            await ctx.send(
+                                f"❌ **API Error:** HTTP {resp.status}\n"
+                                f"```\n{text[:1000]}\n```"
+                            )
+            except aiohttp.ClientError as e:
+                await ctx.send(f"❌ **Request Failed:** `{e}`")
+            except Exception as e:
+                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")

@@ -15,7 +15,7 @@ log = logging.getLogger("red.glas-cogs-Doro")
 class Doro(commands.Cog):
     """Description"""
 
-    __author__ = "[Glas](https://github.com/dj_tomato/glas-cogs)"
+    __author__ = "[Glas](https://github.com/djtomato/glas-cogs)"
     __version__ = "0.0.1"
 
     def __init__(self, bot: Red):
