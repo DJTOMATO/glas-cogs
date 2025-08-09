@@ -1222,7 +1222,7 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def pets(self, ctx, *, member: FuzzyMember = None):
+    async def nopets(self, ctx, *, member: FuzzyMember = None):
         """No Pets allowed..."""
         if not member:
             member = ctx.author
