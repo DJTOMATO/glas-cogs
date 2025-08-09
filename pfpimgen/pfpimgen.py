@@ -59,23 +59,6 @@ class PfpImgen(commands.Cog):
         )
         self.session = aiohttp.ClientSession()
 
-    async def send_with_retries(self, ctx, content=None, file=None, retries=3, delay=2):
-        for attempt in range(retries):
-            try:
-                if file:
-                    await ctx.send(file=file)
-                else:
-                    await ctx.send(content)
-                return  # If successful, exit the function
-            except discord.errors.DiscordServerError as e:
-                if attempt < retries - 1:
-                    await asyncio.sleep(delay)  # Wait before retrying
-                    delay *= 2  # Exponential backoff
-                else:
-                    await ctx.send(
-                        f"Failed to send message after {retries} attempts. Error: {e}"
-                    )
-
     async def cog_unload(self):
         await self.session.close()
 
@@ -137,23 +120,6 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["amazon"], cooldown_after_parsing=True)
-    async def primeday(self, ctx, *, member: FuzzyMember = None):
-        """it's primeday!..."""
-        if not member:
-            member = ctx.author
-        username = member.display_name
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_prime, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["youu"], cooldown_after_parsing=True)
     async def you(self, ctx, *, member: FuzzyMember = None):
         """Make a you avatar..."""
@@ -168,42 +134,6 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["mrbest"], cooldown_after_parsing=True)
-    async def fraud(self, ctx, *, member: FuzzyMember = None):
-        """He's a fraud..."""
-        if member:
-            async with ctx.typing():
-                # t = ctx.author
-                # avatar = await self.get_avatar(t)
-                # target = await self.get_avatar(member)
-                user = ctx.author
-                target = member
-
-                member_avatar = await self.get_avatar(ctx.author)
-                target_avatar = await self.get_avatar(target)
-
-                member_name = user.name
-                target_name = target.name
-                if member_name == target_name:
-                    return await ctx.send("You can't target yourself!")
-                task = functools.partial(
-                    self.gen_fraud,
-                    ctx,
-                    member_avatar,
-                    member_name,
-                    target_avatar,
-                    target_name,
-                )
-                image = await self.generate_image(task)
-            if isinstance(image, str):
-                await ctx.send(image)
-            else:
-                await ctx.send(file=image)
-        else:
-            await ctx.send("You must target someone!")
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -307,6 +237,7 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(aliases=["liar"], cooldown_after_parsing=True)
@@ -371,9 +302,9 @@ class PfpImgen(commands.Cog):
             task = functools.partial(self.gen_jail, ctx, avatar)
             image = await self.generate_image(task)
         if isinstance(image, str):
-            await self.send_with_retries(ctx, content=image)
+            await ctx.send(image)
         else:
-            await self.send_with_retries(ctx, file=image)
+            await ctx.send(file=image)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -584,36 +515,6 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def delulu(self, ctx, *, member: FuzzyMember = None):
-        """Assign someone a delulu license."""
-        member = member or ctx.author
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_delulu, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def cutie(self, ctx, *, member: FuzzyMember = None):
-        """Assign someone a cute license."""
-        member = member or ctx.author
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_cute, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
     async def shutup(
         self,
         ctx,
@@ -814,23 +715,6 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def ilove(self, ctx, *, member: FuzzyMember = None):
-        """I love..."""
-        if not member:
-            member = ctx.author
-        username = member.display_name
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_ilove, ctx, avatar, username)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
     async def didyou(self, ctx, *, member: FuzzyMember = None):
         """Did you know..."""
         if not member:
@@ -1001,57 +885,6 @@ class PfpImgen(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
-    async def secreto(self, ctx, *, member: FuzzyMember = None):
-        """El Secreto de la creatividad"""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_creatividad, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def thisuser(self, ctx, *, member: FuzzyMember = None):
-        """This user makes me happy"""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_happy, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def competition(self, ctx, *, member: FuzzyMember = None):
-        """When you're at a competition"""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_compet, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
     async def sus(self, ctx, *, member: FuzzyMember = None):
         """You're among us..."""
         if not member:
@@ -1083,22 +916,6 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def jack(self, ctx, *, member: FuzzyMember = None):
-        """Jack Sparrow's tresaure..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_jack, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -1116,7 +933,6 @@ class PfpImgen(commands.Cog):
             await ctx.send(image)
         else:
             await ctx.send(file=image)
-
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(cooldown_after_parsing=True)
@@ -1128,125 +944,6 @@ class PfpImgen(commands.Cog):
         async with ctx.typing():
             avatar = await self.get_avatar(member)
             task = functools.partial(self.gen_pretend, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def evidence(self, ctx, *, member: FuzzyMember = None):
-        """Here's the photographic evidence..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_evidence, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def twoguys(self, ctx, *, member: FuzzyMember = None):
-        """Two guys in a bus..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_twoguys, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def mulder(self, ctx, *, member: FuzzyMember = None):
-        """Shitposting License..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_mulder, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def dreaming(self, ctx, *, member: FuzzyMember = None):
-        """Dreaming of you..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_dreaming, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def dark(self, ctx, *, member: FuzzyMember = None):
-        """Horrfying secret..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_dark, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def pets(self, ctx, *, member: FuzzyMember = None):
-        """No Pets allowed..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_pets, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def feeling(self, ctx, *, member: FuzzyMember = None):
-        """Can I borrow a feeling..."""
-        if not member:
-            member = ctx.author
-        member_name = member.name
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_feeling, ctx, avatar, member_name)
             image = await self.generate_image(task)
         if isinstance(image, str):
             await ctx.send(image)
@@ -1372,58 +1069,6 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["olreliable"], cooldown_after_parsing=True)
-    async def reliable(self, ctx, *, member: FuzzyMember = None):
-        """Call the ol' reliable..."""
-        if not member:
-            member = ctx.author
-        username = member.display_name
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_reliable, ctx, avatar, username)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def mikuphone(self, ctx, *, member: FuzzyMember = None):
-        """Miku phone..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            task = functools.partial(self.gen_miku, ctx, avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
-    @commands.bot_has_permissions(attach_files=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
-    async def world(self, ctx, *, member: FuzzyMember = None):
-        """You're my world..."""
-        if not member:
-            member = ctx.author
-
-        async with ctx.typing():
-            avatar = await self.get_avatar(member)
-            author_avatar = await self.get_avatar(ctx.author)
-            task = functools.partial(self.gen_world, ctx, avatar, author_avatar)
-            image = await self.generate_image(task)
-        if isinstance(image, str):
-            await ctx.send(image)
-        else:
-            await ctx.send(file=image)
-
     # @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user)
     # @commands.command(cooldown_after_parsing=True)
@@ -1483,7 +1128,7 @@ class PfpImgen(commands.Cog):
         im.paste(nekomask, (0, 0), nekomask)
         nekomask.close()
         member_avatar.close()
-        # uppy test
+
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
@@ -1712,7 +1357,7 @@ class PfpImgen(commands.Cog):
         # text
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        text_width = canvas.textbbox((0, 0), text, font=font, stroke_width=2)[2]
+        text_width, text_height = canvas.textsize(text, font, stroke_width=2)
         canvas.text(
             ((im.width - text_width) / 2, 285),
             text,
@@ -1760,7 +1405,7 @@ class PfpImgen(commands.Cog):
         y = 70
         pages = list(pagify(text, [" "], page_length=30))[:4]
         for page in pages:
-            text_width = canvas.textbbox((0, 0), page, font=font, stroke_width=2)[2]
+            text_width, text_height = canvas.textsize(page, font, stroke_width=2)
             x = ((im.width + 40) - text_width) / 2
             canvas.text(
                 (x, y),
@@ -1809,60 +1454,6 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def gen_delulu(self, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 85)
-        # base canvas
-        im = Image.new("RGBA", (360, 300), None)
-        card = Image.open(
-            f"{bundled_data_path(self)}/horny/delulu.png", mode="r"
-        ).convert("RGBA")
-
-        # pasting the pfp
-        member_avatar = member_avatar.rotate(
-            angle=22, resample=Image.BILINEAR, expand=True
-        )
-        im.paste(member_avatar, (43, 117))
-        member_avatar.close()
-
-        # pasting the card
-        im.paste(card, (0, 0), card)
-        card.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "delulu.png")
-        fp.close()
-        return _file
-
-    def gen_cute(self, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 85)
-        # base canvas
-        im = Image.new("RGBA", (360, 300), None)
-        card = Image.open(
-            f"{bundled_data_path(self)}/horny/cute.png", mode="r"
-        ).convert("RGBA")
-
-        # pasting the pfp
-        member_avatar = member_avatar.rotate(
-            angle=22, resample=Image.BILINEAR, expand=True
-        )
-        im.paste(member_avatar, (43, 117))
-        member_avatar.close()
-
-        # pasting the card
-        im.paste(card, (0, 0), card)
-        card.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "cute.png")
-        fp.close()
-        return _file
-
     def gen_shut(self, ctx, member_avatar, text: str, *, biden_avatar=None):
         member_avatar = self.bytes_to_image(member_avatar, 135)
         # base canvas
@@ -1883,7 +1474,7 @@ class PfpImgen(commands.Cog):
         pages = list(pagify(text, [" "], page_length=40))[:2]
         y = 250 - (len(pages) * 25)
         for page in pages:
-            text_width = canvas.textbbox((0, 0), page, font=font, stroke_width=2)[2]
+            text_width, text_height = canvas.textsize(page, font, stroke_width=2)
             x = ((im.width - 300) - text_width) / 2
             canvas.text(
                 (x, y),
@@ -2394,7 +1985,7 @@ class PfpImgen(commands.Cog):
         text = username
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        bbox = canvas.textbbox((0, 0), text, font=font)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
         canvas.text(
             (250, 530),
             text,
@@ -2413,46 +2004,6 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "naruto.png")
-        fp.close()
-        return _file
-
-    def gen_ilove(self, ctx, member_avatar, username):
-        member_avatar = self.bytes_to_image(member_avatar, 455)
-
-        # base canvas
-        im = Image.new("RGBA", (853, 1045), None)
-        lovemask = Image.open(
-            f"{bundled_data_path(self)}/ilove/ilove_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (130, 510), member_avatar)
-        im.paste(lovemask, (0, 0), lovemask)
-        lovemask.close()
-        member_avatar.close()
-        text = username
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
-        canvas = ImageDraw.Draw(im)
-        bbox = canvas.textbbox((0, 0), text, font=font)
-        text = text[:8]
-
-        canvas.text(
-            (615, 267),
-            text,
-            font=font,
-            fill=(0, 0, 0),
-            align="left",
-            stroke_width=1,
-            stroke_fill=(0, 0, 0),
-        )
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        # test
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "ilove.png")
         fp.close()
         return _file
 
@@ -2694,174 +2245,6 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def gen_creatividad(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 350)
-
-        # Create a circular mask
-        mask = Image.new("L", member_avatar.size, 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, member_avatar.size[0], member_avatar.size[1]), fill=255)
-
-        # Apply the circular mask to the avatar
-        member_avatar.putalpha(mask)
-
-        im = Image.new("RGBA", (458, 612), None)
-        creatividad = Image.open(
-            f"{bundled_data_path(self)}/creatividad/creatividad.png", mode="r"
-        ).convert("RGBA")
-        muy = Image.open(
-            f"{bundled_data_path(self)}/creatividad/muy.png", mode="r"
-        ).convert("RGBA")
-        im.paste(creatividad, (0, 0), creatividad)
-        im.paste(member_avatar, (50, 100), member_avatar)
-        im.paste(muy, (0, 0), muy)
-        creatividad.close()
-        member_avatar.close()
-        muy.close()
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "creatividad.png")
-        fp.close()
-        return _file
-
-    def gen_happy(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 400)
-
-        # Create a circular mask
-        mask = Image.new("L", member_avatar.size, 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, member_avatar.size[0], member_avatar.size[1]), fill=255)
-
-        # Apply the circular mask to the avatar
-        member_avatar.putalpha(mask)
-
-        im = Image.new("RGBA", (640, 640), None)
-        x = random.randint(1, 3)
-        muy = Image.open(f"{bundled_data_path(self)}/happy/{x}.png", mode="r").convert(
-            "RGBA"
-        )
-
-        im.paste(member_avatar, (10, 140), member_avatar)
-        im.paste(muy, (0, 0), muy)
-        member_avatar.close()
-        muy.close()
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "happy.png")
-        fp.close()
-        return _file
-
-    def gen_fraud(self, ctx, member_avatar, member_name, target_avatar, target_name):
-        abc = member_avatar
-        dff = target_avatar
-        target_avatar2 = self.bytes_to_image(dff, 55)
-        member_avatar = self.bytes_to_image(abc, 110)
-        target_name = target_name.capitalize()
-        target_avatar = self.bytes_to_image(target_avatar, 520)
-        fraud = Image.open(
-            f"{bundled_data_path(self)}/fraud/fraud_template.png", mode="r"
-        ).convert("RGBA")
-        im = Image.new("RGBA", (1024, 693), None)
-        im.paste(target_avatar, (235, 10), target_avatar)
-        im.paste(member_avatar, (20, 590), member_avatar)
-        im.paste(target_avatar2, (110, 385), target_avatar2)
-        im.paste(fraud, (0, 0), fraud)
-
-        # Target
-        font_size = 43
-        max_width = 555
-
-        font = ImageFont.truetype(
-            f"{bundled_data_path(self)}/RobotoRegular.ttf", font_size
-        )
-        canvas = ImageDraw.Draw(im)
-        targetname_final = target_name + ", He's a Fraud"
-        while canvas.textlength(targetname_final, font=font) > max_width:
-            font_size -= 1
-            font = ImageFont.truetype(
-                f"{bundled_data_path(self)}/RobotoRegular.ttf", font_size
-            )
-
-        text_width, text_height = canvas.textbbox((0, 0), targetname_final, font=font)[
-            2:4
-        ]
-        canvas.text(
-            (401, 590),
-            targetname_final,
-            font=font,
-            fill=(0, 0, 0),
-            align="center",
-            stroke_width=0,
-            stroke_fill=(0, 0, 0),
-        )
-        # Channel name
-
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/RobotoRegular.ttf", 35)
-        canvas = ImageDraw.Draw(im)
-        bbox = canvas.textbbox((0, 0), member_name, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        canvas.text(
-            (152, 643),
-            member_name,
-            font=font,
-            fill=(87, 87, 87),
-            align="center",
-            stroke_width=0,
-            stroke_fill=(0, 0, 0),
-        )
-
-        fraud.close()
-        target_avatar.close()
-        target_avatar2.close()
-        member_avatar.close()
-        # Left side text
-        font_size = 20
-        max_width = 85
-
-        font = ImageFont.truetype(
-            f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
-        )
-        canvas = ImageDraw.Draw(im)
-
-        while canvas.textlength(target_name, font=font) > max_width:
-            font_size -= 1
-            font = ImageFont.truetype(
-                f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
-            )
-
-        text_width, text_height = canvas.textbbox((0, 0), target_name, font=font)[2:4]
-        text_width = int(text_width)
-        text_height = int(text_height)
-
-        text_img = Image.new("RGBA", (text_width, text_height), (255, 255, 255, 0))
-        text_canvas = ImageDraw.Draw(text_img)
-        text_canvas.text(
-            (0, 0),
-            target_name,
-            font=font,
-            fill=(0, 0, 0),
-            align="left",
-            stroke_width=0,
-            stroke_fill=(0, 0, 0),
-        )
-
-        rotated_text_img = text_img.rotate(5, resample=Image.BICUBIC, expand=1)
-        im.paste(rotated_text_img, (2, 328), rotated_text_img)
-
-        # End
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "fraud.png")
-        fp.close()
-        return _file
-
     def gen_didyou(self, ctx, member_avatar, username):
         member_avatar = self.bytes_to_image(member_avatar, 500)
 
@@ -2877,7 +2260,7 @@ class PfpImgen(commands.Cog):
         text = ctx.guild.name
         font = ImageFont.truetype(f"{bundled_data_path(self)}/arial.ttf", 30)
         canvas = ImageDraw.Draw(im)
-        bbox = canvas.textbbox((0, 0), text, font=font)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
         canvas.text(
             (670, 712),
             text,
@@ -2958,34 +2341,16 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def gen_ash(self, ctx, member_avatar):
+    def gen_sugoi(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 500)
 
         im = Image.new("RGBA", (500, 500), None)
         im.paste(member_avatar, (0, 0), member_avatar)
-        head = Image.open(f"{bundled_data_path(self)}/ash/ash.png", mode="r").convert(
-            "RGBA"
-        )
-        im.paste(head, (50, 30), head)
-        head.close()
-        member_avatar.close()
+        head = Image.open(
+            f"{bundled_data_path(self)}/ash/ash.png", mode="r"
+        ).convert("RGBA")
 
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "ash.png")
-        fp.close()
-        return _file
 
-    def gen_jack(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
-
-        im = Image.new("RGBA", (337, 746), None)
-        im.paste(member_avatar, (30, 258), member_avatar)
-        head = Image.open(f"{bundled_data_path(self)}/jack/jack.png", mode="r").convert(
-            "RGBA"
-        )
         im.paste(head, (0, 0), head)
         head.close()
         member_avatar.close()
@@ -2994,7 +2359,7 @@ class PfpImgen(commands.Cog):
         im.save(fp, "PNG")
         fp.seek(0)
         im.close()
-        _file = discord.File(fp, "jack.png")
+        _file = discord.File(fp, "ash.png")
         fp.close()
         return _file
 
@@ -3075,12 +2440,12 @@ class PfpImgen(commands.Cog):
         _file = discord.File(fp, "bau.png")
         fp.close()
         return _file
-
+    
     def gen_better(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 340)
 
         member_avatar = member_avatar.rotate(15, Image.NEAREST, expand=1)
-
+        
         im = Image.new("RGBA", (465, 500), None)
         better_mask = Image.open(
             f"{bundled_data_path(self)}/better/better_mask.png", mode="r"
@@ -3088,7 +2453,7 @@ class PfpImgen(commands.Cog):
 
         im.paste(member_avatar, (30, 40), member_avatar)
         im.paste(better_mask, (0, 0), better_mask)
-
+        
         better_mask.close()
         member_avatar.close()
         # make im transparent by making white areas transparent
@@ -3104,7 +2469,7 @@ class PfpImgen(commands.Cog):
 
         im.putdata(new_data)
 
-        fp = BytesIO()
+        fp = BytesIO() 
         im.save(fp, "PNG")
         fp.seek(0)
         im.close()
@@ -3112,12 +2477,15 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
+
+
+
     def gen_mygf(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 306)
 
         # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
         # base canvas
-        im = Image.new("RGBA", (672, 568), None)
+        im = Image.new("RGBA", (672, 658), None)
         mygfmask = Image.open(
             f"{bundled_data_path(self)}/mygf/mygf_mask.png", mode="r"
         ).convert("RGBA")
@@ -3135,37 +2503,6 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "mygf.png")
-        fp.close()
-        return _file
-
-    def gen_compet(self, ctx, member_avatar):
-        member_avatar1 = self.bytes_to_image(member_avatar, 60)
-        member_avatar2 = self.bytes_to_image(member_avatar, 60)
-        member_avatar3 = self.bytes_to_image(member_avatar, 580)
-
-        im = Image.new("RGBA", (575, 722), None)
-        mycompmask = Image.open(
-            f"{bundled_data_path(self)}/competition/competition_mask.png", mode="r"
-        ).convert("RGBA")
-
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        im.paste(mycompmask, (0, 0), mycompmask)
-        mycompmask.close()
-
-        im.paste(member_avatar1, (342, 38), member_avatar1)
-        member_avatar.close()
-
-        im.paste(member_avatar2, (480, 84), member_avatar2)
-        member_avatar2.close()
-
-        im.paste(member_avatar3, (0, 160), member_avatar3)
-        member_avatar3.close()
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "whenyoure.png")
         fp.close()
         return _file
 
@@ -3229,7 +2566,7 @@ class PfpImgen(commands.Cog):
             f"{bundled_data_path(self)}/Magistral-Cond-W08-Bold.ttf", 60
         )
         canvas = ImageDraw.Draw(im)
-        bbox = canvas.textbbox((0, 0), text, font=font)
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
         canvas.text(
             (330, 653),
             text,
@@ -3240,54 +2577,6 @@ class PfpImgen(commands.Cog):
             stroke_fill=(255, 29, 80),
         )
 
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "ameto.png")
-        fp.close()
-        return _file
-
-    def gen_reliable(self, ctx, member_avatar, username):
-        member_avatar = self.bytes_to_image(member_avatar, 50)
-
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
-        im = Image.new("RGBA", (384, 578), None)
-        reliablemask = Image.open(
-            f"{bundled_data_path(self)}/reliable/reliable_mask.png", mode="r"
-        ).convert("RGBA")
-        # member_avatar.rotate(-25, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        im.paste(reliablemask, (0, 0), reliablemask)
-        im.paste(member_avatar, (180, 395), member_avatar)
-        reliablemask.close()
-        member_avatar.close()
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-
-        # TEST START
-        # Load font
-        font_path = f"{bundled_data_path(self)}/krab.ttf"
-        font_size = 50
-        font = ImageFont.truetype(font_path, font_size)
-
-        # Create a new image for the rotated text
-        text_width, text_height = font.getsize(username)
-        rotated_text_img = Image.new("RGBA", (text_width, text_height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(rotated_text_img)
-        username = username[:6] if len(username) > 6 else username
-        # Draw the text on the rotated text image
-        draw.text(
-            (0, 0), username, font=font, fill=(0, 0, 0), align="left", stroke_width=0
-        )
-
-        # Rotate the text image by 20 degrees
-        rotated_text_img = rotated_text_img.rotate(-24, expand=True)
-
-        # Paste the rotated text onto the original image
-        im.paste(rotated_text_img, (105, 415), rotated_text_img)
-
-        # TEST END
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
@@ -3317,26 +2606,6 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
-    def gen_prime(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 300)
-
-        im = Image.new("RGBA", (600, 314), None)
-        primemask = Image.open(
-            f"{bundled_data_path(self)}/prime/prime_mask.png", mode="r"
-        ).convert("RGBA")
-        im.paste(member_avatar, (228, 50), member_avatar)
-        im.paste(primemask, (0, 0), primemask)
-        member_avatar.close()
-        primemask.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "discord.png")
-        fp.close()
-        return _file
-
     def gen_kowone(self, ctx, member_avatar, username):
         member_avatar = self.bytes_to_image(member_avatar, 260)
 
@@ -3354,7 +2623,7 @@ class PfpImgen(commands.Cog):
         text = text.lower()
         font = ImageFont.truetype(f"{bundled_data_path(self)}/Calibri.ttf", 25)
         canvas = ImageDraw.Draw(im)
-        text_width = canvas.textbbox((0, 0), text, font=font, stroke_width=1)[2]
+        text_width, text_height = canvas.textsize(text, font, stroke_width=1)
         canvas.text(
             ((im.width - text_width) / 2, 223),
             text,
@@ -3422,261 +2691,5 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "pretend.png")
-        fp.close()
-        return _file
-
-    def gen_evidence(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 724)
-
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
-        im = Image.new("RGBA", (1436, 808), None)
-        evi_mask = Image.open(
-            f"{bundled_data_path(self)}/evidence/evidence_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (350, 60), member_avatar)
-
-        im.paste(evi_mask, (0, 0), evi_mask)
-
-        evi_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "pretend.png")
-        fp.close()
-        return _file
-
-    def gen_feeling(self, ctx, member_avatar, member_name):
-        member_avatar = self.bytes_to_image(member_avatar, 530)
-
-        member_avatar = member_avatar.rotate(390, Image.NEAREST, expand=1)
-        # base canvas
-        im = Image.new("RGBA", (1280, 720), None)
-        evi_mask = Image.open(
-            f"{bundled_data_path(self)}/feeling/feeling_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (150, -20), member_avatar)
-
-        im.paste(evi_mask, (0, 0), evi_mask)
-
-        evi_mask.close()
-        # print(member_name)
-        member_avatar.close()
-        # texto
-        # Left side text
-        font_size = 90
-        max_width = 290
-
-        font = ImageFont.truetype(
-            f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
-        )
-        canvas = ImageDraw.Draw(im)
-
-        while canvas.textlength(member_name, font=font) > max_width:
-            font_size -= 1
-            font = ImageFont.truetype(
-                f"{bundled_data_path(self)}/Roboto-Black.ttf", font_size
-            )
-
-        text_width, text_height = canvas.textbbox((0, 0), member_name, font=font)[2:4]
-        text_width = int(text_width)
-        text_height = int(text_height)
-
-        text_img = Image.new("RGBA", (text_width, text_height), (255, 255, 255, 0))
-        text_canvas = ImageDraw.Draw(text_img)
-        text_canvas.text(
-            (0, 0),
-            member_name,
-            font=font,
-            fill=(0, 0, 0),
-            align="left",
-            stroke_width=0,
-            stroke_fill=(0, 0, 0),
-        )
-
-        rotated_text_img = text_img.rotate(29, resample=Image.BICUBIC, expand=1)
-        im.paste(rotated_text_img, (180, 50), rotated_text_img)
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "feeling.png")
-        fp.close()
-        return _file
-
-    def gen_twoguys(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 270)
-
-        im = Image.new("RGBA", (675, 897), None)
-        evi_mask = Image.open(
-            f"{bundled_data_path(self)}/twoguys/twoguys_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (70, 700), member_avatar)
-
-        im.paste(evi_mask, (0, 0), evi_mask)
-
-        evi_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "twoguys.png")
-        fp.close()
-        return _file
-
-    def gen_mulder(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 170)
-
-        im = Image.new("RGBA", (600, 600), None)
-        evi_mask = Image.open(
-            f"{bundled_data_path(self)}/mulder/mulder_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (90, 200), member_avatar)
-
-        im.paste(evi_mask, (0, 0), evi_mask)
-
-        evi_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "mulder.png")
-        fp.close()
-        return _file
-
-    def gen_dreaming(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 710)
-
-        im = Image.new("RGBA", (1200, 1200), None)
-        evi_mask = Image.open(
-            f"{bundled_data_path(self)}/dreaming/dreaming_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (480, -50), member_avatar)
-
-        im.paste(evi_mask, (0, 0), evi_mask)
-
-        evi_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "dreaming.png")
-        fp.close()
-        return _file
-
-    def gen_dark(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 335)
-
-        im = Image.new("RGBA", (1080, 802), None)
-        dark_mask = Image.open(
-            f"{bundled_data_path(self)}/dark/dark_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (158, 62), member_avatar)
-
-        im.paste(dark_mask, (0, 0), dark_mask)
-
-        dark_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "dark.png")
-        fp.close()
-        return _file
-
-    def gen_pets(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 190)
-
-        im = Image.new("RGBA", (681, 537), None)
-        pets_mask = Image.open(
-            f"{bundled_data_path(self)}/pets/pets_mask.png", mode="r"
-        ).convert("RGBA")
-        im.paste(pets_mask, (0, 0), pets_mask)
-        im.paste(member_avatar, (370, 232), member_avatar)
-
-        pets_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "pets.png")
-        fp.close()
-        return _file
-
-    def gen_miku(self, ctx, member_avatar):
-        member_avatar = self.bytes_to_image(member_avatar, 440)
-
-        im = Image.new("RGBA", (903, 498), None)
-        miku_mask = Image.open(
-            f"{bundled_data_path(self)}/miku/miku_mask.png", mode="r"
-        ).convert("RGBA")
-
-        im.paste(member_avatar, (60, 66), member_avatar)
-        im.paste(miku_mask, (0, 0), miku_mask)
-        miku_mask.close()
-
-        member_avatar.close()
-
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "miku.png")
-        fp.close()
-        return _file
-
-    def gen_world(self, ctx, member_avatar, author_avatar):
-        self_avatar = self.bytes_to_image(author_avatar, 165)
-        member_avatar = self.bytes_to_image(member_avatar, 165)
-
-        im = Image.new("RGBA", (750, 1000), None)
-        world_mask = Image.open(
-            f"{bundled_data_path(self)}/world/world_mask.png", mode="r"
-        ).convert("RGBA")
-        im.paste(world_mask, (0, 0), world_mask)
-        im.paste(self_avatar, (95, 80), self_avatar)
-        im.paste(member_avatar, (480, 60), member_avatar)
-
-        im.paste(self_avatar, (89, 410), self_avatar)
-        im.paste(member_avatar, (480, 410), member_avatar)
-
-        im.paste(self_avatar, (95, 720), self_avatar)
-        im.paste(member_avatar, (485, 720), member_avatar)
-
-        world_mask.close()
-
-        member_avatar.close()
-        self_avatar.close()
-        fp = BytesIO()
-        im.save(fp, "PNG")
-        fp.seek(0)
-        im.close()
-        _file = discord.File(fp, "world.png")
         fp.close()
         return _file
