@@ -3312,44 +3312,39 @@ class PfpImgen(commands.Cog):
 
     def gen_reliable(self, ctx, member_avatar, username):
         member_avatar = self.bytes_to_image(member_avatar, 50)
-
-        # member_avatar = member_avatar.rotate(330, Image.NEAREST, expand=1)
-        # base canvas
         im = Image.new("RGBA", (384, 578), None)
         reliablemask = Image.open(
             f"{bundled_data_path(self)}/reliable/reliable_mask.png", mode="r"
         ).convert("RGBA")
-        # member_avatar.rotate(-25, resample=0, expand=0, center=None, translate=None, fillcolor=None)
         im.paste(reliablemask, (0, 0), reliablemask)
         im.paste(member_avatar, (180, 395), member_avatar)
         reliablemask.close()
         member_avatar.close()
-        # member_avatar.rotate(90, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-        # im.rotate(120, resample=0, expand=0, center=None, translate=None, fillcolor=None)
-
-        # TEST START
-        # Load font
         font_path = f"{bundled_data_path(self)}/krab.ttf"
         font_size = 50
         font = ImageFont.truetype(font_path, font_size)
 
-        # Create a new image for the rotated text
-        text_width, text_height = font.getsize(username)
-        rotated_text_img = Image.new("RGBA", (text_width, text_height), (0, 0, 0, 0))
+        bbox = ImageDraw.Draw(Image.new("RGB", (1, 1))).textbbox(
+            (0, 0), username, font=font
+        )
+        text_width, text_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+        padding = 10
+        rotated_text_img = Image.new(
+            "RGBA", (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0)
+        )
         draw = ImageDraw.Draw(rotated_text_img)
         username = username[:6] if len(username) > 6 else username
-        # Draw the text on the rotated text image
         draw.text(
-            (0, 0), username, font=font, fill=(0, 0, 0), align="left", stroke_width=0
+            (padding - bbox[0], padding - bbox[1]),
+            username,
+            font=font,
+            fill=(0, 0, 0),
+            align="left",
+            stroke_width=0,
         )
-
-        # Rotate the text image by 20 degrees
         rotated_text_img = rotated_text_img.rotate(-24, expand=True)
-
-        # Paste the rotated text onto the original image
-        im.paste(rotated_text_img, (105, 415), rotated_text_img)
-
-        # TEST END
+        im.paste(rotated_text_img, (90, 410), rotated_text_img)
         fp = BytesIO()
         im.save(fp, "PNG")
         fp.seek(0)
