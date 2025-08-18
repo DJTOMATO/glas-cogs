@@ -1459,6 +1459,23 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def computer(self, ctx, *, member: FuzzyMember = None):
+        """pc..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_computer, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     # @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user)
     # @commands.command(cooldown_after_parsing=True)
@@ -3817,5 +3834,30 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "MLB.png")
+        fp.close()
+        return _file
+
+    def gen_computer(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+
+        member_avatar = member_avatar.rotate(5, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (960, 540), None)
+        computer = Image.open(
+            f"{bundled_data_path(self)}/computer/computer_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (240, 60), member_avatar)
+
+        im.paste(computer, (0, 0), computer)
+
+        computer.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "computer.png")
         fp.close()
         return _file
