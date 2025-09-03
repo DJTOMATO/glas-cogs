@@ -1476,6 +1476,23 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(cooldown_after_parsing=True)
+    async def aid(self, ctx, *, member: FuzzyMember = None):
+        """AID..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_aid, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     # @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user)
     # @commands.command(cooldown_after_parsing=True)
@@ -3859,5 +3876,30 @@ class PfpImgen(commands.Cog):
         fp.seek(0)
         im.close()
         _file = discord.File(fp, "computer.png")
+        fp.close()
+        return _file
+
+    def gen_aid(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 290)
+
+        member_avatar = member_avatar.rotate(15, Image.NEAREST, expand=1)
+        # base canvas
+        im = Image.new("RGBA", (467, 600), None)
+        aid = Image.open(
+            f"{bundled_data_path(self)}/aid/aid_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (80, 270), member_avatar)
+
+        im.paste(aid, (0, 0), aid)
+
+        aid.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "aid.png")
         fp.close()
         return _file
