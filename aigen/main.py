@@ -948,6 +948,121 @@ class AiGen(commands.Cog):
             except Exception as e:
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
+    @commands.command(name="nanobanana")
+    async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
+        """
+        Image Generation via Pollinations AI (nanobanana model).
+        Usage:
+          [p]nanobanana <prompt> [attach image or provide image URL]
+          [p]nanobanana <prompt> (text-only prompt is supported)
+        """
+        import re
+
+        image_url = None
+        # 1. Attachment
+        if ctx.message.attachments:
+            image_url = ctx.message.attachments[0].url
+        # 2. Reply
+        elif ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    image_url = referenced.attachments[0].url
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            image_url = embed.image.url
+                            break
+            except Exception:
+                pass
+        # 3. Mention
+        elif prompt and ctx.message.mentions:
+            user = ctx.message.mentions[0]
+            # Force static PNG for avatars (avoids GIFs)
+            if hasattr(user, "display_avatar"):
+                image_url = user.display_avatar.replace(format="png").url
+            else:
+                image_url = user.avatar_url
+            prompt = prompt.replace(user.mention, "").strip()
+        # 4. Direct URL in prompt
+        elif prompt:
+            url_match = re.search(r"(https?://\S+)", prompt)
+            if url_match:
+                image_url = url_match.group(1)
+                prompt = prompt.replace(image_url, "").strip()
+        # 5. Numeric ID
+        if not image_url and prompt:
+            id_match = re.search(r"\b\d{17,20}\b", prompt)
+            if id_match:
+                user_id = int(id_match.group(0))
+                user = ctx.guild.get_member(user_id) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(user_id)
+                    except Exception:
+                        user = None
+                if user:
+                    # Force static PNG for avatars (avoids GIFs)
+                    if hasattr(user, "display_avatar"):
+                        image_url = user.display_avatar.replace(format="png").url
+                    else:
+                        image_url = user.avatar_url
+                    prompt = prompt.replace(str(user_id), "").strip()
+
+        # If image_url is a Discord avatar GIF, convert to PNG
+        if (
+            image_url
+            and image_url.endswith(".gif")
+            and "discordapp.com/avatars/" in image_url
+        ):
+            image_url = image_url.replace(".gif", ".png")
+
+        if not prompt:
+            await ctx.send("❌ Please provide a prompt.")
+            return
+
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = pollinations_keys.get("token") if pollinations_keys else None
+        seed = random.randint(0, 1000000)
+        params = {
+            "model": "nanobanana",
+            "seed": seed,
+            "width": 1024,
+            "height": 1024,
+            "nologo": "True",
+            "private": "True",
+            "enhance": "True",
+        }
+        if image_url:
+            params["image"] = image_url
+
+        encoded_prompt = quote(prompt)
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers) as resp:
+                    if resp.status != 200:
+                        await ctx.send(
+                            f"Failed to fetch image: {resp.status} \n{await resp.text()}"
+                        )
+                        return
+                    data = await resp.read()
+                    file = BytesIO(data)
+                    file.seek(0)
+
+        embed = discord.Embed(title="🖼️ Nanobanana Image Generated")
+        embed.set_image(url="attachment://nanobanana.png")
+        embed.add_field(name="Prompt", value=f"```\n{prompt}\n```", inline=False)
+        if image_url:
+            embed.add_field(name="Image", value=f"[Source]({image_url})", inline=False)
+        embed.set_footer(text=f"Model: nanobanana • Powered by Pollinations.ai")
+
+        await ctx.send(file=File(file, filename="nanobanana.png"), embed=embed)
+
 
 class EditModal(ui.Modal):
     def __init__(
