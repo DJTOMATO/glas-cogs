@@ -953,71 +953,79 @@ class AiGen(commands.Cog):
         """
         Image Generation via Pollinations AI (nanobanana model).
         Usage:
-          [p]nanobanana <prompt> [attach image or provide image URL]
+          [p]nanobanana <prompt> [attach image(s), reply, mention, ID, or URL(s)]
           [p]nanobanana <prompt> (text-only prompt is supported)
+          Multiple images supported (comma-separated).
         """
         import re
 
-        image_url = None
-        # 1. Attachment
+        images = []
+
+        # 1. Attachments
         if ctx.message.attachments:
-            image_url = ctx.message.attachments[0].url
+            images.extend([a.url for a in ctx.message.attachments])
+
         # 2. Reply
-        elif ctx.message.reference:
+        if ctx.message.reference:
             try:
                 referenced = await ctx.channel.fetch_message(
                     ctx.message.reference.message_id
                 )
                 if referenced.attachments:
-                    image_url = referenced.attachments[0].url
+                    images.extend([a.url for a in referenced.attachments])
                 elif referenced.embeds:
                     for embed in referenced.embeds:
                         if embed.image and embed.image.url:
-                            image_url = embed.image.url
-                            break
+                            images.append(embed.image.url)
             except Exception:
                 pass
-        # 3. Mention
-        elif prompt and ctx.message.mentions:
-            user = ctx.message.mentions[0]
-            # Force static PNG for avatars (avoids GIFs)
-            if hasattr(user, "display_avatar"):
-                image_url = user.display_avatar.replace(format="png").url
-            else:
-                image_url = user.avatar_url
-            prompt = prompt.replace(user.mention, "").strip()
-        # 4. Direct URL in prompt
-        elif prompt:
-            url_match = re.search(r"(https?://\S+)", prompt)
-            if url_match:
-                image_url = url_match.group(1)
-                prompt = prompt.replace(image_url, "").strip()
-        # 5. Numeric ID
-        if not image_url and prompt:
-            id_match = re.search(r"\b\d{17,20}\b", prompt)
-            if id_match:
-                user_id = int(id_match.group(0))
-                user = ctx.guild.get_member(user_id) if ctx.guild else None
+
+        # 3. Mentions
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(user.display_avatar.replace(format="png").url)
+                else:
+                    images.append(user.avatar_url)
+                prompt = prompt.replace(user.mention, "").strip()
+
+        # 4. Direct URLs in prompt
+        if prompt:
+            url_matches = re.findall(r"(https?://\S+)", prompt)
+            for url in url_matches:
+                images.append(url)
+                prompt = prompt.replace(url, "").strip()
+
+        # 5. Numeric IDs in prompt
+        if prompt:
+            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
+            for mid in id_matches:
+                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
                 if not user:
                     try:
-                        user = await self.bot.fetch_user(user_id)
+                        user = await self.bot.fetch_user(int(mid))
                     except Exception:
                         user = None
                 if user:
-                    # Force static PNG for avatars (avoids GIFs)
                     if hasattr(user, "display_avatar"):
-                        image_url = user.display_avatar.replace(format="png").url
+                        images.append(user.display_avatar.replace(format="png").url)
                     else:
-                        image_url = user.avatar_url
-                    prompt = prompt.replace(str(user_id), "").strip()
+                        images.append(user.avatar_url)
+                    prompt = prompt.replace(mid, "").strip()
 
-        # If image_url is a Discord avatar GIF, convert to PNG
-        if (
-            image_url
-            and image_url.endswith(".gif")
-            and "discordapp.com/avatars/" in image_url
-        ):
-            image_url = image_url.replace(".gif", ".png")
+        # Convert Discord avatar GIFs to PNGs
+        images = [
+            (
+                img.replace(".gif", ".png")
+                if img.endswith(".gif") and "discordapp.com/avatars/" in img
+                else img
+            )
+            for img in images
+        ]
+
+        # Remove duplicates while preserving order
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
 
         if not prompt:
             await ctx.send("❌ Please provide a prompt.")
@@ -1035,8 +1043,8 @@ class AiGen(commands.Cog):
             "private": "True",
             "enhance": "True",
         }
-        if image_url:
-            params["image"] = image_url
+        if images:
+            params["image"] = ",".join(images)
 
         encoded_prompt = quote(prompt)
         url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
@@ -1057,8 +1065,14 @@ class AiGen(commands.Cog):
         embed = discord.Embed(title="🖼️ Nanobanana Image Generated")
         embed.set_image(url="attachment://nanobanana.png")
         embed.add_field(name="Prompt", value=f"```\n{prompt}\n```", inline=False)
-        if image_url:
-            embed.add_field(name="Image", value=f"[Source]({image_url})", inline=False)
+        if images:
+            embed.add_field(
+                name="Reference Images",
+                value="\n".join(
+                    [f"[Image {i+1}]({img})" for i, img in enumerate(images)]
+                ),
+                inline=False,
+            )
         embed.set_footer(text=f"Model: nanobanana • Powered by Pollinations.ai")
 
         await ctx.send(file=File(file, filename="nanobanana.png"), embed=embed)
