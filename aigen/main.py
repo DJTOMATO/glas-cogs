@@ -31,9 +31,26 @@ class AiGen(commands.Cog):
         self.log = logging.getLogger("glas.glas-cogs.aigen")
 
     def format_help_for_context(self, ctx: commands.Context):
-        helpcmd = super().format_help_for_context(ctx)
-        txt = "Version: {}\nAuthor: {}".format(self.__version__, self.__author__)
-        return f"{helpcmd}\n\n{txt}"
+        image_cmds = "🎨 Image Commands\n" + " ".join(
+            [
+                f"``{cmd}``"
+                for cmd in [
+                    "flux",
+                    "hidream",
+                    "img2img",
+                    "kontext",
+                    "lumina",
+                    "nanobanana",
+                    "seedream",
+                    "turbo",
+                ]
+            ]
+        )
+        text_cmds = "📜 Text Commands\n" + " ".join(
+            [f"``{cmd}``" for cmd in ["analyze", "evil", "geminisearch", "gpt5"]]
+        )
+
+        return f"Version: {self.__version__}\n\nAuthor: {self.__author__}\n\n{image_cmds}\n\n{text_cmds}"
 
     async def cog_load(self) -> None:
         asyncio.create_task(self.initialize())
@@ -50,9 +67,20 @@ class AiGen(commands.Cog):
         model: str,
         prompt: str,
         seed: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
         images: list[str] | None = None,
     ):
         start_time = discord.utils.utcnow()
+
+        if width and height:
+            try:
+                width = int(width)
+                height = int(height)
+            except ValueError:
+                # fallback if input is not a number
+                width = None
+                height = None
 
         if seed is None:
             seed = random.randint(0, 1000000)
@@ -105,13 +133,21 @@ class AiGen(commands.Cog):
             await send_func("Pollinations API token not set.")
             return
 
+        min_pixels = 921600
+        if width and height:
+            if width * height < min_pixels:
+                scale = (min_pixels / (width * height)) ** 0.5
+                width = int(width * scale)
+                height = int(height * scale)
+
         params = {
-            "width": 1024,
-            "height": 1024,
+            "width": width or 1024,
+            "height": height or 1024,
             "seed": seed,
             "model": model,
             "nologo": "True",
             "private": "True",
+            "quality": "high",
             "enhance": "True",
         }
 
@@ -126,9 +162,24 @@ class AiGen(commands.Cog):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params, headers=headers) as resp:
                     if resp.status != 200:
-                        await send_func(
-                            f"Failed to fetch image: {resp.status} \n{await resp.text()}"
+                        error = discord.Embed(
+                            title="⚠️ Oops! I couldn't generate your image",
+                            description=(
+                                "Something went wrong while talking to the image service.\n\n"
+                                "**Possible reasons:**\n"
+                                "• One of the image links might be invalid or expired.\n"
+                                "• The image might be private or not accessible.\n"
+                                "• The generation service might be having temporary issues.\n\n"
+                                "Please try again with different images or later."
+                            ),
+                            color=discord.Color.orange(),
                         )
+                        # error.add_field(
+                        #     name="Technical details",
+                        #     value=f"HTTP Status: `{resp.status}`\n```\n{url}\n```",
+                        #     inline=False,
+                        # )
+                        await send_func(embed=error)
                         return
                     data = await resp.read()
                     file = BytesIO(data)
@@ -138,7 +189,14 @@ class AiGen(commands.Cog):
         embed = discord.Embed(title="🖼️ Image Generated Successfully")
         embed.set_image(url="attachment://generated.png")
         for key, value in params.items():
-            if key.lower() not in ["private", "nologo", "referrer", "enhance", "image"]:
+            if key.lower() not in [
+                "private",
+                "nologo",
+                "referrer",
+                "enhance",
+                "image",
+                "quality",
+            ]:
                 embed.add_field(name=key, value=f"```\n{value}\n```", inline=True)
 
         embed.add_field(name="Time Taken", value=f"```{time_taken:.2f} seconds```")
@@ -172,12 +230,17 @@ class AiGen(commands.Cog):
                 model,
                 prompt,
                 seed=random.randint(0, 1000000),
+                width=width,
+                height=height,
                 images=images,
             )
 
         async def edit_callback(interaction: discord.Interaction):
             current_seed = seed
             current_prompt = prompt
+            current_width = width
+            current_height = height
+            current_images = images
             await interaction.response.send_modal(
                 EditModal(
                     cog=self,
@@ -185,6 +248,9 @@ class AiGen(commands.Cog):
                     model=model,
                     prompt=current_prompt,
                     seed=current_seed,
+                    width=current_width,
+                    height=current_height,
+                    images=current_images,
                 )
             )
 
@@ -207,8 +273,8 @@ class AiGen(commands.Cog):
         new_prompt = self.children[0].value
         await self._pollinations_generate(interaction, model, new_prompt)
 
-    @commands.command(name="pflux")
-    async def pflux(self, ctx: commands.Context, *, prompt: str):
+    @commands.command(name="flux")
+    async def flux(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (flux model)."""
         words = prompt.split()
         seed = None
@@ -218,13 +284,12 @@ class AiGen(commands.Cog):
             words = words[:-1]
             prompt = " ".join(words)
         else:
-
             seed = random.randint(0, 1000000)
 
         await self._pollinations_generate(ctx, "flux", prompt, seed)
 
-    @commands.command(name="pkontext")
-    async def pkontext(self, ctx: commands.Context, *, prompt: str):
+    @commands.command(name="kontext")
+    async def kontext(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (kontext model)."""
         words = prompt.split()
         seed = None
@@ -241,8 +306,8 @@ class AiGen(commands.Cog):
     @commands.command(name="seedream")
     async def seedream(self, ctx: commands.Context, *, prompt: str = None):
         """Image Generation via Pollinations AI (seedream model).
-        Can be used with text prompt only or with image attachments."""
-        import re
+        Can be used with text prompt only or with image attachments.
+        Image size can be changed via edit button, min size 1000x1000"""
 
         images = []
 
@@ -287,11 +352,17 @@ class AiGen(commands.Cog):
         images = [x for x in images if not (x in seen or seen.add(x))]
 
         await self._pollinations_generate(
-            ctx, "seedream", prompt or "", seed=seed, images=images if images else None
+            ctx,
+            "seedream",
+            prompt or "",
+            seed=seed,
+            images=images if images else None,
+            width=1700,
+            height=1200,
         )
 
-    @commands.command(name="pturbo")
-    async def pturbo(self, ctx: commands.Context, *, prompt: str):
+    @commands.command(name="turbo")
+    async def turbo(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (turbo model)."""
         words = prompt.split()
         seed = None
@@ -322,7 +393,6 @@ class AiGen(commands.Cog):
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
         def extract_hf_space(endpoint):
-            import re
 
             m = re.match(r"https?://huggingface.co/spaces/([^/]+)/([^/?#]+)", endpoint)
             if m:
@@ -442,12 +512,12 @@ class AiGen(commands.Cog):
                 ctx, prompt, endpoint, api_name_override="/generate_with_status"
             )
 
-    @commands.command()
-    async def flux(self, ctx: commands.Context, *, prompt: str):
-        """Image Generation using Fake-FLUX-Pro-Unlimited endpoint."""
-        endpoint = "https://huggingface.co/spaces/llamameta/Fake-FLUX-Pro-Unlimited/"
-        async with ctx.typing():
-            await self._generate_hf_image(ctx, prompt, endpoint, model="flux")
+    # @commands.command()
+    # async def flux(self, ctx: commands.Context, *, prompt: str):
+    #     """Image Generation using Fake-FLUX-Pro-Unlimited endpoint."""
+    #     endpoint = "https://huggingface.co/spaces/llamameta/Fake-FLUX-Pro-Unlimited/"
+    #     async with ctx.typing():
+    #         await self._generate_hf_image(ctx, prompt, endpoint, model="flux")
 
     @commands.command()
     async def lumina(self, ctx: commands.Context, *, prompt: str):
@@ -517,7 +587,7 @@ class AiGen(commands.Cog):
         if poll_token:
             headers["Authorization"] = f"Bearer {poll_token}"
         payload = {
-            "model": "openai",
+            "model": "openai-large",
             "messages": [
                 {
                     "role": "user",
@@ -568,8 +638,6 @@ class AiGen(commands.Cog):
         !img2img enhance this 123456789012345678
         !img2img (reply to an image) stylize this
         """
-        import re
-
         images = []
         prompt = text or ""
 
@@ -658,6 +726,7 @@ class AiGen(commands.Cog):
             "referrer": await self.config.referrer(),
             "nologo": "True",
             "private": "True",
+            "nofeed": "True",
             "enhance": "True",
         }
 
@@ -705,11 +774,11 @@ class AiGen(commands.Cog):
                                 ),
                                 color=discord.Color.orange(),
                             )
-                            error.add_field(
-                                name="Technical details",
-                                value=f"HTTP Status: `{resp.status}`\n```\n{full_url}\n```",
-                                inline=False,
-                            )
+                            # error.add_field(
+                            #     name="Technical details",
+                            #     value=f"HTTP Status: `{resp.status}`\n```\n{full_url}\n```",
+                            #     inline=False,
+                            # )
                             await send_func(embed=error)
                             return
                         # else: retry
@@ -717,7 +786,14 @@ class AiGen(commands.Cog):
         embed = discord.Embed(title="🖼️ Image Generated Successfully")
         embed.set_image(url="attachment://img2img.png")
         for key, value in query_params.items():
-            if key.lower() not in ["private", "nologo", "referrer", "enhance"]:
+            if key.lower() not in [
+                "private",
+                "nologo",
+                "referrer",
+                "enhance",
+                "nofeed",
+                "quality",
+            ]:
                 embed.add_field(name=key, value=f"```\n{value}\n```", inline=True)
 
         if len(prompt) > 1024:
@@ -774,9 +850,9 @@ class AiGen(commands.Cog):
         await send_func(file=File(file, filename="img2img.png"), embed=embed, view=view)
 
     @commands.command()
-    async def elixposearch(self, ctx: commands.Context, *, query: str):
+    async def evil(self, ctx: commands.Context, *, query: str):
         """
-        Query the Elixposearch model at Pollinations with a text prompt.
+        Query the evil model at Pollinations with a text prompt.
         """
         ref = await self.config.referrer()
         if ref == "none":
@@ -789,7 +865,7 @@ class AiGen(commands.Cog):
         encoded_query = urllib.parse.quote(query)
 
         headers = {}
-        params = {"model": "elixposearch", "referrer": await self.config.referrer()}
+        params = {"model": "evil", "referrer": await self.config.referrer()}
 
         pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
         poll_token = pollinations_keys.get("token") if pollinations_keys else None
@@ -833,8 +909,21 @@ class AiGen(commands.Cog):
         base_url = "https://text.pollinations.ai/"
         encoded_query = urllib.parse.quote(query)
         headers = {}
-        params = {"model": "geminisearch", "referrer": await self.config.referrer()}
+        params = {"model": "gemini-search", "referrer": await self.config.referrer()}
 
+        MODEL_INFO = {
+            "name": "gemini-search",
+            "description": "Gemini Search",
+            "provider": "azure",
+            "tier": "anonymous",
+            "community": False,
+            "aliases": ["gemini-search"],
+            "input_modalities": ["text", "image"],
+            "output_modalities": ["text"],
+            "tools": True,
+            "vision": True,
+            "audio": False,
+        }
         pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
         poll_token = pollinations_keys.get("token") if pollinations_keys else None
 
@@ -851,8 +940,16 @@ class AiGen(commands.Cog):
                     ) as resp:
                         body = await resp.text()
                         if resp.status == 200:
-
-                            await ctx.send(f"{body[:2000]}")
+                            for i in range(0, len(body), 2000):
+                                embed = discord.Embed(
+                                    title="📡 Gemini Search Response",
+                                    description=body[i : i + 2000],
+                                    color=discord.Color.blue(),
+                                )
+                                embed.set_footer(
+                                    text=f"Model: {MODEL_INFO['name']} | Provider: {MODEL_INFO['provider']} | Powered by pollinations.ai"
+                                )
+                                await ctx.send(embed=embed)
                         else:
 
                             await ctx.send(
@@ -868,7 +965,7 @@ class AiGen(commands.Cog):
     @commands.command()
     async def gpt5(self, ctx: commands.Context, *, query: str = None):
         """
-        Query the GPT-5 Nano model at Pollinations with optional image input.
+        Query the GPT-5 chat model at Pollinations with optional image input.
         Usage:
           [p]gpt5 <prompt> [attach image]
         Examples:
@@ -877,12 +974,12 @@ class AiGen(commands.Cog):
           [p]gpt5 (just attach an image)
         """
         MODEL_INFO = {
-            "name": "gpt-5-nano",
-            "description": "OpenAI GPT-5 Nano",
+            "name": "gpt-5-chat",
+            "description": "OpenAI GPT-5 chat",
             "provider": "azure",
             "tier": "anonymous",
             "community": False,
-            "aliases": ["gpt-5-nano"],
+            "aliases": ["gpt-5-chat"],
             "input_modalities": ["text", "image"],
             "output_modalities": ["text"],
             "tools": True,
@@ -964,6 +1061,7 @@ class AiGen(commands.Cog):
     async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
         """
         Image Generation via Pollinations AI (nanobanana model).
+        Max size is 1024x1024
         Usage:
           [p]nanobanana <prompt> [attach image(s), reply, mention, ID, or URL(s)]
           [p]nanobanana <prompt> (text-only prompt is supported)
@@ -985,7 +1083,6 @@ class AiGen(commands.Cog):
                             images.append(embed.image.url)
             except Exception:
                 pass
-
         if prompt and ctx.message.mentions:
             for user in ctx.message.mentions:
                 if hasattr(user, "display_avatar"):
@@ -993,13 +1090,11 @@ class AiGen(commands.Cog):
                 else:
                     images.append(user.avatar_url)
                 prompt = prompt.replace(user.mention, "").strip()
-
         if prompt:
             url_matches = re.findall(r"(https?://\S+)", prompt)
             for url in url_matches:
                 images.append(url)
                 prompt = prompt.replace(url, "").strip()
-
         if prompt:
             id_matches = re.findall(r"\b\d{17,20}\b", prompt)
             for mid in id_matches:
@@ -1015,7 +1110,6 @@ class AiGen(commands.Cog):
                     else:
                         images.append(user.avatar_url)
                     prompt = prompt.replace(mid, "").strip()
-
         images = [
             (
                 img.replace(".gif", ".png")
@@ -1024,114 +1118,28 @@ class AiGen(commands.Cog):
             )
             for img in images
         ]
-
         seen = set()
         images = [x for x in images if not (x in seen or seen.add(x))]
 
         if not prompt:
             await ctx.send("❌ Please provide a prompt.")
             return
-
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token") if pollinations_keys else None
+        width = 1024
+        height = 1024
         seed = random.randint(0, 1000000)
-        params = {
-            "model": "nanobanana",
-            "seed": seed,
-            "width": 1024,
-            "height": 1024,
-            "nologo": "True",
-            "private": "True",
-            "enhance": "True",
-        }
-        if images:
-            params["image"] = ",".join(images)
-
-        encoded_prompt = quote(prompt)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-        headers = {"Authorization": f"Bearer {token}"} if token else {}
-
-        async with ctx.typing():
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params, headers=headers) as resp:
-                    if resp.status != 200:
-                        await ctx.send(
-                            f"Failed to fetch image: {resp.status} \n{await resp.text()}"
-                        )
-                        return
-                    data = await resp.read()
-                    file = BytesIO(data)
-                    file.seek(0)
-
-        embed = discord.Embed(title="🖼️ Nanobanana Image Generated")
-        embed.set_image(url="attachment://nanobanana.png")
-        embed.add_field(name="Prompt", value=f"```\n{prompt}\n```", inline=False)
-        if images:
-            embed.add_field(
-                name="Reference Images",
-                value="\n".join(
-                    [f"[Image {i+1}]({img})" for i, img in enumerate(images)]
-                ),
-                inline=False,
-            )
-
-        for key, value in params.items():
-            if key.lower() not in ["private", "nologo", "referrer", "enhance", "image"]:
-                embed.add_field(name=key, value=f"```\n{value}\n```", inline=True)
-
-        if len(prompt) > 1024:
-            prompt = prompt[:1024]
-
-        author = ctx.author if hasattr(ctx, "author") else ctx.user
-        embed.set_footer(
-            text=f"Generated by {author} • {datetime.datetime.utcnow().strftime('%m/%d/%Y %I:%M %p')} • Powered by Pollinations.ai"
-        )
-        view = discord.ui.View()
-        regenerate_button = discord.ui.Button(
-            label="Regenerate", style=discord.ButtonStyle.green
-        )
-        edit_button = discord.ui.Button(label="Edit", style=discord.ButtonStyle.blurple)
-        delete_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
-
-        async def regenerate_callback(interaction: discord.Interaction):
-            await interaction.response.defer()
-            await self._pollinations_generate(
-                interaction,
-                "nanobanana",
-                prompt,
-                seed=random.randint(0, 1000000),
-                images=images if images else None,
-            )
-
-        async def edit_callback(interaction: discord.Interaction):
-            await interaction.response.send_modal(
-                EditModal(
-                    cog=self,
-                    interaction=interaction,
-                    model="nanobanana",
-                    prompt=prompt,
-                    seed=seed,
-                    image_url=",".join(images) if images else None,
-                )
-            )
-
-        async def delete_callback(interaction: discord.Interaction):
-            await interaction.message.delete()
-
-        regenerate_button.callback = regenerate_callback
-        edit_button.callback = edit_callback
-        delete_button.callback = delete_callback
-
-        view.add_item(regenerate_button)
-        view.add_item(edit_button)
-        view.add_item(delete_button)
-
-        await ctx.send(
-            file=File(file, filename="nanobanana.png"), embed=embed, view=view
+        await self._pollinations_generate(
+            ctx,
+            "nanobanana",
+            prompt or "",
+            seed=seed,
+            width=width,
+            height=height,
+            images=images if images else None,
         )
 
 
 class EditModal(ui.Modal):
+
     def __init__(
         self,
         cog,
@@ -1139,15 +1147,22 @@ class EditModal(ui.Modal):
         model: str,
         prompt: str,
         seed: int,
-        image_url: str = None,
+        width: int = None,
+        height: int = None,
+        images: str = None,
     ):
+
         super().__init__(title="Edit Prompt & Seed")
         self.cog = cog
         self.interaction = interaction
         self.model = model
         self.seed = seed
-        self.image_url = image_url
-
+        self.images = images
+        self.width_input = width
+        self.width = width
+        self.height_input = height
+        self.height = height
+        self.prompt = prompt
         self.prompt_input = ui.TextInput(
             label="Prompt",
             placeholder="Enter a new prompt",
@@ -1155,6 +1170,22 @@ class EditModal(ui.Modal):
             default=prompt,
         )
         self.add_item(self.prompt_input)
+
+        self.width_input = ui.TextInput(
+            label="Width (optional)",
+            placeholder="Enter a width or leave empty",
+            style=discord.TextStyle.short,
+            default=str(width) if width is not None else "",  # Fixed
+        )
+        self.add_item(self.width_input)
+
+        self.height_input = ui.TextInput(
+            label="Height (optional)",
+            placeholder="Enter a height or leave empty",
+            style=discord.TextStyle.short,
+            default=str(height) if height is not None else "",  # Fixed
+        )
+        self.add_item(self.height_input)
 
         self.seed_input = ui.TextInput(
             label="Seed (optional)",
@@ -1168,6 +1199,19 @@ class EditModal(ui.Modal):
     async def on_submit(self, interaction: Interaction):
         new_prompt = self.prompt_input.value
         new_seed = self.seed
+        new_width = self.width_input.value.strip() or None
+        new_height = self.height_input.value.strip() or None
+        new_images = self.images
+
+        try:
+            new_width = int(new_width) if new_width and new_width != "None" else None
+            new_height = (
+                int(new_height) if new_height and new_height != "None" else None
+            )
+        except ValueError:
+            new_width = None
+            new_height = None
+
         if self.seed_input.value.strip():
             try:
                 new_seed = int(self.seed_input.value.strip())
@@ -1176,7 +1220,10 @@ class EditModal(ui.Modal):
                     "Seed must be an integer. Using previous seed.", ephemeral=True
                 )
                 return
-
+        await interaction.response.send_message(
+            f"Sending request to pollinations with values {{model: {self.model}, prompt: {new_prompt}, seed: {new_seed}, width: {new_width}, height: {new_height}, images: {new_images}}}",
+            ephemeral=False,
+        )
         if not interaction.response.is_done():
             await interaction.response.defer()
 
@@ -1187,7 +1234,13 @@ class EditModal(ui.Modal):
                 )
             else:
                 await self.cog._pollinations_generate(
-                    interaction, self.model, new_prompt, seed=new_seed
+                    interaction,
+                    self.model,
+                    new_prompt,
+                    seed=new_seed,
+                    width=new_width,
+                    height=new_height,
+                    images=new_images,
                 )
         except Exception as e:
             self.cog.log.error(f"[EditModal Error] {e}", exc_info=True)
