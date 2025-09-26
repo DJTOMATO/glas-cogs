@@ -23,7 +23,7 @@ class AiGen(commands.Cog):
     """A cog for generating images using various AI models."""
 
     __author__ = "[Glas](https://github.com/djtomato/glas-cogs)"
-    __version__ = "0.0.1"
+    __version__ = "0.0.2"
 
     def __init__(self, bot: Red):
         super().__init__()
