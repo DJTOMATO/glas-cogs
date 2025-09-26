@@ -2,7 +2,7 @@ import asyncio
 import logging
 from gradio_client import Client, handle_file
 import io, base64
-from redbot.core import Config, commands
+from redbot.core import Config, commands, checks
 from redbot.core.bot import Red
 import aiohttp
 from io import BytesIO
@@ -23,7 +23,7 @@ class AiGen(commands.Cog):
     """A cog for generating images using various AI models."""
 
     __author__ = "[Glas](https://github.com/djtomato/glas-cogs)"
-    __version__ = "0.0.2"
+    __version__ = "0.0.3"
 
     def __init__(self, bot: Red):
         super().__init__()
@@ -297,6 +297,8 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(interaction, model, new_prompt)
 
     @commands.command(name="flux")
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (flux model)."""
         words = prompt.split()
@@ -312,6 +314,8 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(ctx, "flux", prompt, seed)
 
     @commands.command(name="kontext")
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def kontext(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (kontext model)."""
         words = prompt.split()
@@ -327,6 +331,8 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(ctx, "kontext", prompt, seed)
 
     @commands.command(name="seedream")
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def seedream(self, ctx: commands.Context, *, prompt: str = None):
         """Image Generation via Pollinations AI (seedream model).
         Can be used with text prompt only or with image attachments.
@@ -422,6 +428,8 @@ class AiGen(commands.Cog):
         )
 
     @commands.command(name="turbo")
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def turbo(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (turbo model)."""
         words = prompt.split()
@@ -564,6 +572,8 @@ class AiGen(commands.Cog):
             await ctx.send("No image returned.")
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def hidream(self, ctx: commands.Context, *, prompt: str):
         """Image Generation using HiDream endpoint."""
         endpoint = "https://huggingface.co/spaces/HiDream-ai/HiDream-I1-Dev/"
@@ -580,6 +590,8 @@ class AiGen(commands.Cog):
     #         await self._generate_hf_image(ctx, prompt, endpoint, model="flux")
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def lumina(self, ctx: commands.Context, *, prompt: str):
         """Image Generation using NetaLumina_T2I_Playground endpoint."""
         endpoint = "https://huggingface.co/spaces/neta-art/NetaLumina_T2I_Playground/"
@@ -587,6 +599,8 @@ class AiGen(commands.Cog):
             await self._generate_hf_image(ctx, prompt, endpoint)
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def analyze(self, ctx: commands.Context, *, arg: str = None):
         """Analyze an image: provide an attachment, URL, or mention a user (for avatar)."""
         image_url = None
@@ -686,6 +700,8 @@ class AiGen(commands.Cog):
                     await ctx.send("Received unexpected response:\n" + str(api_result))
 
     @commands.command(name="img2img")
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def img2img(self, ctx: commands.Context, *, text: str = None):
         """
         Multi-Image-to-Image generation via Pollinations AI (kontext model).
@@ -910,6 +926,8 @@ class AiGen(commands.Cog):
         await send_func(file=File(file, filename="img2img.png"), embed=embed, view=view)
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def evil(self, ctx: commands.Context, *, query: str):
         """
         Query the evil model at Pollinations with a text prompt.
@@ -956,6 +974,8 @@ class AiGen(commands.Cog):
                 )
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def geminisearch(self, ctx: commands.Context, *, query: str):
         """
         Query the GeminiSearch model at Pollinations with a search prompt.
@@ -1023,6 +1043,8 @@ class AiGen(commands.Cog):
                 )
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def gpt5(self, ctx: commands.Context, *, query: str = None):
         """
         Query the GPT-5 chat model at Pollinations with optional image input.
@@ -1118,6 +1140,8 @@ class AiGen(commands.Cog):
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
     @commands.command(name="nanobanana")
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
     async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
         """
         Image Generation via Pollinations AI (nanobanana model).
