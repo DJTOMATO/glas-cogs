@@ -353,6 +353,7 @@ async def generate(self, ctx, **parameters):
     max_width = canvas.width * 0.9
     text = parameters["text"]
 
+    text = text.replace("\\n", "\n")
     # Define a translation table for accented characters
     accented_chars = "áéíóúÁÉÍÓÚ"
     unaccented_chars = "aeiouAEIOU"

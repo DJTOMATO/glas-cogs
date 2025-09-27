@@ -262,6 +262,7 @@ class AiGen(commands.Cog):
                 images=images,
             )
 
+        # Poll
         async def edit_callback(interaction: discord.Interaction):
             current_seed = seed
             current_prompt = prompt
