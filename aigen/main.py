@@ -168,7 +168,7 @@ class AiGen(commands.Cog):
                     if resp.status != 200:
                         # Read the raw response body
                         response_body = await resp.read()
-                        
+
                         try:
                             # Try parsing it as JSON even if content-type is text/plain
                             response_json = json.loads(response_body)
@@ -313,7 +313,7 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(interaction, model, new_prompt)
 
     @commands.command(name="flux")
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (flux model)."""
@@ -330,7 +330,7 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(ctx, "flux", prompt, seed)
 
     @commands.command(name="kontext")
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def kontext(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (kontext model)."""
@@ -347,7 +347,7 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(ctx, "kontext", prompt, seed)
 
     @commands.command(name="seedream")
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def seedream(self, ctx: commands.Context, *, prompt: str = None):
         """Image Generation via Pollinations AI (seedream model).
@@ -444,7 +444,7 @@ class AiGen(commands.Cog):
         )
 
     @commands.command(name="turbo")
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def turbo(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (turbo model)."""
@@ -615,7 +615,7 @@ class AiGen(commands.Cog):
             await self._generate_hf_image(ctx, prompt, endpoint)
 
     @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def analyze(self, ctx: commands.Context, *, arg: str = None):
         """Analyze an image: provide an attachment, URL, or mention a user (for avatar)."""
@@ -716,7 +716,7 @@ class AiGen(commands.Cog):
                     await ctx.send("Received unexpected response:\n" + str(api_result))
 
     @commands.command(name="img2img")
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def img2img(self, ctx: commands.Context, *, text: str = None):
         """
@@ -942,7 +942,7 @@ class AiGen(commands.Cog):
         await send_func(file=File(file, filename="img2img.png"), embed=embed, view=view)
 
     @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def evil(self, ctx: commands.Context, *, query: str):
         """
@@ -990,7 +990,7 @@ class AiGen(commands.Cog):
                 )
 
     @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def geminisearch(self, ctx: commands.Context, *, query: str):
         """
@@ -1059,7 +1059,7 @@ class AiGen(commands.Cog):
                 )
 
     @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def gpt5(self, ctx: commands.Context, *, query: str = None):
         """
@@ -1156,7 +1156,7 @@ class AiGen(commands.Cog):
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
     @commands.command(name="nanobanana")
-    @commands.cooldown(1, 10, commands.BucketType.guild)
+    @commands.cooldown(1, 30, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
         """
