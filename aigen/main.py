@@ -15,7 +15,7 @@ import discord
 import re
 from PIL import Image
 from io import BytesIO
-
+import json
 log = logging.getLogger("red.glas-cogs-aigen")
 
 
@@ -164,11 +164,25 @@ class AiGen(commands.Cog):
         async with typing_cm:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params, headers=headers) as resp:
+
                     if resp.status != 200:
+                        # Read the raw response body
+                        response_body = await resp.read()
+                        
+                        try:
+                            # Try parsing it as JSON even if content-type is text/plain
+                            response_json = json.loads(response_body)
+                            error_message = response_json.get("message", "An unknown error occurred.")
+                        except Exception:
+                            # Fallback if it’s not JSON
+                            error_message = response_body.decode() if response_body else "An unknown error occurred."
+
                         error = discord.Embed(
                             title="⚠️ Oops! I couldn't generate your image",
                             description=(
                                 "Something went wrong while talking to the image service.\n\n"
+                                "**Error message:**\n"
+                                f"```\n{error_message}\n```"
                                 "**Possible reasons:**\n"
                                 "• One of the image links might be invalid or expired.\n"
                                 "• The image might be private or not accessible.\n"
@@ -176,12 +190,9 @@ class AiGen(commands.Cog):
                                 "Please try again with different images or later."
                             ),
                             color=discord.Color.orange(),
+
                         )
-                        # error.add_field(
-                        #     name="Technical details",
-                        #     value=f"HTTP Status: `{resp.status}`\n```\n{url}\n```",
-                        #     inline=False,
-                        # )
+
                         await send_func(embed=error)
                         return
                     data = await resp.read()
