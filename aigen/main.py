@@ -74,15 +74,17 @@ class AiGen(commands.Cog):
         images: list[str] | None = None,
     ):
         start_time = discord.utils.utcnow()
-
+        if not width and not height:
+            width = 1024
+            height = 1024
         if width and height:
             try:
                 width = int(width)
                 height = int(height)
             except ValueError:
                 # fallback if input is not a number
-                width = None
-                height = None
+                width = 1024
+                height = 1024
 
         if seed is None:
             seed = random.randint(0, 1000000)
@@ -152,6 +154,15 @@ class AiGen(commands.Cog):
             "quality": "high",
             "enhance": "True",
         }
+        if images:
+            params["image"] = ",".join(images)
+
+        # 🩹 Fix: remove any params whose value is None
+        none_params = [k for k, v in params.items() if v is None]
+        if none_params:
+            pass
+        #await ctx.send(f"[WARN] Skipping None params: {', '.join(none_params)}")
+        params = {k: v for k, v in params.items() if v is not None}
 
         if images:
             params["image"] = ",".join(images)
@@ -221,6 +232,9 @@ class AiGen(commands.Cog):
         embed.add_field(name="Width", value=f"```{real_width}```", inline=True)
         embed.add_field(name="Height", value=f"```{real_height}```", inline=True)
         MAX_FIELD_LEN = 1024
+        for k, v in params.items():
+            if v is None:
+                await ctx.send(f"⚠️ Param {k} is None")
         for key, value in params.items():
             if key.lower() not in [
                 "private",
@@ -230,6 +244,7 @@ class AiGen(commands.Cog):
                 "image",
                 "quality",
             ]:
+
                 # Ensure value fits inside Discord's 1024-char limit (account for formatting)
                 val_str = str(value)
                 if len(val_str) > MAX_FIELD_LEN - 7:  # account for ```\n and \n```
@@ -313,7 +328,7 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(interaction, model, new_prompt)
 
     @commands.command(name="flux")
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (flux model)."""
@@ -330,7 +345,7 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(ctx, "flux", prompt, seed)
 
     @commands.command(name="kontext")
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def kontext(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (kontext model)."""
@@ -347,7 +362,7 @@ class AiGen(commands.Cog):
         await self._pollinations_generate(ctx, "kontext", prompt, seed)
 
     @commands.command(name="seedream")
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def seedream(self, ctx: commands.Context, *, prompt: str = None):
         """Image Generation via Pollinations AI (seedream model).
@@ -444,7 +459,7 @@ class AiGen(commands.Cog):
         )
 
     @commands.command(name="turbo")
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def turbo(self, ctx: commands.Context, *, prompt: str):
         """Image Generation via Pollinations AI (turbo model)."""
@@ -615,7 +630,7 @@ class AiGen(commands.Cog):
             await self._generate_hf_image(ctx, prompt, endpoint)
 
     @commands.command()
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def analyze(self, ctx: commands.Context, *, arg: str = None):
         """Analyze an image: provide an attachment, URL, or mention a user (for avatar)."""
@@ -716,7 +731,7 @@ class AiGen(commands.Cog):
                     await ctx.send("Received unexpected response:\n" + str(api_result))
 
     @commands.command(name="img2img")
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def img2img(self, ctx: commands.Context, *, text: str = None):
         """
@@ -942,7 +957,7 @@ class AiGen(commands.Cog):
         await send_func(file=File(file, filename="img2img.png"), embed=embed, view=view)
 
     @commands.command()
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def evil(self, ctx: commands.Context, *, query: str):
         """
@@ -990,7 +1005,7 @@ class AiGen(commands.Cog):
                 )
 
     @commands.command()
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def geminisearch(self, ctx: commands.Context, *, query: str):
         """
@@ -1059,7 +1074,7 @@ class AiGen(commands.Cog):
                 )
 
     @commands.command()
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def gpt5(self, ctx: commands.Context, *, query: str = None):
         """
@@ -1156,7 +1171,7 @@ class AiGen(commands.Cog):
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
     @commands.command(name="nanobanana")
-    @commands.cooldown(1, 30, commands.BucketType.guild)
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
         """
