@@ -118,6 +118,7 @@ class Trickcal(commands.Cog):
                 color=discord.Color.random(),
             )
             embed.set_image(url="attachment://trick_avatar.png")
+            embed.set_footer(text="Play Trickcal!")
             await ctx.send(embed=embed, file=file)
 
     @commands.hybrid_command(
@@ -126,4 +127,5 @@ class Trickcal(commands.Cog):
     )
     async def trick(self, ctx, grid_size: int = 1):
         """Generate a grid of random Trick avatars. Example: !trick 4 (4x4 grid)"""
-        await self.send_avatar_embed(ctx, grid_size=grid_size)
+        async with ctx.typing():
+            await self.send_avatar_embed(ctx, grid_size=grid_size)
