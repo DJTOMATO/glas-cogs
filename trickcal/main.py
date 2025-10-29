@@ -80,7 +80,7 @@ class Trickcal(commands.Cog):
                 continue
             if layer_idx == 7:
                 coords["left"] += random.randint(-5, 5)
-                coords["top"] += random.randint(5, 20)
+                coords["top"] += random.randint(20, 30)
             try:
                 asset_img = Image.open(asset_path).convert("RGBA")
                 asset_img = asset_img.resize(
