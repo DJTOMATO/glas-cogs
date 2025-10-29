@@ -6,7 +6,7 @@ from redbot.core import Config, commands, checks
 from redbot.core.bot import Red
 import aiohttp
 from io import BytesIO
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, quote_plus
 import urllib
 import random
 import datetime
@@ -16,6 +16,7 @@ import re
 from PIL import Image
 from io import BytesIO
 import json
+
 log = logging.getLogger("red.glas-cogs-aigen")
 
 
@@ -145,30 +146,50 @@ class AiGen(commands.Cog):
                 height = int(height * scale)
 
         params = {
+            "model": model,
             "width": width,
             "height": height,
             "seed": seed,
-            "model": model,
-            "nologo": "True",
-            "private": "True",
+            "nologo": "false",
+            "private": "false",
+            "nofeed": "false",
+            "safe": "false",
             "quality": "high",
-            "enhance": "True",
+            "enhance": "true",
+            "guidance_scale": 1,
+            "negative_prompt": "worst quality, blurry",
+            "transparent": "false",
         }
         if images:
             params["image"] = ",".join(images)
 
-        # 🩹 Fix: remove any params whose value is None
+
         none_params = [k for k, v in params.items() if v is None]
         if none_params:
             pass
-        #await ctx.send(f"[WARN] Skipping None params: {', '.join(none_params)}")
+
         params = {k: v for k, v in params.items() if v is not None}
 
         if images:
             params["image"] = ",".join(images)
+        encoded_prompt = quote(prompt, safe="")
+        url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
 
-        encoded_prompt = quote(prompt)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+        payload = {
+            "model": model,
+            "width": width,
+            "height": height,
+            "seed": seed,
+            "enhance": True,
+            "private": True,
+            "nologo": True,
+            "quality": "high",
+            "negative_prompt": "worst quality, blurry",
+            "prompt": prompt,
+        }
+        if images:
+            payload["image"] = ",".join(images)
+
         headers = {"Authorization": f"Bearer {token}"}
         real_height = height
         real_width = width
@@ -177,19 +198,25 @@ class AiGen(commands.Cog):
                 async with session.get(url, params=params, headers=headers) as resp:
 
                     if resp.status != 200:
-                        # Read the raw response body
                         response_body = await resp.read()
+                        response_text = response_body.decode(errors="replace")  # always safe
+                        headers_text = json.dumps(dict(resp.headers), indent=2)
 
+                        # Try parsing JSON
                         try:
-                            # Try parsing it as JSON even if content-type is text/plain
                             response_json = json.loads(response_body)
-                            error_message = response_json.get("message", "An unknown error occurred.")
+                            error_message = response_json.get("message") or response_json.get("error") or response_text
                         except Exception:
-                            # Fallback if it’s not JSON
-                            error_message = response_body.decode() if response_body else "An unknown error occurred."
+                            error_message = response_text
 
+                        # Include status code, headers, and body
                         error = discord.Embed(
                             title="⚠️ Oops! I couldn't generate your image",
+                            # description=(
+                            #     f"**HTTP Status:** {resp.status}\n"
+                            #     f"**Response Headers:**\n```\n{headers_text}\n```\n"
+                            #     f"**Response Body:**\n```\n{error_message}\n```"
+                            # ),
                             description=(
                                 "Something went wrong while talking to the image service.\n\n"
                                 "**Error message:**\n"
@@ -201,9 +228,7 @@ class AiGen(commands.Cog):
                                 "Please try again with different images or later."
                             ),
                             color=discord.Color.orange(),
-
                         )
-
                         await send_func(embed=error)
                         return
                     data = await resp.read()
@@ -837,7 +862,7 @@ class AiGen(commands.Cog):
             "enhance": "True",
         }
 
-        base_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+        base_url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
         query_str = urlencode(query_params)
         full_url = f"{base_url}?{query_str}&image={images_param}"
 
@@ -1169,6 +1194,88 @@ class AiGen(commands.Cog):
                 await ctx.send(f"❌ **Request Failed:** `{e}`")
             except Exception as e:
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+
+    @commands.command(name="gptimage")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def gptimage(self, ctx: commands.Context, *, prompt: str = None):
+        """
+        Image Generation via Pollinations AI (gptimage model).
+        Max size is 1024x1024
+        Usage:
+          [p]gptimage <prompt> [attach image(s), reply, mention, ID, or URL(s)]
+          [p]gptimage <prompt> (text-only prompt is supported)
+          Multiple images supported (comma-separated).
+        """
+        images = []
+        if ctx.message.attachments:
+            images.extend([a.url for a in ctx.message.attachments])
+        if ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    images.extend([a.url for a in referenced.attachments])
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            images.append(embed.image.url)
+            except Exception:
+                pass
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(user.display_avatar.replace(format="png").url)
+                else:
+                    images.append(user.avatar_url)
+                prompt = prompt.replace(user.mention, "").strip()
+        if prompt:
+            url_matches = re.findall(r"(https?://\S+)", prompt)
+            for url in url_matches:
+                images.append(url)
+                prompt = prompt.replace(url, "").strip()
+        if prompt:
+            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
+            for mid in id_matches:
+                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(int(mid))
+                    except Exception:
+                        user = None
+                if user:
+                    if hasattr(user, "display_avatar"):
+                        images.append(user.display_avatar.replace(format="png").url)
+                    else:
+                        images.append(user.avatar_url)
+                    prompt = prompt.replace(mid, "").strip()
+        images = [
+            (
+                img.replace(".gif", ".png")
+                if img.endswith(".gif") and "discordapp.com/avatars/" in img
+                else img
+            )
+            for img in images
+        ]
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        if not prompt:
+            await ctx.send("❌ Please provide a prompt.")
+            return
+        width = 1024
+        height = 1024
+        seed = random.randint(0, 1000000)
+        await self._pollinations_generate(
+            ctx,
+            "gptimage",
+            prompt or "",
+            seed=seed,
+            width=width,
+            height=height,
+            images=images if images else None,
+        )
 
     @commands.command(name="nanobanana")
     @commands.cooldown(1, 60, commands.BucketType.guild)
