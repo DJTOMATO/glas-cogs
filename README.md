@@ -59,6 +59,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   Trickcal   | Generate random Trickcal avatars |                           Glas                          |        ✅        |
 |   ShindanMaker   | ShindanMaker integration for Red Discord Bot |                           Glas                          |        ✅        |
 |   AiGen   | Generate Free AI images using several endpoints |                           Glas                          |        ✅        |
 |   Ghibli   | Generate Ghibli-style images from Users, attachments, etc |                           Glas                          |        ✅        |
