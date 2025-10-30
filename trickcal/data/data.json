@@ -10,16 +10,16 @@
         {
             "name": "1_2",
             "left": 18,
-            "top": 80,
+            "top": 48,
             "width": 267,
             "height": 218
         },
         {
             "name": "1_3",
             "left": 10,
-            "top": 56,
-            "width": 338,
-            "height": 233
+            "top": 48,
+            "width": 267,
+            "height": 218
         },
         {
             "name": "1_4",
@@ -33,7 +33,7 @@
             "left": -3,
             "top": 48,
             "width": 265,
-            "height": 242
+            "height": 218
         },
         {
             "name": "1_6",
@@ -59,9 +59,9 @@
         {
             "name": "1_9",
             "left": 5,
-            "top": 30,
+            "top": 47,
             "width": 265,
-            "height": 252
+            "height": 218
         },
         {
             "name": "1_10",
@@ -3055,8 +3055,8 @@
         },
         {
             "name": "5_29",
-            "left": 11,
-            "top": 72,
+            "left": 14,
+            "top": 75,
             "width": 241,
             "height": 55
         },
@@ -3084,7 +3084,7 @@
         {
             "name": "5_33",
             "left": -13,
-            "top": 37,
+            "top": 43,
             "width": 307,
             "height": 211
         },
@@ -3385,7 +3385,7 @@
         {
             "name": "5_76",
             "left": -6,
-            "top": 63,
+            "top": 50, 
             "width": 269,
             "height": 221
         }
