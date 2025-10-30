@@ -6,7 +6,7 @@ import random
 import json
 import io
 from redbot.core.data_manager import bundled_data_path
-
+from discord import app_commands
 
 class Trickcal(commands.Cog):
     """Generate random Trick avatars"""
@@ -17,7 +17,6 @@ class Trickcal(commands.Cog):
         self.coord_file = Path(self.bundled_data_path()) / "data.json"
         self.coordinates = self.load_coordinates()
 
-        # Mapping between character names and base layer (layer 1) image numbers
         self.character_heads = {
             "kommy": 1,
             "rin": 2,
@@ -101,15 +100,14 @@ class Trickcal(commands.Cog):
 
         for layer_idx in layer_order:
             asset_num = layer_selections[layer_idx - 1]
+            if layer_idx == 7 and random.random() < 0.50:  # 50% chance (adjust as desired)
+                continue
             if asset_num == 0:
                 continue
 
-            # Accessories layer logic
             if layer_idx == 5:
                 accessory_choices = [asset_num]
                 base_is_exclusive = asset_num in exclusive_accessories
-
-                # Add extras (rarely)
                 if not base_is_exclusive and random.random() < 0.1:
                     accessory_dir = self.design_folder / "5"
                     available = [
@@ -133,7 +131,6 @@ class Trickcal(commands.Cog):
                     self._paste_layer(canvas, layer_idx, acc_num)
                 continue
 
-            # Normal layers
             self._paste_layer(canvas, layer_idx, asset_num)
 
         return canvas
@@ -194,19 +191,40 @@ class Trickcal(commands.Cog):
             image_binary.seek(0)
             file = discord.File(fp=image_binary, filename="trick_avatar.png")
             embed = discord.Embed(color=discord.Color.random())
-            embed.title = (
-                f"✨ {character_name.capitalize()}'s {grid_size}x{grid_size} Cheeks!"
-                if character_name
-                else f"✨ {grid_size}x{grid_size} Cheeks!"
-            )
+            if grid_size == 1:
+                embed.title = (
+                    f"✨ {character_name.capitalize()}'s Cheek!"
+                    if character_name
+                    else "✨ Here's your Cheek!"
+                )
+            else:
+                embed.title = (
+                    f"✨ {character_name.capitalize()}'s {grid_size}x{grid_size} Cheeks!"
+                    if character_name
+                    else f"✨ Here's your {grid_size}x{grid_size} Cheeks!"
+                )
             embed.set_image(url="attachment://trick_avatar.png")
             embed.set_footer(text="Play Trickcal!")
             await ctx.send(embed=embed, file=file)
+
+    async def character_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ):
+      
+        names = [name.capitalize() for name in self.character_heads.keys()]
+        return [
+            app_commands.Choice(name=n, value=n)
+            for n in names
+            if current.lower() in n.lower()
+        ][
+            :25
+        ]  
 
     @commands.hybrid_command(
         name="trick",
         description="Generate Trick avatars in a grid (e.g., !trick 3 Mayo = 3x3 Mayo grid)",
     )
+    @app_commands.autocomplete(character_name=character_autocomplete)
     async def trick(self, ctx, grid_size: int = 1, character_name: str = None):
         """Generate a grid of random Trick avatars.
         Example: !trick 4 or !trick 8 Mayo
