@@ -33,27 +33,27 @@ class AiGen(commands.Cog):
         self.config.register_global(referrer="none")  # Default value
         self.log = logging.getLogger("glas.glas-cogs.aigen")
 
-    def format_help_for_context(self, ctx: commands.Context):
-        image_cmds = "🎨 Image Commands\n" + " ".join(
-            [
-                f"``{cmd}``"
-                for cmd in [
-                    "flux",
-                    "hidream",
-                    "img2img",
-                    "kontext",
-                    "lumina",
-                    "nanobanana",
-                    "seedream",
-                    "turbo",
-                ]
-            ]
-        )
-        text_cmds = "📜 Text Commands\n" + " ".join(
-            [f"``{cmd}``" for cmd in ["analyze", "evil", "geminisearch", "gpt5"]]
-        )
+    # def format_help_for_context(self, ctx: commands.Context):
+    #     image_cmds = "🎨 Image Commands\n" + " ".join(
+    #         [
+    #             f"``{cmd}``"
+    #             for cmd in [
+    #                 "flux",
+    #                 "hidream",
+    #                 "img2img",
+    #                 "kontext",
+    #                 "lumina",
+    #                 "nanobanana",
+    #                 "seedream",
+    #                 "turbo",
+    #             ]
+    #         ]
+    #     )
+    #     text_cmds = "📜 Text Commands\n" + " ".join(
+    #         [f"``{cmd}``" for cmd in ["analyze", "evil", "geminisearch", "gpt5"]]
+    #     )
 
-        return f"Version: {self.__version__}\n\nAuthor: {self.__author__}\n\n{image_cmds}\n\n{text_cmds}"
+    #     return f"Version: {self.__version__}\n\nAuthor: {self.__author__}\n\n{image_cmds}\n\n{text_cmds}"
 
     async def cog_load(self) -> None:
         asyncio.create_task(self.initialize())
@@ -312,7 +312,6 @@ class AiGen(commands.Cog):
                 images=images,
             )
 
-        # Poll
         async def edit_callback(interaction: discord.Interaction):
             current_seed = seed
             current_prompt = prompt
@@ -351,11 +350,109 @@ class AiGen(commands.Cog):
         new_prompt = self.children[0].value
         await self._pollinations_generate(interaction, model, new_prompt)
 
+        ## TEST
+
+    async def _run_pollinations_text(
+        self,
+        ctx: commands.Context,
+        model: str,
+        query: str = None,
+    ):
+        referrer = await self.config.referrer()
+        if not referrer or referrer.lower() == "none":
+            await ctx.send(
+                "⚠️ Pollinations referrer not set.\n"
+                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
+                "Get it from: <https://auth.pollinations.ai/>"
+            )
+            return
+
+        # Prompt fallback
+        if not query and ctx.message.attachments:
+            query = "Describe this image"
+        if not query and not ctx.message.attachments:
+            await ctx.send("❌ Please provide a prompt or attach an image.")
+            return
+
+        # Collect image URLs
+        image_urls = []
+        for att in ctx.message.attachments:
+            if att.content_type and att.content_type.startswith("image/"):
+                image_urls.append(att.url)
+
+        # Build messages (OpenAI‑compatible multimodal format)
+        content_parts = [{"type": "text", "text": query}]
+        for url in image_urls:
+            content_parts.append({"type": "image_url", "image_url": {"url": url}})
+
+        messages = [{"role": "user", "content": content_parts}]
+
+        # Pollinations token
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        poll_token = poll_keys.get("token") if poll_keys else None
+
+        if not poll_token:
+            await ctx.send(
+                "❌ Missing Pollinations API token. "
+                "Use `[p]set api pollinations token,<value>`"
+            )
+            return
+
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": 1,
+            "top_p": 1,
+            "max_tokens": 4096,
+            "seed": 0,
+            "referrer": referrer,
+            "isPrivate": bool(poll_token),
+            "stream": False,
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {poll_token}",
+            "referer": referrer,
+        }
+        API_URL = "https://enter.pollinations.ai/api/generate/v1/chat/completions"
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+
+                    async with session.post(API_URL, json=payload, headers=headers) as resp:
+                        text = await resp.text()
+
+                        if resp.status != 200:
+                            if resp.status == 500 and model == "grok":
+                                await ctx.send("❌ The Grok model is currently unavailable due to server issues. Please try again later.")
+                            else:
+                                await ctx.send(
+                                    f"❌ **API Error:** HTTP {resp.status}\n"
+                                    f"``````"
+                                )
+                            return
+
+                        try:
+                            data = json.loads(text)
+                            result = data["choices"][0]["message"]["content"]
+                        except Exception:
+                            result = text  # fallback
+
+                        for i in range(0, len(result), 2000):
+                            chunk = result[i : i + 2000]
+                            await ctx.send(chunk)
+
+            except aiohttp.ClientError as e:
+                await ctx.send(f"❌ **Request Failed:** `{e}`")
+            except Exception as e:
+                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+
     @commands.command(name="flux")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
-        """Image Generation via Pollinations AI (flux model)."""
+        """Image Gen via flux model."""
         words = prompt.split()
         seed = None
 
@@ -372,7 +469,7 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def kontext(self, ctx: commands.Context, *, prompt: str):
-        """Image Generation via Pollinations AI (kontext model)."""
+        """Image Gen via kontext model."""
         words = prompt.split()
         seed = None
 
@@ -389,7 +486,7 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def seedream(self, ctx: commands.Context, *, prompt: str = None):
-        """Image Generation via Pollinations AI (seedream model).
+        """Image Gen via seedream model.
         Can be used with text prompt only or with image attachments.
         Image size can be changed via command arguments; default 1700x1200.
         Ex: !seedream a cat
@@ -486,7 +583,7 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def turbo(self, ctx: commands.Context, *, prompt: str):
-        """Image Generation via Pollinations AI (turbo model)."""
+        """Image Gen via turbo model."""
         words = prompt.split()
         seed = None
 
@@ -499,24 +596,6 @@ class AiGen(commands.Cog):
             seed = random.randint(0, 1000000)
 
         await self._pollinations_generate(ctx, "turbo", prompt, seed)
-
-    # @commands.command(name="gemini3")
-    # @commands.cooldown(1, 60, commands.BucketType.guild)
-    # @checks.bot_has_permissions(attach_files=True)
-    # async def gemini3(self, ctx: commands.Context, *, prompt: str):
-    #     """Image Generation via Pollinations AI (gemini3 model)."""
-    #     words = prompt.split()
-    #     seed = None
-
-    #     if words and words[-1].isdigit():
-    #         seed = int(words[-1])
-
-    #         words = words[:-1]
-    #         prompt = " ".join(words)
-    #     else:
-    #         seed = random.randint(0, 1000000)
-
-    #     await self._pollinations_generate(ctx, "gemini3", prompt, seed)
 
     @commands.command()
     @commands.is_owner()
@@ -648,7 +727,7 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def hidream(self, ctx: commands.Context, *, prompt: str):
-        """Image Generation using HiDream endpoint."""
+        """Image Gen via HiDream endpoint."""
         endpoint = "https://huggingface.co/spaces/HiDream-ai/HiDream-I1-Dev/"
         async with ctx.typing():
             await self._generate_hf_image(
@@ -657,7 +736,7 @@ class AiGen(commands.Cog):
 
     # @commands.command()
     # async def flux(self, ctx: commands.Context, *, prompt: str):
-    #     """Image Generation using Fake-FLUX-Pro-Unlimited endpoint."""
+    #     """Image Gen via Fake-FLUX-Pro-Unlimited endpoint."""
     #     endpoint = "https://huggingface.co/spaces/llamameta/Fake-FLUX-Pro-Unlimited/"
     #     async with ctx.typing():
     #         await self._generate_hf_image(ctx, prompt, endpoint, model="flux")
@@ -666,7 +745,7 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def lumina(self, ctx: commands.Context, *, prompt: str):
-        """Image Generation using NetaLumina_T2I_Playground endpoint."""
+        """Image Gen via NetaLumina."""
         endpoint = "https://huggingface.co/spaces/neta-art/NetaLumina_T2I_Playground/"
         async with ctx.typing():
             await self._generate_hf_image(ctx, prompt, endpoint)
@@ -777,7 +856,7 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def img2img(self, ctx: commands.Context, *, text: str = None):
         """
-        Multi-Image-to-Image generation via Pollinations AI (kontext model).
+        Multi-Image-to-Image Gen via gptimage model.
         Detects images from attachments, reply, mention, ID, or URL.
         Supports up to 3 images.
         Usage examples:
@@ -1002,8 +1081,7 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def evil(self, ctx: commands.Context, *, query: str):
-        """
-        Query the evil model at Pollinations with a text prompt.
+        """Query with `evil`.
         """
         ref = await self.config.referrer()
         if ref == "none":
@@ -1115,14 +1193,12 @@ class AiGen(commands.Cog):
                     f"❌ **Request Failed:** An error occurred while contacting the API.\n`{e}`"
                 )
 
-
     @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def gemini3(self, ctx: commands.Context, *, query: str = None):
         """
-        Query Pollinations Chat Completions API.
-        Supports text + image.
+        Query via Gemini3
         """
 
         MODEL = "gemini-large"  # Pollinations new API model name
@@ -1230,7 +1306,7 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def gptimage(self, ctx: commands.Context, *, prompt: str = None):
         """
-        Image Generation via Pollinations AI (gptimage model).
+        Image Gen via gptimage model.
         Max size is 1024x1024
         Usage:
           [p]gptimage <prompt> [attach image(s), reply, mention, ID, or URL(s)]
@@ -1312,7 +1388,7 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
         """
-        Image Generation via Pollinations AI (nanobanana model).
+        Image Gen via nanobanana model.
         Max size is 1024x1024
         Usage:
           [p]nanobanana <prompt> [attach image(s), reply, mention, ID, or URL(s)]
@@ -1388,6 +1464,139 @@ class AiGen(commands.Cog):
             height=height,
             images=images if images else None,
         )
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def openai(self, ctx: commands.Context, *, query: str = None):
+        """Query with `openai`."""
+        await self._run_pollinations_text(ctx, "openai", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def openaifast(self, ctx: commands.Context, *, query: str = None):
+        """Query with `openai-fast`."""
+        await self._run_pollinations_text(ctx, "openai-fast", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def openailarge(self, ctx: commands.Context, *, query: str = None):
+        """Query with `openai-large`."""
+        await self._run_pollinations_text(ctx, "openai-large", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def qwencoder(self, ctx: commands.Context, *, query: str = None):
+        """Query with `qwen-coder`."""
+        await self._run_pollinations_text(ctx, "qwen-coder", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def mistral(self, ctx: commands.Context, *, query: str = None):
+        """Query with `mistral`."""
+        await self._run_pollinations_text(ctx, "mistral", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def mistralfast(self, ctx: commands.Context, *, query: str = None):
+        """Query with `mistral-fast`."""
+        await self._run_pollinations_text(ctx, "mistral-fast", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def deepseek(self, ctx: commands.Context, *, query: str = None):
+        """Query with `deepseek`."""
+        await self._run_pollinations_text(ctx, "deepseek", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def grok(self, ctx: commands.Context, *, query: str = None):
+        """Query with `grok`."""
+        await self._run_pollinations_text(ctx, "grok", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def claude(self, ctx: commands.Context, *, query: str = None):
+        """Query with `claude`."""
+        await self._run_pollinations_text(ctx, "claude", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def claudelarge(self, ctx: commands.Context, *, query: str = None):
+        """Query with `claude-large`."""
+        await self._run_pollinations_text(ctx, "claude-large", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def openaireasoning(self, ctx: commands.Context, *, query: str = None):
+        """Query with `openai-reasoning`."""
+        await self._run_pollinations_text(ctx, "openai-reasoning", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def gemini(self, ctx: commands.Context, *, query: str = None):
+        """Query with `gemini`."""
+        await self._run_pollinations_text(ctx, "gemini", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def geminisearch(self, ctx: commands.Context, *, query: str = None):
+        """Query with `gemini-search`."""
+        await self._run_pollinations_text(ctx, "gemini-search", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def midijourney(self, ctx: commands.Context, *, query: str = None):
+        """Query with `midijourney`."""
+        await self._run_pollinations_text(ctx, "midijourney", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def chickytutor(self, ctx: commands.Context, *, query: str = None):
+        """Query with `chickytutor`."""
+        await self._run_pollinations_text(ctx, "chickytutor", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def perplexityfast(self, ctx: commands.Context, *, query: str = None):
+        """Query with `perplexity-fast`."""
+        await self._run_pollinations_text(ctx, "perplexity-fast", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def perplexityreasoning(self, ctx: commands.Context, *, query: str = None):
+        """Query with `perplexity-reasoning`."""
+        await self._run_pollinations_text(ctx, "perplexity-reasoning", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def kimik2thinking(self, ctx: commands.Context, *, query: str = None):
+        """Query with `kimi-k2-thinking`."""
+        await self._run_pollinations_text(ctx, "kimi-k2-thinking", query)
+
+    @commands.command()
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def geminilarge(self, ctx: commands.Context, *, query: str = None):
+        """Query with `gemini-large`."""
+        await self._run_pollinations_text(ctx, "gemini-large", query)
 
 
 class EditModal(ui.Modal):
