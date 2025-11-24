@@ -73,8 +73,12 @@ class AiGen(commands.Cog):
         width: int | None = None,
         height: int | None = None,
         images: list[str] | None = None,
+        negative_prompt: str | None = None,  # new arg
     ):
+
         start_time = discord.utils.utcnow()
+        if negative_prompt is None:
+            negative_prompt = "worst quality, blurry"  # fallback default
         if not width and not height:
             width = 1024
             height = 1024
@@ -157,7 +161,7 @@ class AiGen(commands.Cog):
             "quality": "high",
             "enhance": "true",
             "guidance_scale": 1,
-            "negative_prompt": "worst quality, blurry",
+            "negative_prompt": negative_prompt,
             "transparent": "false",
         }
         if images:
@@ -456,6 +460,14 @@ class AiGen(commands.Cog):
         words = prompt.split()
         seed = None
 
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE).strip()
+
         if words and words[-1].isdigit():
             seed = int(words[-1])
             words = words[:-1]
@@ -463,13 +475,24 @@ class AiGen(commands.Cog):
         else:
             seed = random.randint(0, 1000000)
 
-        await self._pollinations_generate(ctx, "flux", prompt, seed)
+        await self._pollinations_generate(ctx, "flux", prompt, seed, negative_prompt=negative_prompt)
 
     @commands.command(name="kontext")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def kontext(self, ctx: commands.Context, *, prompt: str):
         """Image Gen via kontext model."""
+
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
         words = prompt.split()
         seed = None
 
@@ -480,7 +503,7 @@ class AiGen(commands.Cog):
         else:
             seed = random.randint(0, 1000000)
 
-        await self._pollinations_generate(ctx, "kontext", prompt, seed)
+        await self._pollinations_generate(ctx, "kontext", prompt, seed, negative_prompt=negative_prompt)
 
     @commands.command(name="seedream")
     @commands.cooldown(1, 60, commands.BucketType.guild)
@@ -492,6 +515,16 @@ class AiGen(commands.Cog):
         Ex: !seedream a cat
         Ex: !seedream 1024x768 a cat
         Ex: !seedream 1024 768 a cat"""
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
         images = []
 
         if ctx.message.attachments:
@@ -577,6 +610,7 @@ class AiGen(commands.Cog):
             images=images if images else None,
             width=width,
             height=height,
+            negative_prompt=negative_prompt,
         )
 
     @commands.command(name="turbo")
@@ -584,6 +618,17 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def turbo(self, ctx: commands.Context, *, prompt: str):
         """Image Gen via turbo model."""
+
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
         words = prompt.split()
         seed = None
 
@@ -595,7 +640,7 @@ class AiGen(commands.Cog):
         else:
             seed = random.randint(0, 1000000)
 
-        await self._pollinations_generate(ctx, "turbo", prompt, seed)
+        await self._pollinations_generate(ctx, "turbo", prompt, seed, negative_prompt=negative_prompt)
 
     @commands.command()
     @commands.is_owner()
@@ -1313,6 +1358,14 @@ class AiGen(commands.Cog):
           [p]gptimage <prompt> (text-only prompt is supported)
           Multiple images supported (comma-separated).
         """
+
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE).strip()
         images = []
         if ctx.message.attachments:
             images.extend([a.url for a in ctx.message.attachments])
@@ -1381,6 +1434,7 @@ class AiGen(commands.Cog):
             width=width,
             height=height,
             images=images if images else None,
+            negative_prompt=negative_prompt,
         )
 
     @commands.command(name="nanobanana")
@@ -1395,6 +1449,16 @@ class AiGen(commands.Cog):
           [p]nanobanana <prompt> (text-only prompt is supported)
           Multiple images supported (comma-separated).
         """
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+            
         images = []
         if ctx.message.attachments:
             images.extend([a.url for a in ctx.message.attachments])
@@ -1463,6 +1527,7 @@ class AiGen(commands.Cog):
             width=width,
             height=height,
             images=images if images else None,
+            negative_prompt=negative_prompt,
         )
 
     @commands.command()
