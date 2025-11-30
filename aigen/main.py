@@ -10,7 +10,6 @@ from urllib.parse import quote, urlencode, quote_plus
 import urllib
 import random
 import datetime
-from bytez import Bytez
 from discord import ui, Interaction, TextStyle, ButtonStyle, File
 import discord
 import re
@@ -473,7 +472,31 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
-        """Image Gen via flux model."""
+        """Generate an image using the Flux model.
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            The command context containing message and author information.
+        prompt : str
+            The text prompt describing the image to generate.
+            Supports optional seed at the end (e.g., "a cat 12345").
+            Supports negative prompt via --negative flag (e.g., "a cat --negative blurry").
+
+        Returns
+        -------
+        None
+            Sends the generated image to the channel with metadata embed.
+
+        Notes
+        -----
+        - Cooldown: 1 use per 60 seconds per guild.
+        - Requires bot permission to attach files.
+        - Seed is optional; if not provided, a random seed is used.
+        - Negative prompt defaults to "worst quality, blurry" if not specified.
+        - Output includes regenerate, edit, and delete buttons.
+        - Powered by Pollinations.ai API.
+        """
         words = prompt.split()
         seed = None
 
