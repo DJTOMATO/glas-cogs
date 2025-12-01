@@ -1736,6 +1736,144 @@ class AiGen(commands.Cog):
             negative_prompt=negative_prompt,
         )
 
+    async def _pollinations_request(self, prompt: str, model: str, token: str, input_images=None):
+        """
+        Handles Pollinations requests for VEO and Seedance.
+        VEO uses GET with just the prompt.
+        Seedance supports optional images via URLs.
+        """
+        safe_prompt = str(prompt)
+        encoded_prompt = urllib.parse.quote(safe_prompt)
+        headers = {"Authorization": f"Bearer {token}"}
+
+        base_url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}?model={model}"
+        images = []
+        if input_images:
+            for item in input_images:
+                if isinstance(item, discord.Attachment):
+                    images.append(item.url)
+                elif isinstance(item, str):
+                    images.append(item)
+
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        params = {"prompt": prompt}
+        if images:
+            params["image"] = ",".join(images)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(base_url, headers=headers, params=params) as resp:
+                if resp.status != 200:
+                    text = await resp.text()
+                    raise RuntimeError(f"HTTP {resp.status} - {text}")
+
+                content_type = resp.headers.get("Content-Type", "")
+                if "application/json" in content_type:
+                    return await resp.json()
+                return await resp.read()
+
+    @commands.command(name="veo")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.has_permissions(attach_files=True)
+    async def veo(self, ctx, *, prompt: str = None):
+        """Generate a video using the VEO model."""
+        if not prompt:
+            return await ctx.send("Please provide a prompt for VEO video generation.")
+
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = poll_keys.get("token") if poll_keys else None
+        if not token:
+            return await ctx.send("Missing Pollinations API token. Use `pset api pollinations token,value`")
+
+        async with ctx.typing():
+            try:
+                result = await self._pollinations_request(prompt, "veo", token)
+
+                if isinstance(result, bytes):
+                    await ctx.send(file=discord.File(io.BytesIO(result), "veo.mp4"))
+                else:
+                    await ctx.send(result.get("message", "Unexpected API response."))
+
+            except Exception as e:
+                try:
+                    data = json.loads(str(e).split(" - ", 1)[1])
+                    user_msg = data.get("error", {}).get("message", str(e))
+                except Exception:
+                    user_msg = str(e)
+
+                embed = discord.Embed(
+                    title="❌ VEO Video Generation Failed",
+                    description=user_msg,
+                    color=discord.Color.red()
+                )
+                await ctx.send(embed=embed)
+
+    @commands.command(name="seedance")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.has_permissions(attach_files=True)
+    async def seedance(self, ctx, *, prompt: str = None):
+        """Generate a video using the Seedance model with optional images (via URLs)."""
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Please provide a prompt and/or attach an image.")
+
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = poll_keys.get("token") if poll_keys else None
+        if not token:
+            return await ctx.send("Missing Pollinations API token. Use `pset api pollinations token,value`")
+
+        images = []
+        if ctx.message.attachments:
+            images.extend([a.url for a in ctx.message.attachments])
+
+        if ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                if referenced.attachments:
+                    images.extend([a.url for a in referenced.attachments])
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            images.append(embed.image.url)
+            except Exception:
+                pass
+
+        images = [
+            img.replace(".gif", ".png") if img.endswith(".gif") and "discordapp.com/avatars/" in img else img
+            for img in images
+        ]
+
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        async with ctx.typing():
+            try:
+                result = await self._pollinations_request(
+                    prompt or "",
+                    "seedance",
+                    token,
+                    input_images=images if images else None  # Pass URLs instead of bytes
+                )
+
+                if isinstance(result, bytes):
+                    await ctx.send(file=discord.File(io.BytesIO(result), "seedance.mp4"))
+                else:
+                    await ctx.send(result.get("message", "Unexpected API response."))
+
+            except Exception as e:
+                try:
+                    data = json.loads(str(e).split(" - ", 1)[1])
+                    user_msg = data.get("error", {}).get("message", str(e))
+                except Exception:
+                    user_msg = str(e)
+
+                embed = discord.Embed(
+                    title="❌ Seedance Video Generation Failed",
+                    description=user_msg,
+                    color=discord.Color.red()
+                )
+                await ctx.send(embed=embed)
+
     @commands.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
