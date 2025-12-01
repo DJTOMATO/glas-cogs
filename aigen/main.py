@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from gradio_client import Client, handle_file
 import io, base64
 from redbot.core import Config, commands, checks
@@ -32,7 +33,10 @@ class AiGen(commands.Cog):
         self.config = Config.get_conf(self, 117, force_registration=True)
         self.config.register_global(referrer="none")  # Default value
         self.log = logging.getLogger("glas.glas-cogs.aigen")
+        self.external_upload = False
+        default_guild = {"external_upload_enabled": False}
 
+        self.config.register_guild(**default_guild)
     # def format_help_for_context(self, ctx: commands.Context):
     #     image_cmds = "🎨 Image Commands\n" + " ".join(
     #         [
@@ -87,10 +91,10 @@ class AiGen(commands.Cog):
         start_time = discord.utils.utcnow()
         if negative_prompt is None:
             negative_prompt = "worst quality, blurry"  # fallback default
-        if not width and not height:
+        if not width and not height and model != "nanobanana-pro":
             width = 1024
             height = 1024
-        if width and height:
+        if width and height and model != "nanobanana-pro":
             try:
                 width = int(width)
                 height = int(height)
@@ -151,12 +155,15 @@ class AiGen(commands.Cog):
             return
 
         min_pixels = 921600
-        if width and height:
+        if width and height and model != "nanobanana-pro":
             if width * height < min_pixels:
                 scale = (min_pixels / (width * height)) ** 0.5
                 width = int(width * scale)
                 height = int(height * scale)
 
+        if model == "nanobanana-pro":
+            width = 3840
+            height = 2160
         params = {
             "model": model,
             "width": width,
@@ -185,27 +192,42 @@ class AiGen(commands.Cog):
             params["image"] = ",".join(images)
         encoded_prompt = quote(prompt, safe="")
         url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
-
-        payload = {
-            "model": model,
-            "width": width,
-            "height": height,
-            "seed": seed,
-            "enhance": True,
-            "private": True,
-            "nologo": True,
-            "quality": "high",
-            "negative_prompt": "worst quality, blurry",
-            "prompt": prompt,
-        }
+        if model == "nanobanana-pro":
+            payload = {
+                "model": model,
+                "width": width,
+                "height": height,
+                "seed": seed,
+                "enhance": True,
+                "private": True,
+                "nologo": True,
+                "quality": "high",
+                "negative_prompt": "worst quality, blurry",
+                "prompt": prompt,
+            }
+        else:
+            payload = {
+                "model": model,
+                "width": width,
+                "height": height,
+                "seed": seed,
+                "enhance": True,
+                "private": True,
+                "nologo": True,
+                "quality": "high",
+                "negative_prompt": "worst quality, blurry",
+                "prompt": prompt,
+            }
         if images:
             payload["image"] = ",".join(images)
 
         headers = {"Authorization": f"Bearer {token}"}
         real_height = height
         real_width = width
+
         async with typing_cm:
             async with aiohttp.ClientSession() as session:
+
                 async with session.get(url, params=params, headers=headers) as resp:
 
                     if resp.status != 200:
@@ -242,25 +264,50 @@ class AiGen(commands.Cog):
                         )
                         await send_func(embed=error)
                         return
+
                     data = await resp.read()
+                    image_bytes = await resp.read()
 
-                    # After reading image data from resp.read()
-                    image_file = BytesIO(data)
-                    image_file.seek(0)
+                    # Para PIL dimensions
+                    with Image.open(BytesIO(image_bytes)) as img_for_pil:
+                        real_width, real_height = img_for_pil.size
 
-                    # Open the image with PIL and get real dimensions
-                    with Image.open(image_file) as img:
-                        real_width, real_height = img.size
-                    real_width = int(real_width)
-                    real_height = int(real_height)
-                    # Update or add the embed fields for width and height with real values
-                    # Remove previous width/height fields (if any) from params embed fields first
+                    # Elimina params width/height para embed (opcional)
                     for key in ["width", "height"]:
                         if key in params:
                             del params[key]
 
-                    file = BytesIO(data)
-                    file.seek(0)
+        # Upload to chibisafe
+        chibisafe_tokens = await self.bot.get_shared_api_tokens("chibisafe")
+        upload_url = chibisafe_tokens.get("upload_url")
+        api_key = chibisafe_tokens.get("x_api_key")
+        external_upload = await self.config.guild(ctx.guild).external_upload_enabled()
+        if external_upload:
+            if not upload_url or not api_key:
+                await send_func("External upload is enabled, but Chibisafe upload URL or API key is missing. Please set them first using `[p]set api chibisafe upload_url,<url> x_api_key,<key>`",
+                "Please set them first."
+                )
+            else:        
+                headers = {"x-api-key": api_key}
+                data_form = aiohttp.FormData()
+                chibisafe_buffer = BytesIO(image_bytes)
+                chibisafe_buffer.seek(0)
+                data_form.add_field(
+                    "file[]",
+                    chibisafe_buffer,
+                    filename="generated.png",
+                    content_type="image/png",
+                )
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(upload_url, data=data_form, headers=headers) as resp:
+                        if resp.status == 200:
+                            resp_json = await resp.json()
+                            uploaded_url = resp_json.get("url")
+                            thumb_url = resp_json.get("thumb")  # optional thumbnail if your API returns it
+                        else:
+                            uploaded_url = None
+                            thumb_url = None
 
         time_taken = (discord.utils.utcnow() - start_time).total_seconds()
         embed = discord.Embed(title="🖼️ Image Generated Successfully")
@@ -293,9 +340,8 @@ class AiGen(commands.Cog):
         prompt = re.sub(r"^\d{3,4}x\d{3,4}\s+", "", prompt)
         embed.add_field(name="Prompt", value=f"```\n{prompt}\n```", inline=False)
         embed.set_footer(
-            text=f"Generated by {author_name} • {datetime.datetime.utcnow().strftime('%m/%d/%Y %I:%M %p')} • Powered by Pollinations.ai"
+            text=f"Generated by {author_name} • {datetime.datetime.utcnow().strftime('%m/%d/%Y %I:%M %p')} • Powered by Pollinations.ai - Images may be resized due to Discord Constraints"
         )
-
 
         if images:
             ref_value = "\n".join(
@@ -361,10 +407,21 @@ class AiGen(commands.Cog):
         view.add_item(regenerate_button)
         view.add_item(edit_button)
         view.add_item(delete_button)
+        if external_upload: 
+            if uploaded_url:
+                embed.add_field(name="Shared Link (4K Download)", value=f"[View Image]({uploaded_url})", inline=False)
 
+        # Nuevo buffer para Discord
+        discord_buffer = BytesIO(image_bytes)
+        discord_buffer.seek(0)
         await send_func(
-            file=File(file, filename="generated.png"), embed=embed, view=view
+            file=File(discord_buffer, filename="generated.png"),
+            embed=embed,
+            view=view
         )
+        if external_upload: 
+            if uploaded_url:
+                await ctx.send(f"High Quality Image uploaded to: {uploaded_url}")
 
     async def callback(self, interaction: discord.Interaction):
         new_prompt = self.children[0].value
@@ -467,6 +524,14 @@ class AiGen(commands.Cog):
                 await ctx.send(f"❌ **Request Failed:** `{e}`")
             except Exception as e:
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+
+    @commands.command(name="externalupload")
+    @commands.admin_or_permissions(manage_guild=True)
+    async def externalupload(self, ctx, toggle: bool):
+        """Enable or disable external uploads like Chibisafe for this server."""
+        await self.config.guild(ctx.guild).external_upload_enabled.set(toggle)
+        status = "enabled" if toggle else "disabled"
+        await ctx.send(f"External uploads are now **{status}** for this server.")
 
     @commands.command(name="flux")
     @commands.cooldown(1, 60, commands.BucketType.guild)
@@ -1580,6 +1645,97 @@ class AiGen(commands.Cog):
             negative_prompt=negative_prompt,
         )
 
+    @commands.command(name="nanapro")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def nanobananapro(self, ctx: commands.Context, *, prompt: str = None):
+        """
+        Image Gen via nanobanana pro model.
+        Max size is 2048x2048
+        Usage:
+          [p]nanobanana <prompt> [attach image(s), reply, mention, ID, or URL(s)]
+          [p]nanobanana <prompt> (text-only prompt is supported)
+          Multiple images supported (comma-separated).
+        """
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        images = []
+        if ctx.message.attachments:
+            images.extend([a.url for a in ctx.message.attachments])
+        if ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    images.extend([a.url for a in referenced.attachments])
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            images.append(embed.image.url)
+            except Exception:
+                pass
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(user.display_avatar.replace(format="png").url)
+                else:
+                    images.append(user.avatar_url)
+                prompt = prompt.replace(user.mention, "").strip()
+        if prompt:
+            url_matches = re.findall(r"(https?://\S+)", prompt)
+            for url in url_matches:
+                images.append(url)
+                prompt = prompt.replace(url, "").strip()
+        if prompt:
+            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
+            for mid in id_matches:
+                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(int(mid))
+                    except Exception:
+                        user = None
+                if user:
+                    if hasattr(user, "display_avatar"):
+                        images.append(user.display_avatar.replace(format="png").url)
+                    else:
+                        images.append(user.avatar_url)
+                    prompt = prompt.replace(mid, "").strip()
+        images = [
+            (
+                img.replace(".gif", ".png")
+                if img.endswith(".gif") and "discordapp.com/avatars/" in img
+                else img
+            )
+            for img in images
+        ]
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        if not prompt:
+            await ctx.send("❌ Please provide a prompt.")
+            return
+            width = 2048
+            height = 2048
+        seed = random.randint(0, 1000000)
+        await self._pollinations_generate(
+            ctx,
+            "nanobanana-pro",
+            prompt or "",
+            seed=seed,
+            images=images if images else None,
+            negative_prompt=negative_prompt,
+        )
+
     @commands.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
@@ -1712,6 +1868,100 @@ class AiGen(commands.Cog):
     async def geminilarge(self, ctx: commands.Context, *, query: str = None):
         """Query with `gemini-large`."""
         await self._run_pollinations_text(ctx, "gemini-large", query)
+
+    # test
+
+    async def _generate_tts(self, ctx: commands.Context, text: str, voice: str = "alloy"):
+        """Helper method to generate TTS audio."""
+
+        if not text:
+            await ctx.send("❌ Please provide text to convert to speech.")
+            return
+
+        if len(text) > 4096:
+            await ctx.send("❌ Text is too long. Maximum 4096 characters allowed.")
+            return
+
+        referrer = await self.config.referrer()
+        if not referrer or referrer.lower() == "none":
+            await ctx.send(
+                "⚠️ Pollinations referrer not set.\n"
+                "Use [p]referrer (bot owner only).\n"
+                "Get it from: "
+            )
+            return
+
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        poll_token = pollinations_keys.get("token") if pollinations_keys else None
+
+        if not poll_token:
+            await ctx.send(
+                "❌ Missing Pollinations API token. " "Use [p]set api pollinations token,"
+            )
+            return
+
+        payload = {
+            "model": "openai-audio",
+            "input": text,
+            "voice": voice,
+            "response_format": "mp3",
+            "speed": 1.0,
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {poll_token}",
+            "referer": referrer,
+        }
+
+        url = "https://text.pollinations.ai/openai/audio/speech"
+
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, json=payload, headers=headers) as resp:
+                        if resp.status != 200:
+                            error_text = await resp.text()
+                            await ctx.send(
+                                f"❌ API Error: HTTP {resp.status}\n"
+                                f"`\n{error_text[:500]}\n`"
+                            )
+                            return
+
+                        audio_data = await resp.read()
+
+                        if not audio_data:
+                            await ctx.send("❌ No audio data received from the API.")
+                            return
+
+                        audio_file = BytesIO(audio_data)
+                        audio_file.seek(0)
+
+                        embed = discord.Embed(
+                            title="🔊 Text-to-Speech",
+                            description=f"`\n{text[:500]}{'...' if len(text) > 500 else ''}\n`",
+                            color=discord.Color.green(),
+                        )
+                        embed.add_field(name="Voice", value=f"`{voice}`", inline=True)
+                        embed.add_field(
+                            name="Characters", value=f"`{len(text)}`", inline=True
+                        )
+                        embed.set_footer(
+                            text=f"Requested by {ctx.author} • Powered by Pollinations.ai"
+                        )
+
+                        await ctx.send(
+                            embed=embed,
+                            file=discord.File(audio_file, filename="speech.mp3"),
+                        )
+
+            except aiohttp.ClientError as e:
+                await ctx.send(f"❌ Request Failed: {e}")
+
+            except Exception as e:
+                self.log.error(f"[TTS Error] {e}", exc_info=True)
+                await ctx.send(f"⚠️ Unexpected Error: {type(e).__name__}: {e}")
+
 
 class EditModal(ui.Modal):
 
