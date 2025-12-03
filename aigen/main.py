@@ -17,7 +17,7 @@ import re
 from PIL import Image
 from io import BytesIO
 import json
-
+import uuid
 log = logging.getLogger("red.glas-cogs-aigen")
 
 
@@ -68,6 +68,25 @@ class AiGen(commands.Cog):
     async def initialize(self) -> None:
         await self.bot.wait_until_red_ready()
 
+    async def process_image(self, url):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    data = await r.read()
+            img = Image.open(io.BytesIO(data))
+            min_size = 300
+            if img.width < min_size or img.height < min_size:
+                ratio = max(min_size / img.width, min_size / img.height)
+                img = img.resize((int(img.width * ratio), int(img.height * ratio)), Image.LANCZOS)
+                buf = io.BytesIO()
+                img.save(buf, format="PNG")
+                buf.seek(0)
+                return buf, f"image_{uuid.uuid4()}.png"
+            return None, url
+        except Exception as e:
+            self.log.error(f"Image processing failed for {url}: {e}")
+            return None, url
+
     def safe_field(embed, name, value, inline=False):
         value = str(value)
         wrapped = f"```\n{value}\n```"
@@ -75,6 +94,17 @@ class AiGen(commands.Cog):
             trimmed = value[:1000] + "..."
             wrapped = f"```\n{trimmed}\n```"
         embed.add_field(name=name, value=wrapped, inline=inline)
+
+    def parse_prompt_and_duration(self, prompt: str, default_duration: int):
+        duration = default_duration
+
+        match = re.search(r"--duration\s+(\d+)", prompt)
+        if match:
+            duration = int(match.group(1))
+
+            prompt = re.sub(r"--duration\s+\d+", "", prompt).strip()
+
+        return prompt, duration
 
     async def _pollinations_generate(
         self,
@@ -1736,141 +1766,175 @@ class AiGen(commands.Cog):
             negative_prompt=negative_prompt,
         )
 
-    async def _pollinations_request(self, prompt: str, model: str, token: str, input_images=None):
+    async def _pollinations_request(
+        self,
+        *,
+        prompt: str,
+        model: str,
+        token: str,
+        images=None,
+        duration=None,
+        audio=False,
+        aspect_ratio=None,
+    ):
         """
-        Handles Pollinations requests for VEO and Seedance.
-        VEO uses GET with just the prompt.
-        Seedance supports optional images via URLs.
+        Handles Pollinations GET requests for all models, capturing all parameters for debugging.
         """
-        safe_prompt = str(prompt)
-        encoded_prompt = urllib.parse.quote(safe_prompt)
-        headers = {"Authorization": f"Bearer {token}"}
+        encoded_prompt = urllib.parse.quote(prompt, safe="")
+        base_url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
+        params = {
+            k: v
+            for k, v in {
+                "model": model,
+                "duration": duration,
+                "audio": "true" if audio else None,
+                "aspectRatio": aspect_ratio,
+                
+            }.items()
+            if v is not None
+        }
 
-        base_url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}?model={model}"
-        images = []
-        if input_images:
-            for item in input_images:
-                if isinstance(item, discord.Attachment):
-                    images.append(item.url)
-                elif isinstance(item, str):
-                    images.append(item)
-
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        params = {"prompt": prompt}
         if images:
-            params["image"] = ",".join(images)
+            params["image"] = images[0]  
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Referer": "https://pollinations.ai/",
+            "Origin": "https://pollinations.ai",
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "*/*",
+        }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(base_url, headers=headers, params=params) as resp:
-                if resp.status != 200:
-                    text = await resp.text()
-                    raise RuntimeError(f"HTTP {resp.status} - {text}")
+            async with session.get(base_url, params=params, headers=headers) as resp:
+                full_url = str(resp.url)
 
                 content_type = resp.headers.get("Content-Type", "")
                 if "application/json" in content_type:
-                    return await resp.json()
-                return await resp.read()
+                    data = await resp.json()
+                else:
+                    data = await resp.read()
+
+        return data, full_url
+
+    @commands.command(name="seedance")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.has_permissions(attach_files=True)
+    async def seedance(self, ctx, *, prompt: str = None):
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Provide a prompt and/or images.")
+
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = poll_keys.get("token") if poll_keys else None
+        if not token:
+            return await ctx.send("Missing Pollinations API token.")
+        processed_images = []
+        temp_msgs = []
+
+        for a in ctx.message.attachments:
+            buf, result = await self.process_image(a.url.rstrip("&"))
+            if buf:
+                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                temp_msgs.append(msg)
+                processed_images.append(msg.attachments[0].url)
+            else:
+                processed_images.append(result)
+
+        if ctx.message.reference:
+            try:
+                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                for a in ref.attachments:
+                    buf, result = await self.process_image(a.url)
+                    if buf:
+                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                        temp_msgs.append(msg)
+                        processed_images.append(msg.attachments[0].url)
+                    else:
+                        processed_images.append(result)
+                for embed in ref.embeds:
+                    if embed.image and embed.image.url:
+                        buf, result = await self.process_image(embed.image.url)
+                        if buf:
+                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                            temp_msgs.append(msg)
+                            processed_images.append(msg.attachments[0].url)
+                        else:
+                            processed_images.append(result)
+            except Exception as e:
+                self.log.error(f"Failed fetching referenced message: {e}")
+
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                avatar_url = str(user.display_avatar.replace(format="png", size=1024)).split("?")[0]
+                buf, result = await self.process_image(avatar_url)
+                if buf:
+                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+                prompt = prompt.replace(user.mention, "").strip()
+
+        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
+
+        async with ctx.typing():
+            result, full_url = await self._pollinations_request(
+                prompt=prompt or "",
+                model="seedance",
+                token=token,
+                images=images if images else None,
+                duration=self.parse_prompt_and_duration(
+                    prompt or "", default_duration=8
+                )[1],
+                aspect_ratio="16:9",
+            )
+            try:
+                await ctx.send(file=discord.File(io.BytesIO(result), "seedance.mp4"))
+            except discord.HTTPException:
+                await ctx.send(f"🎬 Your Seedance video is ready: [Here]({full_url})")
+
+            for m in temp_msgs:
+                try:
+                    await m.delete()
+                except:
+                    pass
 
     @commands.command(name="veo")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
     async def veo(self, ctx, *, prompt: str = None):
-        """Generate a video using the VEO model."""
         if not prompt:
             return await ctx.send("Please provide a prompt for VEO video generation.")
 
         poll_keys = await self.bot.get_shared_api_tokens("pollinations")
         token = poll_keys.get("token") if poll_keys else None
         if not token:
-            return await ctx.send("Missing Pollinations API token. Use `pset api pollinations token,value`")
+            return await ctx.send("Missing Pollinations API token.")
+
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
 
         async with ctx.typing():
             try:
-                result = await self._pollinations_request(prompt, "veo", token)
+                result, full_url = await self._pollinations_request(
+                    prompt=prompt,
+                    model="veo",
+                    token=token,
+                    duration=duration,
+                    audio=True,
+                    aspect_ratio="16:9",
 
-                if isinstance(result, bytes):
+                )
+                if isinstance(result, bytes) and len(result) < 8_000_000:
                     await ctx.send(file=discord.File(io.BytesIO(result), "veo.mp4"))
                 else:
-                    await ctx.send(result.get("message", "Unexpected API response."))
+
+                    await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
 
             except Exception as e:
-                try:
-                    data = json.loads(str(e).split(" - ", 1)[1])
-                    user_msg = data.get("error", {}).get("message", str(e))
-                except Exception:
-                    user_msg = str(e)
-
                 embed = discord.Embed(
-                    title="❌ VEO Video Generation Failed",
-                    description=user_msg,
-                    color=discord.Color.red()
-                )
-                await ctx.send(embed=embed)
-
-    @commands.command(name="seedance")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @commands.has_permissions(attach_files=True)
-    async def seedance(self, ctx, *, prompt: str = None):
-        """Generate a video using the Seedance model with optional images (via URLs)."""
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Please provide a prompt and/or attach an image.")
-
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = poll_keys.get("token") if poll_keys else None
-        if not token:
-            return await ctx.send("Missing Pollinations API token. Use `pset api pollinations token,value`")
-
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-
-        images = [
-            img.replace(".gif", ".png") if img.endswith(".gif") and "discordapp.com/avatars/" in img else img
-            for img in images
-        ]
-
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        async with ctx.typing():
-            try:
-                result = await self._pollinations_request(
-                    prompt or "",
-                    "seedance",
-                    token,
-                    input_images=images if images else None  # Pass URLs instead of bytes
-                )
-
-                if isinstance(result, bytes):
-                    await ctx.send(file=discord.File(io.BytesIO(result), "seedance.mp4"))
-                else:
-                    await ctx.send(result.get("message", "Unexpected API response."))
-
-            except Exception as e:
-                try:
-                    data = json.loads(str(e).split(" - ", 1)[1])
-                    user_msg = data.get("error", {}).get("message", str(e))
-                except Exception:
-                    user_msg = str(e)
-
-                embed = discord.Embed(
-                    title="❌ Seedance Video Generation Failed",
-                    description=user_msg,
-                    color=discord.Color.red()
+                    title="❌ VEO Generation Failed",
+                    description=str(e),
+                    color=discord.Color.red(),
                 )
                 await ctx.send(embed=embed)
 
@@ -2008,97 +2072,6 @@ class AiGen(commands.Cog):
         await self._run_pollinations_text(ctx, "gemini-large", query)
 
     # test
-
-    async def _generate_tts(self, ctx: commands.Context, text: str, voice: str = "alloy"):
-        """Helper method to generate TTS audio."""
-
-        if not text:
-            await ctx.send("❌ Please provide text to convert to speech.")
-            return
-
-        if len(text) > 4096:
-            await ctx.send("❌ Text is too long. Maximum 4096 characters allowed.")
-            return
-
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use [p]referrer (bot owner only).\n"
-                "Get it from: "
-            )
-            return
-
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = pollinations_keys.get("token") if pollinations_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. " "Use [p]set api pollinations token,"
-            )
-            return
-
-        payload = {
-            "model": "openai-audio",
-            "input": text,
-            "voice": voice,
-            "response_format": "mp3",
-            "speed": 1.0,
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-
-        url = "https://text.pollinations.ai/openai/audio/speech"
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, json=payload, headers=headers) as resp:
-                        if resp.status != 200:
-                            error_text = await resp.text()
-                            await ctx.send(
-                                f"❌ API Error: HTTP {resp.status}\n"
-                                f"`\n{error_text[:500]}\n`"
-                            )
-                            return
-
-                        audio_data = await resp.read()
-
-                        if not audio_data:
-                            await ctx.send("❌ No audio data received from the API.")
-                            return
-
-                        audio_file = BytesIO(audio_data)
-                        audio_file.seek(0)
-
-                        embed = discord.Embed(
-                            title="🔊 Text-to-Speech",
-                            description=f"`\n{text[:500]}{'...' if len(text) > 500 else ''}\n`",
-                            color=discord.Color.green(),
-                        )
-                        embed.add_field(name="Voice", value=f"`{voice}`", inline=True)
-                        embed.add_field(
-                            name="Characters", value=f"`{len(text)}`", inline=True
-                        )
-                        embed.set_footer(
-                            text=f"Requested by {ctx.author} • Powered by Pollinations.ai"
-                        )
-
-                        await ctx.send(
-                            embed=embed,
-                            file=discord.File(audio_file, filename="speech.mp3"),
-                        )
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ Request Failed: {e}")
-
-            except Exception as e:
-                self.log.error(f"[TTS Error] {e}", exc_info=True)
-                await ctx.send(f"⚠️ Unexpected Error: {type(e).__name__}: {e}")
 
 
 class EditModal(ui.Modal):
