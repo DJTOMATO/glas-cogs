@@ -1849,7 +1849,7 @@ class AiGen(commands.Cog):
             # Remove URLs from prompt so Pollinations doesn't try to read them as text
             for url in found_urls:
                 prompt = prompt.replace(url, "").strip()
-#a
+        # a
         for a in ctx.message.attachments:
             buf, result = await self.process_image(a.url.rstrip("&"))
             if buf:
@@ -1907,9 +1907,23 @@ class AiGen(commands.Cog):
                 )[1],
                 aspect_ratio="16:9",
             )
-            try:
-                await ctx.send(file=discord.File(io.BytesIO(result), "seedance.mp4"))
-            except discord.HTTPException:
+            if isinstance(result, bytes):
+                # normal case: we got video bytes
+                try:
+                    await ctx.send(
+                        file=discord.File(io.BytesIO(result), "seedance.mp4")
+                    )
+                except discord.HTTPException:
+                    await ctx.send(
+                        f"🎬 Your Seedance video is ready: [Here]({full_url})"
+                    )
+            elif isinstance(result, dict) and result.get("error"):
+                # API returned an error, e.g., no credits
+                await ctx.send(
+                    f"❌ Seedance generation failed: {result['error']['message']}"
+                )
+            else:
+                # fallback
                 await ctx.send(f"🎬 Your Seedance video is ready: [Here]({full_url})")
 
             for m in temp_msgs:
@@ -1943,10 +1957,17 @@ class AiGen(commands.Cog):
                     aspect_ratio="16:9",
 
                 )
-                if isinstance(result, bytes) and len(result) < 8_000_000:
-                    await ctx.send(file=discord.File(io.BytesIO(result), "veo.mp4"))
+                if isinstance(result, bytes):
+                    # Normal case: got video bytes
+                    if len(result) < 8_000_000:
+                        await ctx.send(file=discord.File(io.BytesIO(result), "veo.mp4"))
+                    else:
+                        await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
+                elif isinstance(result, dict) and result.get("error"):
+                    # API returned an error
+                    await ctx.send(f"❌ VEO generation failed: {result['error']['message']}")
                 else:
-
+                    # Fallback: just send the URL if something unexpected happened
                     await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
 
             except Exception as e:
