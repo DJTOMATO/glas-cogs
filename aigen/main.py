@@ -1831,6 +1831,25 @@ class AiGen(commands.Cog):
         processed_images = []
         temp_msgs = []
 
+        if prompt:
+            # Extract URLs from the prompt
+            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
+            found_urls = re.findall(url_regex, prompt)
+            for url in found_urls:
+                buf, result = await self.process_image(url)
+                if buf:
+                    msg = await ctx.channel.send(
+                        content="Processing Image... Please wait",
+                        file=discord.File(buf, filename=result),
+                    )
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+            # Remove URLs from prompt so Pollinations doesn't try to read them as text
+            for url in found_urls:
+                prompt = prompt.replace(url, "").strip()
+#a
         for a in ctx.message.attachments:
             buf, result = await self.process_image(a.url.rstrip("&"))
             if buf:
