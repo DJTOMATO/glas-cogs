@@ -265,12 +265,15 @@ class AiGen(commands.Cog):
                         response_text = response_body.decode(errors="replace")  # always safe
                         headers_text = json.dumps(dict(resp.headers), indent=2)
 
-                        # Try parsing JSON
                         try:
                             response_json = json.loads(response_body)
-                            error_message = response_json.get("message") or response_json.get("error") or response_text
+                            # Drill down into nested error message if present
+                            if "error" in response_json and isinstance(response_json["error"], dict):
+                                error_message = response_json["error"].get("message", response_text)
+                            else:
+                                error_message = response_json.get("message", response_text)
                         except Exception:
-                            error_message = response_text
+                            error_message = response_text  # fallback if JSON parsing fails
 
                         # Include status code, headers, and body
                         error = discord.Embed(
@@ -1919,9 +1922,21 @@ class AiGen(commands.Cog):
                     )
             elif isinstance(result, dict) and result.get("error"):
                 # API returned an error, e.g., no credits
-                await ctx.send(
-                    f"❌ Seedance generation failed: {result['error']['message']}"
+                embed = discord.Embed(
+                    title="⚠️ Oops! Seedance Generation Failed",
+                    description=(
+                        "Something went wrong while generating your VEO video.\n\n"
+                        "**Error message:**\n"
+                        f"```\n{result['error']['message']}\n```"
+                        "**Possible reasons:**\n"
+                        "• The generation service might be temporarily down.\n"
+                        "• Your prompt might be invalid or too long.\n"
+                        "• You might have run out of credits/pollen balance.\n\n"
+                        "Please try again later or adjust your prompt."
+                    ),
+                    color=discord.Color.orange(),
                 )
+                await ctx.send(embed=embed)
             else:
                 # fallback
                 await ctx.send(f"🎬 Your Seedance video is ready: [Here]({full_url})")
@@ -1965,16 +1980,42 @@ class AiGen(commands.Cog):
                         await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
                 elif isinstance(result, dict) and result.get("error"):
                     # API returned an error
-                    await ctx.send(f"❌ VEO generation failed: {result['error']['message']}")
+                    # await ctx.send(f"❌ VEO generation failed: {result['error']['message']}")
+
+                    embed = discord.Embed(
+                        title="⚠️ Oops! VEO Generation Failed",
+                        description=(
+                            "Something went wrong while generating your VEO video.\n\n"
+                            "**Error message:**\n"
+                            f"```\n{result['error']['message']}\n```"
+                            "**Possible reasons:**\n"
+                            "• The generation service might be temporarily down.\n"
+                            "• Your prompt might be invalid or too long.\n"
+                            "• You might have run out of credits/pollen balance.\n\n"
+                            "Please try again later or adjust your prompt."
+                        ),
+                        color=discord.Color.orange(),
+                    )
+                    await ctx.send(embed=embed)
+
                 else:
                     # Fallback: just send the URL if something unexpected happened
                     await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
 
             except Exception as e:
                 embed = discord.Embed(
-                    title="❌ VEO Generation Failed",
-                    description=str(e),
-                    color=discord.Color.red(),
+                    title="⚠️ Oops! VEO Generation Failed",
+                    description=(
+                        "Something went wrong while generating your VEO video.\n\n"
+                        "**Error message:**\n"
+                        f"```\n{e}\n```"
+                        "**Possible reasons:**\n"
+                        "• The generation service might be temporarily down.\n"
+                        "• Your prompt might be invalid or too long.\n"
+                        "• You might have run out of credits/pollen balance.\n\n"
+                        "Please try again later or adjust your prompt."
+                    ),
+                    color=discord.Color.orange(),
                 )
                 await ctx.send(embed=embed)
 
