@@ -191,7 +191,7 @@ class AiGen(commands.Cog):
                 width = int(width * scale)
                 height = int(height * scale)
 
-        if model == "nanobanana-pro":
+        if model == "nanobanana-pro" and not width and not height:
             width = 3840
             height = 2160
         params = {
@@ -221,7 +221,7 @@ class AiGen(commands.Cog):
         if images:
             params["image"] = ",".join(images)
         encoded_prompt = quote(prompt, safe="")
-        url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
+        url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
         if model == "nanobanana-pro":
             payload = {
                 "model": model,
@@ -314,7 +314,7 @@ class AiGen(commands.Cog):
         chibisafe_tokens = await self.bot.get_shared_api_tokens("chibisafe")
         upload_url = chibisafe_tokens.get("upload_url")
         api_key = chibisafe_tokens.get("x_api_key")
-        external_upload = await self.config.guild(ctx.guild).external_upload_enabled()
+        external_upload = await self.config.guild(ctx.guild).external_upload_enabled() if ctx.guild else False
         if external_upload:
             if not upload_url or not api_key:
                 await send_func("External upload is enabled, but Chibisafe upload URL or API key is missing. Please set them first using `[p]set api chibisafe upload_url,<url> x_api_key,<key>`",
@@ -525,7 +525,7 @@ class AiGen(commands.Cog):
             "Authorization": f"Bearer {poll_token}",
             "referer": referrer,
         }
-        API_URL = "https://enter.pollinations.ai/api/generate/v1/chat/completions"
+        API_URL = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
         async with ctx.typing():
             try:
                 async with aiohttp.ClientSession() as session:
@@ -562,6 +562,9 @@ class AiGen(commands.Cog):
     @commands.admin_or_permissions(manage_guild=True)
     async def externalupload(self, ctx, toggle: bool):
         """Enable or disable external uploads like Chibisafe for this server."""
+        if not ctx.guild:
+            await ctx.send("❌ This command can only be used in a server, not in DMs.")
+            return
         await self.config.guild(ctx.guild).external_upload_enabled.set(toggle)
         status = "enabled" if toggle else "disabled"
         await ctx.send(f"External uploads are now **{status}** for this server.")
@@ -664,6 +667,13 @@ class AiGen(commands.Cog):
             ).strip()
 
         images = []
+
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                else:
+                    images.append(user.avatar_url)
 
         if ctx.message.attachments:
             images.extend([a.url for a in ctx.message.attachments])
@@ -779,6 +789,7 @@ class AiGen(commands.Cog):
             seed = random.randint(0, 1000000)
 
         await self._pollinations_generate(ctx, "turbo", prompt, seed, negative_prompt=negative_prompt)
+
 
     @commands.command()
     @commands.is_owner()
@@ -1141,7 +1152,7 @@ class AiGen(commands.Cog):
             "enhance": "True",
         }
 
-        base_url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
+        base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
         query_str = urlencode(query_params)
         full_url = f"{base_url}?{query_str}&image={images_param}"
 
@@ -1457,7 +1468,7 @@ class AiGen(commands.Cog):
             "referer": referrer,
         }
 
-        url = "https://enter.pollinations.ai/api/generate/v1/chat/completions"
+        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
 
         async with ctx.typing():
             try:
@@ -1533,7 +1544,7 @@ class AiGen(commands.Cog):
         if prompt and ctx.message.mentions:
             for user in ctx.message.mentions:
                 if hasattr(user, "display_avatar"):
-                    images.append(user.display_avatar.replace(format="png").url)
+                    images.append(user.display_avatar.with_format("png").with_size(1024).url)
                 else:
                     images.append(user.avatar_url)
                 prompt = prompt.replace(user.mention, "").strip()
@@ -1553,7 +1564,7 @@ class AiGen(commands.Cog):
                         user = None
                 if user:
                     if hasattr(user, "display_avatar"):
-                        images.append(user.display_avatar.replace(format="png").url)
+                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
                     else:
                         images.append(user.avatar_url)
                     prompt = prompt.replace(mid, "").strip()
@@ -1626,7 +1637,7 @@ class AiGen(commands.Cog):
         if prompt and ctx.message.mentions:
             for user in ctx.message.mentions:
                 if hasattr(user, "display_avatar"):
-                    images.append(user.display_avatar.replace(format="png").url)
+                    images.append(user.display_avatar.with_format("png").with_size(1024).url)
                 else:
                     images.append(user.avatar_url)
                 prompt = prompt.replace(user.mention, "").strip()
@@ -1646,7 +1657,8 @@ class AiGen(commands.Cog):
                         user = None
                 if user:
                     if hasattr(user, "display_avatar"):
-                        images.append(user.display_avatar.replace(format="png").url)
+                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                        # images.append(user.display_avatar.with_format("png").with_size(1024).url)
                     else:
                         images.append(user.avatar_url)
                     prompt = prompt.replace(mid, "").strip()
@@ -1700,6 +1712,24 @@ class AiGen(commands.Cog):
                 r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
             ).strip()
 
+        # Parse height if present in format --height <number>
+        height = 3072  # default height
+        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
+        if height_match:
+            height = int(height_match.group(1))
+            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        # Parse width if present in format --width <number>
+        width = 5504  # default width
+        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
+        if width_match:
+            width = int(width_match.group(1))
+            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+
+        # --- Parse --seed ---
+        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
+        if seed_match:
+            seed = int(seed_match.group(1))
+            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
         images = []
         if ctx.message.attachments:
             images.extend([a.url for a in ctx.message.attachments])
@@ -1719,7 +1749,10 @@ class AiGen(commands.Cog):
         if prompt and ctx.message.mentions:
             for user in ctx.message.mentions:
                 if hasattr(user, "display_avatar"):
-                    images.append(user.display_avatar.replace(format="png").url)
+                    images.append(
+                        user.display_avatar.with_format("png").with_size(1024).url
+                    )
+                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
                 else:
                     images.append(user.avatar_url)
                 prompt = prompt.replace(user.mention, "").strip()
@@ -1739,8 +1772,10 @@ class AiGen(commands.Cog):
                         user = None
                 if user:
                     if hasattr(user, "display_avatar"):
-                        images.append(user.display_avatar.replace(format="png").url)
+                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
                     else:
+
                         images.append(user.avatar_url)
                     prompt = prompt.replace(mid, "").strip()
         images = [
@@ -1757,9 +1792,10 @@ class AiGen(commands.Cog):
         if not prompt:
             await ctx.send("❌ Please provide a prompt.")
             return
-            width = 2048
-            height = 2048
-        seed = random.randint(0, 1000000)
+
+        seed = None
+        if not seed:
+            seed = random.randint(0, 1000000)
         await self._pollinations_generate(
             ctx,
             "nanobanana-pro",
@@ -1767,6 +1803,8 @@ class AiGen(commands.Cog):
             seed=seed,
             images=images if images else None,
             negative_prompt=negative_prompt,
+            height=height,
+            width=width,
         )
 
     async def _pollinations_request(
@@ -1784,7 +1822,7 @@ class AiGen(commands.Cog):
         Handles Pollinations GET requests for all models, capturing all parameters for debugging.
         """
         encoded_prompt = urllib.parse.quote(prompt, safe="")
-        base_url = f"https://enter.pollinations.ai/api/generate/image/{encoded_prompt}"
+        base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
         params = {
             k: v
             for k, v in {
@@ -1887,7 +1925,7 @@ class AiGen(commands.Cog):
 
         if prompt and ctx.message.mentions:
             for user in ctx.message.mentions:
-                avatar_url = str(user.display_avatar.replace(format="png", size=1024)).split("?")[0]
+                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
                 buf, result = await self.process_image(avatar_url)
                 if buf:
                     msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
@@ -1898,16 +1936,14 @@ class AiGen(commands.Cog):
                 prompt = prompt.replace(user.mention, "").strip()
 
         images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
         async with ctx.typing():
             result, full_url = await self._pollinations_request(
                 prompt=prompt or "",
                 model="seedance",
                 token=token,
                 images=images if images else None,
-                duration=self.parse_prompt_and_duration(
-                    prompt or "", default_duration=8
-                )[1],
+                duration=duration,
                 aspect_ratio="16:9",
             )
             if isinstance(result, bytes):
@@ -1946,6 +1982,131 @@ class AiGen(commands.Cog):
                     await m.delete()
                 except:
                     pass
+
+    @commands.command(name="seedancepro")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.has_permissions(attach_files=True)
+    async def seedancepro(self, ctx, *, prompt: str = None):
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Provide a prompt and/or images.")
+
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = poll_keys.get("token") if poll_keys else None
+        if not token:
+            return await ctx.send("Missing Pollinations API token.")
+        processed_images = []
+        temp_msgs = []
+
+        if prompt:
+            # Extract URLs from the prompt
+            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
+            found_urls = re.findall(url_regex, prompt)
+            for url in found_urls:
+                buf, result = await self.process_image(url)
+                if buf:
+                    msg = await ctx.channel.send(
+                        content="Processing Image... Please wait",
+                        file=discord.File(buf, filename=result),
+                    )
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+            # Remove URLs from prompt so Pollinations doesn't try to read them as text
+            for url in found_urls:
+                prompt = prompt.replace(url, "").strip()
+        # a
+        for a in ctx.message.attachments:
+            buf, result = await self.process_image(a.url.rstrip("&"))
+            if buf:
+                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                temp_msgs.append(msg)
+                processed_images.append(msg.attachments[0].url)
+            else:
+                processed_images.append(result)
+
+        if ctx.message.reference:
+            try:
+                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                for a in ref.attachments:
+                    buf, result = await self.process_image(a.url)
+                    if buf:
+                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                        temp_msgs.append(msg)
+                        processed_images.append(msg.attachments[0].url)
+                    else:
+                        processed_images.append(result)
+                for embed in ref.embeds:
+                    if embed.image and embed.image.url:
+                        buf, result = await self.process_image(embed.image.url)
+                        if buf:
+                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                            temp_msgs.append(msg)
+                            processed_images.append(msg.attachments[0].url)
+                        else:
+                            processed_images.append(result)
+            except Exception as e:
+                self.log.error(f"Failed fetching referenced message: {e}")
+
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                buf, result = await self.process_image(avatar_url)
+                if buf:
+                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+                prompt = prompt.replace(user.mention, "").strip()
+
+        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
+        async with ctx.typing():
+            result, full_url = await self._pollinations_request(
+                prompt=prompt or "",
+                model="seedance-pro",
+                token=token,
+                images=images if images else None,
+                duration=duration,
+                aspect_ratio="16:9",
+            )
+            if isinstance(result, bytes):
+                # normal case: we got video bytes
+                try:
+                    await ctx.send(
+                        file=discord.File(io.BytesIO(result), "seedancePro.mp4")
+                    )
+                except discord.HTTPException:
+                    await ctx.send(
+                        f"🎬 Your Seedance video is ready: [Here]({full_url})"
+                    )
+            elif isinstance(result, dict) and result.get("error"):
+                # API returned an error, e.g., no credits
+                embed = discord.Embed(
+                    title="⚠️ Oops! Seedance Pro Generation Failed",
+                    description=(
+                        "Something went wrong while generating your VEO video.\n\n"
+                        "**Error message:**\n"
+                        f"```\n{result['error']['message']}\n```"
+                        "**Possible reasons:**\n"
+                        "• The generation service might be temporarily down.\n"
+                        "• Your prompt might be invalid or too long.\n"
+                        "• You might have run out of credits/pollen balance.\n\n"
+                        "Please try again later or adjust your prompt."
+                    ),
+                    color=discord.Color.orange(),
+                )
+                await ctx.send(embed=embed)
+            else:
+                # fallback
+                await ctx.send(f"🎬 Your Seedance Pro video is ready: [Here]({full_url})")
+
+            for m in temp_msgs:
+                try:
+                    await m.delete()
+                except:
+                    pass     
 
     @commands.command(name="veo")
     @commands.cooldown(1, 60, commands.BucketType.guild)
