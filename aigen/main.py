@@ -37,27 +37,7 @@ class AiGen(commands.Cog):
         default_guild = {"external_upload_enabled": False}
 
         self.config.register_guild(**default_guild)
-    # def format_help_for_context(self, ctx: commands.Context):
-    #     image_cmds = "🎨 Image Commands\n" + " ".join(
-    #         [
-    #             f"``{cmd}``"
-    #             for cmd in [
-    #                 "flux",
-    #                 "hidream",
-    #                 "img2img",
-    #                 "kontext",
-    #                 "lumina",
-    #                 "nanobanana",
-    #                 "seedream",
-    #                 "turbo",
-    #             ]
-    #         ]
-    #     )
-    #     text_cmds = "📜 Text Commands\n" + " ".join(
-    #         [f"``{cmd}``" for cmd in ["analyze", "evil", "geminisearch", "gpt5"]]
-    #     )
 
-    #     return f"Version: {self.__version__}\n\nAuthor: {self.__author__}\n\n{image_cmds}\n\n{text_cmds}"
 
     async def cog_load(self) -> None:
         asyncio.create_task(self.initialize())
@@ -761,6 +741,7 @@ class AiGen(commands.Cog):
             negative_prompt=negative_prompt,
         )
 
+
     @commands.command(name="turbo")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
@@ -789,7 +770,6 @@ class AiGen(commands.Cog):
             seed = random.randint(0, 1000000)
 
         await self._pollinations_generate(ctx, "turbo", prompt, seed, negative_prompt=negative_prompt)
-
 
     @commands.command()
     @commands.is_owner()
@@ -1601,100 +1581,6 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
         """
-        Image Gen via nanobanana model.
-        Max size is 1024x1024
-        Usage:
-          [p]nanobanana <prompt> [attach image(s), reply, mention, ID, or URL(s)]
-          [p]nanobanana <prompt> (text-only prompt is supported)
-          Multiple images supported (comma-separated).
-        """
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-                prompt = prompt.replace(user.mention, "").strip()
-        if prompt:
-            url_matches = re.findall(r"(https?://\S+)", prompt)
-            for url in url_matches:
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-        if prompt:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    if hasattr(user, "display_avatar"):
-                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                        # images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                    else:
-                        images.append(user.avatar_url)
-                    prompt = prompt.replace(mid, "").strip()
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt.")
-            return
-        width = 1024
-        height = 1024
-        seed = random.randint(0, 1000000)
-        await self._pollinations_generate(
-            ctx,
-            "nanobanana",
-            prompt or "",
-            seed=seed,
-            width=width,
-            height=height,
-            images=images if images else None,
-            negative_prompt=negative_prompt,
-        )
-
-    @commands.command(name="nanapro")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def nanobananapro(self, ctx: commands.Context, *, prompt: str = None):
-        """
         Image Gen via nanobanana pro model.
         Max size is 2048x2048
         Usage:
@@ -1798,7 +1684,7 @@ class AiGen(commands.Cog):
             seed = random.randint(0, 1000000)
         await self._pollinations_generate(
             ctx,
-            "nanobanana-pro",
+            "nanobanana",
             prompt or "",
             seed=seed,
             images=images if images else None,
@@ -1817,9 +1703,13 @@ class AiGen(commands.Cog):
         duration=None,
         audio=False,
         aspect_ratio=None,
+        resolution=None,
+        negative_prompt=None,
+        seed=None,
     ):
         """
         Handles Pollinations GET requests for all models, capturing all parameters for debugging.
+        Supports Wan 2.6 video generation with proper parameter handling.
         """
         encoded_prompt = urllib.parse.quote(prompt, safe="")
         base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
@@ -1830,7 +1720,9 @@ class AiGen(commands.Cog):
                 "duration": duration,
                 "audio": "true" if audio else None,
                 "aspectRatio": aspect_ratio,
-                
+                "resolution": resolution,
+                "negative_prompt": negative_prompt,
+                "seed": seed,
             }.items()
             if v is not None
         }
@@ -1961,7 +1853,7 @@ class AiGen(commands.Cog):
                 embed = discord.Embed(
                     title="⚠️ Oops! Seedance Generation Failed",
                     description=(
-                        "Something went wrong while generating your VEO video.\n\n"
+                        "Something went wrong while generating your Seedance video.\n\n"
                         "**Error message:**\n"
                         f"```\n{result['error']['message']}\n```"
                         "**Possible reasons:**\n"
@@ -2086,7 +1978,7 @@ class AiGen(commands.Cog):
                 embed = discord.Embed(
                     title="⚠️ Oops! Seedance Pro Generation Failed",
                     description=(
-                        "Something went wrong while generating your VEO video.\n\n"
+                        "Something went wrong while generating your Seedance video.\n\n"
                         "**Error message:**\n"
                         f"```\n{result['error']['message']}\n```"
                         "**Possible reasons:**\n"
@@ -2108,47 +2000,174 @@ class AiGen(commands.Cog):
                 except:
                     pass     
 
-    @commands.command(name="veo")
+
+
+    @commands.command(name="wan")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
-    async def veo(self, ctx, *, prompt: str = None):
-        if not prompt:
-            return await ctx.send("Please provide a prompt for VEO video generation.")
+    async def wan(self, ctx, *, prompt: str = None):
+        """Generate videos using Alibaba Wan 2.6 model.
+        
+        Supports text-to-video and image-to-video generation.
+        
+        Usage:
+        !wan a girl dancing in a field
+        !wan --resolution 720p --aspect_ratio 9:16 a vertical video of someone singing
+        
+        Parameters in prompt:
+        --resolution: 720p or 1080p (default: 1080p)
+        --aspect_ratio: 16:9 or 9:16 (default: 16:9)
+        --negative_prompt: things to avoid in the video
+        
+        Image-to-video: attach an image and provide a prompt.
+        Duration: automatically optimized (2-15 seconds).
+        """
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Please provide a prompt and/or images.")
 
         poll_keys = await self.bot.get_shared_api_tokens("pollinations")
         token = poll_keys.get("token") if poll_keys else None
         if not token:
-            return await ctx.send("Missing Pollinations API token.")
+            return await ctx.send("❌ Missing Pollinations API token.")
+        
+        processed_images = []
+        temp_msgs = []
 
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
+        # Parse resolution from prompt
+        resolution = "1080p"  # default
+        resolution_match = re.search(r"--resolution\s+(720p|1080p)", prompt or "", re.IGNORECASE)
+        if resolution_match:
+            resolution = resolution_match.group(1).lower()
+            prompt = re.sub(r"--resolution\s+(?:720p|1080p)", "", prompt or "", flags=re.IGNORECASE).strip()
+        
+        # Parse aspect ratio from prompt
+        aspect_ratio = "16:9"  # default
+        aspect_match = re.search(r"--aspect_ratio\s+(16:9|9:16)", prompt or "", re.IGNORECASE)
+        if aspect_match:
+            aspect_ratio = aspect_match.group(1)
+            prompt = re.sub(r"--aspect_ratio\s+(?:16:9|9:16)", "", prompt or "", flags=re.IGNORECASE).strip()
+        
+        # Parse negative prompt
+        negative_prompt = None
+        neg_match = re.search(r"--negative_prompt\s+([^\-]+?)(?=--|$)", prompt or "", re.IGNORECASE)
+        if neg_match:
+            negative_prompt = neg_match.group(1).strip()
+            prompt = re.sub(r"--negative_prompt\s+[^\-]+?(?=--|$)", "", prompt or "", flags=re.IGNORECASE).strip()
+        
+        # Parse seed from prompt
+        seed = None
+        seed_match = re.search(r"--seed\s+(\d+)", prompt or "", re.IGNORECASE)
+        if seed_match:
+            seed = int(seed_match.group(1))
+            prompt = re.sub(r"--seed\s+\d+", "", prompt or "", flags=re.IGNORECASE).strip()
+        else:
+            seed = random.randint(0, 1000000)
 
+        if prompt:
+            # Extract URLs from the prompt
+            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
+            found_urls = re.findall(url_regex, prompt)
+            for url in found_urls:
+                buf, result = await self.process_image(url)
+                if buf:
+                    msg = await ctx.channel.send(
+                        content="🔄 Processing image...",
+                        file=discord.File(buf, filename=result),
+                    )
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+            # Remove URLs from prompt
+            for url in found_urls:
+                prompt = prompt.replace(url, "").strip()
+        
+        # Process attachments
+        for a in ctx.message.attachments:
+            buf, result = await self.process_image(a.url.rstrip("&"))
+            if buf:
+                msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+                temp_msgs.append(msg)
+                processed_images.append(msg.attachments[0].url)
+            else:
+                processed_images.append(result)
+
+        # Process referenced message
+        if ctx.message.reference:
+            try:
+                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                for a in ref.attachments:
+                    buf, result = await self.process_image(a.url)
+                    if buf:
+                        msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+                        temp_msgs.append(msg)
+                        processed_images.append(msg.attachments[0].url)
+                    else:
+                        processed_images.append(result)
+                for embed in ref.embeds:
+                    if embed.image and embed.image.url:
+                        buf, result = await self.process_image(embed.image.url)
+                        if buf:
+                            msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+                            temp_msgs.append(msg)
+                            processed_images.append(msg.attachments[0].url)
+                        else:
+                            processed_images.append(result)
+            except Exception as e:
+                self.log.error(f"Failed fetching referenced message: {e}")
+
+        # Process mentions
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                buf, result = await self.process_image(avatar_url)
+                if buf:
+                    msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+                prompt = prompt.replace(user.mention, "").strip()
+
+        # Get first image if available (Wan 2.6 supports image-to-video)
+        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
+        
+        # Parse duration from prompt (Wan 2.6: 2-15 seconds, Pollinations optimizes automatically)
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
+        
         async with ctx.typing():
             try:
                 result, full_url = await self._pollinations_request(
-                    prompt=prompt,
-                    model="veo",
+                    prompt=prompt or "",
+                    model="wan",
                     token=token,
+                    images=images if images else None,
                     duration=duration,
-                    audio=True,
-                    aspect_ratio="16:9",
-
+                    aspect_ratio=aspect_ratio,
+                    resolution=resolution,
+                    negative_prompt=negative_prompt,
+                    seed=seed,
                 )
                 if isinstance(result, bytes):
-                    # Normal case: got video bytes
-                    if len(result) < 8_000_000:
-                        await ctx.send(file=discord.File(io.BytesIO(result), "veo.mp4"))
-                    else:
-                        await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
+                    # Got video bytes - try to send as file
+                    try:
+                        await ctx.send(
+                            content="✨ Your Wan 2.6 video is ready!",
+                            file=discord.File(io.BytesIO(result), "wan.mp4")
+                        )
+                    except discord.HTTPException:
+                        # File too large, send link instead
+                        await ctx.send(
+                            f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})"
+                        )
                 elif isinstance(result, dict) and result.get("error"):
                     # API returned an error
-                    # await ctx.send(f"❌ VEO generation failed: {result['error']['message']}")
-
                     embed = discord.Embed(
-                        title="⚠️ Oops! VEO Generation Failed",
+                        title="⚠️ Wan 2.6 Generation Failed",
                         description=(
-                            "Something went wrong while generating your VEO video.\n\n"
+                            "Something went wrong while generating your video.\n\n"
                             "**Error message:**\n"
-                            f"```\n{result['error']['message']}\n```"
+                            f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
                             "**Possible reasons:**\n"
                             "• The generation service might be temporarily down.\n"
                             "• Your prompt might be invalid or too long.\n"
@@ -2158,27 +2177,22 @@ class AiGen(commands.Cog):
                         color=discord.Color.orange(),
                     )
                     await ctx.send(embed=embed)
-
                 else:
-                    # Fallback: just send the URL if something unexpected happened
-                    await ctx.send(f"🎬 Your VEO video is [Here]({full_url})")
-
+                    # Unexpected response format
+                    await ctx.send(f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})")
+            except asyncio.TimeoutError:
+                await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
             except Exception as e:
-                embed = discord.Embed(
-                    title="⚠️ Oops! VEO Generation Failed",
-                    description=(
-                        "Something went wrong while generating your VEO video.\n\n"
-                        "**Error message:**\n"
-                        f"```\n{e}\n```"
-                        "**Possible reasons:**\n"
-                        "• The generation service might be temporarily down.\n"
-                        "• Your prompt might be invalid or too long.\n"
-                        "• You might have run out of credits/pollen balance.\n\n"
-                        "Please try again later or adjust your prompt."
-                    ),
-                    color=discord.Color.orange(),
-                )
-                await ctx.send(embed=embed)
+                self.log.error(f"Wan 2.6 generation error: {e}", exc_info=True)
+                await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
+            finally:
+                # Clean up temporary messages
+                for m in temp_msgs:
+                    try:
+                        await m.delete()
+                    except:
+                        pass     
+
 
     @commands.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
@@ -2243,12 +2257,6 @@ class AiGen(commands.Cog):
         """Query with `claude`."""
         await self._run_pollinations_text(ctx, "claude", query)
 
-    @commands.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def claudelarge(self, ctx: commands.Context, *, query: str = None):
-        """Query with `claude-large`."""
-        await self._run_pollinations_text(ctx, "claude-large", query)
 
     @commands.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
@@ -2306,14 +2314,281 @@ class AiGen(commands.Cog):
         """Query with `kimi-k2-thinking`."""
         await self._run_pollinations_text(ctx, "kimi-k2-thinking", query)
 
-    @commands.command()
+    @commands.command(name="klein")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def klein(self, ctx: commands.Context, *, prompt: str = None):
+        """
+        Image Gen via klein pro model.
+        Max size is 2048x2048
+        Usage:
+          [p]klein <prompt> [attach image(s), reply, mention, ID, or URL(s)]
+          [p]klein <prompt> (text-only prompt is supported)
+          Multiple images supported (comma-separated).
+        """
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        # Parse height if present in format --height <number>
+        height = 3072  # default height
+        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
+        if height_match:
+            height = int(height_match.group(1))
+            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        # Parse width if present in format --width <number>
+        width = 5504  # default width
+        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
+        if width_match:
+            width = int(width_match.group(1))
+            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+
+        # --- Parse --seed ---
+        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
+        if seed_match:
+            seed = int(seed_match.group(1))
+            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        images = []
+        if ctx.message.attachments:
+            images.extend([a.url for a in ctx.message.attachments])
+        if ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    images.extend([a.url for a in referenced.attachments])
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            images.append(embed.image.url)
+            except Exception:
+                pass
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(
+                        user.display_avatar.with_format("png").with_size(1024).url
+                    )
+                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                else:
+                    images.append(user.avatar_url)
+                prompt = prompt.replace(user.mention, "").strip()
+        if prompt:
+            url_matches = re.findall(r"(https?://\S+)", prompt)
+            for url in url_matches:
+                images.append(url)
+                prompt = prompt.replace(url, "").strip()
+        if prompt:
+            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
+            for mid in id_matches:
+                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(int(mid))
+                    except Exception:
+                        user = None
+                if user:
+                    if hasattr(user, "display_avatar"):
+                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                    else:
+
+                        images.append(user.avatar_url)
+                    prompt = prompt.replace(mid, "").strip()
+        images = [
+            (
+                img.replace(".gif", ".png")
+                if img.endswith(".gif") and "discordapp.com/avatars/" in img
+                else img
+            )
+            for img in images
+        ]
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        if not prompt:
+            await ctx.send("❌ Please provide a prompt.")
+            return
+
+        seed = None
+        if not seed:
+            seed = random.randint(0, 1000000)
+        await self._pollinations_generate(
+            ctx,
+            "klein",
+            prompt or "",
+            seed=seed,
+            images=images if images else None,
+            negative_prompt=negative_prompt,
+            height=height,
+            width=width,
+        )
+
+    @commands.command(name="kleinpro")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def kleinpro(self, ctx: commands.Context, *, prompt: str = None):
+        """
+        Image Gen via klein pro model.
+        Max size is 2048x2048
+        Usage:
+          [p]kleinpro <prompt> [attach image(s), reply, mention, ID, or URL(s)]
+          [p]kleinpro <prompt> (text-only prompt is supported)
+          Multiple images supported (comma-separated).
+        """
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        # Parse height if present in format --height <number>
+        height = 3072  # default height
+        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
+        if height_match:
+            height = int(height_match.group(1))
+            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        # Parse width if present in format --width <number>
+        width = 5504  # default width
+        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
+        if width_match:
+            width = int(width_match.group(1))
+            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+
+        # --- Parse --seed ---
+        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
+        if seed_match:
+            seed = int(seed_match.group(1))
+            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        images = []
+        if ctx.message.attachments:
+            images.extend([a.url for a in ctx.message.attachments])
+        if ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    images.extend([a.url for a in referenced.attachments])
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            images.append(embed.image.url)
+            except Exception:
+                pass
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(
+                        user.display_avatar.with_format("png").with_size(1024).url
+                    )
+                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                else:
+                    images.append(user.avatar_url)
+                prompt = prompt.replace(user.mention, "").strip()
+        if prompt:
+            url_matches = re.findall(r"(https?://\S+)", prompt)
+            for url in url_matches:
+                images.append(url)
+                prompt = prompt.replace(url, "").strip()
+        if prompt:
+            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
+            for mid in id_matches:
+                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(int(mid))
+                    except Exception:
+                        user = None
+                if user:
+                    if hasattr(user, "display_avatar"):
+                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                    else:
+
+                        images.append(user.avatar_url)
+                    prompt = prompt.replace(mid, "").strip()
+        images = [
+            (
+                img.replace(".gif", ".png")
+                if img.endswith(".gif") and "discordapp.com/avatars/" in img
+                else img
+            )
+            for img in images
+        ]
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        if not prompt:
+            await ctx.send("❌ Please provide a prompt.")
+            return
+
+        seed = None
+        if not seed:
+            seed = random.randint(0, 1000000)
+        await self._pollinations_generate(
+            ctx,
+            "klein-large",
+            prompt or "",
+            seed=seed,
+            images=images if images else None,
+            negative_prompt=negative_prompt,
+            height=height,
+            width=width,
+        )
+
+
+    @commands.command(name="gemini25pro")
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def geminilarge(self, ctx: commands.Context, *, query: str = None):
-        """Query with `gemini-large`."""
-        await self._run_pollinations_text(ctx, "gemini-large", query)
+    async def gemini25pro(self, ctx: commands.Context, *, query: str = None):
+        """Query with Google's latest Gemini 2.5 Pro model for advanced text generation.
+        
+        Parameters
+        ----------
+        ctx : commands.Context
+            The command context.
+        query : str, optional
+            The text query or prompt.
+        
+        Notes
+        -----
+        - Cooldown: 3 uses per 5 seconds per guild.
+        - Powered by Google Gemini 2.5 Pro via Pollinations.ai API.
+        """
+        await self._run_pollinations_text(ctx, "gemini-2.5-pro", query)
 
-    # test
+    @commands.command(name="nomnom")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def nomnom(self, ctx: commands.Context, *, query: str = None):
+        """Query with NomNom (alias: gemini-scrape) for web research, scraping, and crawling.
+        
+        Parameters
+        ----------
+        ctx : commands.Context
+            The command context.
+        query : str, optional
+            The search query or URL to scrape/crawl.
+        
+        Notes
+        -----
+        - Cooldown: 3 uses per 5 seconds per guild.
+        - Excellent for web research and scraping tasks.
+        - Powered by Pollinations.ai API.
+        """
+        await self._run_pollinations_text(ctx, "nomnom", query)
 
 
 class EditModal(ui.Modal):
