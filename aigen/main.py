@@ -38,7 +38,6 @@ class AiGen(commands.Cog):
 
         self.config.register_guild(**default_guild)
 
-
     async def cog_load(self) -> None:
         asyncio.create_task(self.initialize())
 
@@ -101,10 +100,10 @@ class AiGen(commands.Cog):
         start_time = discord.utils.utcnow()
         if negative_prompt is None:
             negative_prompt = "worst quality, blurry"  # fallback default
-        if not width and not height and model != "nanobanana-pro":
+        if not width and not height:
             width = 1024
             height = 1024
-        if width and height and model != "nanobanana-pro":
+        if width and height:
             try:
                 width = int(width)
                 height = int(height)
@@ -165,15 +164,12 @@ class AiGen(commands.Cog):
             return
 
         min_pixels = 921600
-        if width and height and model != "nanobanana-pro":
+        if width and height:
             if width * height < min_pixels:
                 scale = (min_pixels / (width * height)) ** 0.5
                 width = int(width * scale)
                 height = int(height * scale)
 
-        if model == "nanobanana-pro" and not width and not height:
-            width = 3840
-            height = 2160
         params = {
             "model": model,
             "width": width,
@@ -202,32 +198,18 @@ class AiGen(commands.Cog):
             params["image"] = ",".join(images)
         encoded_prompt = quote(prompt, safe="")
         url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
-        if model == "nanobanana-pro":
-            payload = {
-                "model": model,
-                "width": width,
-                "height": height,
-                "seed": seed,
-                "enhance": True,
-                "private": True,
-                "nologo": True,
-                "quality": "high",
-                "negative_prompt": "worst quality, blurry",
-                "prompt": prompt,
-            }
-        else:
-            payload = {
-                "model": model,
-                "width": width,
-                "height": height,
-                "seed": seed,
-                "enhance": True,
-                "private": True,
-                "nologo": True,
-                "quality": "high",
-                "negative_prompt": "worst quality, blurry",
-                "prompt": prompt,
-            }
+        payload = {
+            "model": model,
+            "width": width,
+            "height": height,
+            "seed": seed,
+            "enhance": True,
+            "private": True,
+            "nologo": True,
+            "quality": "high",
+            "negative_prompt": "worst quality, blurry",
+            "prompt": prompt,
+        }
         if images:
             payload["image"] = ",".join(images)
 
@@ -554,6 +536,8 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
         """Generate an image using the Flux model.
+        
+        Model: flux
 
         Parameters
         ----------
@@ -598,156 +582,14 @@ class AiGen(commands.Cog):
 
         await self._pollinations_generate(ctx, "flux", prompt, seed, negative_prompt=negative_prompt)
 
-    @commands.command(name="kontext")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def kontext(self, ctx: commands.Context, *, prompt: str):
-        """Image Gen via kontext model."""
-
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        words = prompt.split()
-        seed = None
-
-        if words and words[-1].isdigit():
-            seed = int(words[-1])
-            words = words[:-1]
-            prompt = " ".join(words)
-        else:
-            seed = random.randint(0, 1000000)
-
-        await self._pollinations_generate(ctx, "kontext", prompt, seed, negative_prompt=negative_prompt)
-
-    @commands.command(name="seedream")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def seedream(self, ctx: commands.Context, *, prompt: str = None):
-        """Image Gen via seedream model.
-        Can be used with text prompt only or with image attachments.
-        Image size can be changed via command arguments; default 1700x1200.
-        Ex: !seedream a cat
-        Ex: !seedream 1024x768 a cat
-        Ex: !seedream 1024 768 a cat"""
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        images = []
-
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-
-        if not prompt and not images:
-            await ctx.send("❌ Please provide a prompt and/or attach an image.")
-            return
-
-        # Default resolution values
-        width = 1700
-        height = 1200
-
-        if prompt:
-            parts = prompt.split(maxsplit=2)
-            if parts:
-                # Try parsing the first part as WxH format
-                if "x" in parts[0]:
-                    try:
-                        width_str, height_str = parts[0].lower().split("x")
-                        width = int(width_str)
-                        height = int(height_str)
-                        prompt = parts[1] if len(parts) > 1 else ""
-                        # If there is more after the second part, append it
-                        if len(parts) > 2:
-                            prompt += " " + parts[2]
-                    except ValueError:
-                        width = 1700
-                        height = 1200
-                        prompt = prompt
-                # Otherwise try parsing first two parts as integers
-                elif len(parts) >= 2:
-                    try:
-                        width = int(parts[0])
-                        height = int(parts[1])
-                        prompt = parts[2] if len(parts) > 2 else ""
-                    except ValueError:
-                        width = 1700
-                        height = 1200
-                        prompt = prompt
-
-        # Handle seed extraction from prompt
-        seed = random.randint(0, 1000000)
-        if prompt:
-            words = prompt.split()
-            if words and words[-1].isdigit():
-                seed = int(words[-1])
-                prompt = " ".join(words[:-1])
-
-        # Replace certain gif URLs with pngs for compatibility
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-
-        # Remove duplicate images
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        await self._pollinations_generate(
-            ctx,
-            "seedream",
-            prompt or "",
-            seed=seed,
-            images=images if images else None,
-            width=width,
-            height=height,
-            negative_prompt=negative_prompt,
-        )
-
-
     @commands.command(name="turbo")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def turbo(self, ctx: commands.Context, *, prompt: str):
-        """Image Gen via turbo model."""
+        """Image Gen via turbo model.
 
+        Model: turbo
+        """
         # Parse negative prompt if present in format --negative <text>
         negative_prompt = "worst quality, blurry"  # default negative prompt
         negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
@@ -770,6 +612,69 @@ class AiGen(commands.Cog):
             seed = random.randint(0, 1000000)
 
         await self._pollinations_generate(ctx, "turbo", prompt, seed, negative_prompt=negative_prompt)
+
+    @commands.command(name="zimage")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def zimage(self, ctx: commands.Context, *, prompt: str):
+        """
+        Image Gen via Z-Image Turbo model.
+        
+        Model: zimage
+        """
+
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        words = prompt.split()
+        seed = None
+
+        if words and words[-1].isdigit():
+            seed = int(words[-1])
+            words = words[:-1]
+            prompt = " ".join(words)
+        else:
+            seed = random.randint(0, 1000000)
+
+        await self._pollinations_generate(ctx, "zimage", prompt, seed, negative_prompt=negative_prompt)
+
+    @commands.command(name="imagen")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def imagen(self, ctx: commands.Context, *, prompt: str):
+        """Image Gen via Imagen 4 model.
+        
+        Model: imagen-4
+        """
+
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        words = prompt.split()
+        seed = None
+
+        if words and words[-1].isdigit():
+            seed = int(words[-1])
+            words = words[:-1]
+            prompt = " ".join(words)
+        else:
+            seed = random.randint(0, 1000000)
+
+        await self._pollinations_generate(ctx, "imagen-4", prompt, seed, negative_prompt=negative_prompt)
 
     @commands.command()
     @commands.is_owner()
@@ -1029,16 +934,18 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def img2img(self, ctx: commands.Context, *, text: str = None):
-        """
-        Multi-Image-to-Image Gen via gptimage model.
-        Detects images from attachments, reply, mention, ID, or URL.
-        Supports up to 3 images.
-        Usage examples:
-        !img2img put them together (with 2+ attachments)
-        !img2img image1=https://example.com/1.png image2=https://example.com/2.png combine them
-        !img2img add a background here @username
-        !img2img enhance this 123456789012345678
-        !img2img (reply to an image) stylize this
+        """ Multi-Image-to-Image Gen via gptimage model.
+            
+            Model: flux
+            
+            Detects images from attachments, reply, mention, ID, or URL.
+            Supports up to 3 images.
+            
+            Usage examples:
+            - !img2img put them together (with 2+ attachments)
+            - !img2img add a background here @username
+            - !img2img enhance this 123456789012345678
+            - !img2img (reply to an image) stylize this
         """
         images = []
         prompt = text or ""
@@ -1124,7 +1031,7 @@ class AiGen(commands.Cog):
             "width": 512,
             "height": 512,
             "seed": seed,
-            "model": "kontext",
+            "model": "flux",
             "referrer": await self.config.referrer(),
             "nologo": "True",
             "private": "True",
@@ -1239,7 +1146,7 @@ class AiGen(commands.Cog):
                 EditModal(
                     cog=self,
                     interaction=interaction,
-                    model="kontext",
+                    model="flux",
                     prompt=prompt,
                     seed=seed,
                     image_url=(
@@ -1491,6 +1398,8 @@ class AiGen(commands.Cog):
     async def gptimage(self, ctx: commands.Context, *, prompt: str = None):
         """
         Image Gen via gptimage model.
+        
+        Model: gptimage
         Max size is 1024x1024
         Usage:
           [p]gptimage <prompt> [attach image(s), reply, mention, ID, or URL(s)]
@@ -1576,123 +1485,6 @@ class AiGen(commands.Cog):
             negative_prompt=negative_prompt,
         )
 
-    @commands.command(name="nanobanana")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def nanobanana(self, ctx: commands.Context, *, prompt: str = None):
-        """
-        Image Gen via nanobanana pro model.
-        Max size is 2048x2048
-        Usage:
-          [p]nanobanana <prompt> [attach image(s), reply, mention, ID, or URL(s)]
-          [p]nanobanana <prompt> (text-only prompt is supported)
-          Multiple images supported (comma-separated).
-        """
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        # Parse height if present in format --height <number>
-        height = 3072  # default height
-        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
-        if height_match:
-            height = int(height_match.group(1))
-            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        # Parse width if present in format --width <number>
-        width = 5504  # default width
-        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
-        if width_match:
-            width = int(width_match.group(1))
-            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-
-        # --- Parse --seed ---
-        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
-        if seed_match:
-            seed = int(seed_match.group(1))
-            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(
-                        user.display_avatar.with_format("png").with_size(1024).url
-                    )
-                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-                prompt = prompt.replace(user.mention, "").strip()
-        if prompt:
-            url_matches = re.findall(r"(https?://\S+)", prompt)
-            for url in url_matches:
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-        if prompt:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    if hasattr(user, "display_avatar"):
-                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                    else:
-
-                        images.append(user.avatar_url)
-                    prompt = prompt.replace(mid, "").strip()
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt.")
-            return
-
-        seed = None
-        if not seed:
-            seed = random.randint(0, 1000000)
-        await self._pollinations_generate(
-            ctx,
-            "nanobanana",
-            prompt or "",
-            seed=seed,
-            images=images if images else None,
-            negative_prompt=negative_prompt,
-            height=height,
-            width=width,
-        )
-
     async def _pollinations_request(
         self,
         *,
@@ -1754,13 +1546,12 @@ class AiGen(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
     async def seedance(self, ctx, *, prompt: str = None):
+        """Generate videos using Seedance Lite model.
+        
+        Model: seedance
+        """
         if not prompt and not ctx.message.attachments and not ctx.message.reference:
             return await ctx.send("❌ Provide a prompt and/or images.")
-
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = poll_keys.get("token") if poll_keys else None
-        if not token:
-            return await ctx.send("Missing Pollinations API token.")
         processed_images = []
         temp_msgs = []
 
@@ -1875,17 +1666,32 @@ class AiGen(commands.Cog):
                 except:
                     pass
 
-    @commands.command(name="seedancepro")
+    @commands.command(name="grok-video")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
-    async def seedancepro(self, ctx, *, prompt: str = None):
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Provide a prompt and/or images.")
+    async def grok_video(self, ctx, *, prompt: str = None):
+        """Generate videos using Grok Video model.
+        
+        Model: grok-video
+        
+        Supports text-to-video generation.
+        
+        Usage:
+        !grok-video a girl dancing in a field
+        !grok-video --duration 5 a person waving
+        """
+        if not prompt:
+            return await ctx.send("❌ Please provide a prompt for video generation.")
 
         poll_keys = await self.bot.get_shared_api_tokens("pollinations")
         token = poll_keys.get("token") if poll_keys else None
         if not token:
-            return await ctx.send("Missing Pollinations API token.")
+            return await ctx.send("❌ Missing Pollinations API token.")
+
+        # Parse duration from prompt
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Provide a prompt and/or images.")
         processed_images = []
         temp_msgs = []
 
@@ -1954,59 +1760,61 @@ class AiGen(commands.Cog):
 
         images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
         prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
+
         async with ctx.typing():
-            result, full_url = await self._pollinations_request(
-                prompt=prompt or "",
-                model="seedance-pro",
-                token=token,
-                images=images if images else None,
-                duration=duration,
-                aspect_ratio="16:9",
-            )
-            if isinstance(result, bytes):
-                # normal case: we got video bytes
-                try:
-                    await ctx.send(
-                        file=discord.File(io.BytesIO(result), "seedancePro.mp4")
-                    )
-                except discord.HTTPException:
-                    await ctx.send(
-                        f"🎬 Your Seedance video is ready: [Here]({full_url})"
-                    )
-            elif isinstance(result, dict) and result.get("error"):
-                # API returned an error, e.g., no credits
-                embed = discord.Embed(
-                    title="⚠️ Oops! Seedance Pro Generation Failed",
-                    description=(
-                        "Something went wrong while generating your Seedance video.\n\n"
-                        "**Error message:**\n"
-                        f"```\n{result['error']['message']}\n```"
-                        "**Possible reasons:**\n"
-                        "• The generation service might be temporarily down.\n"
-                        "• Your prompt might be invalid or too long.\n"
-                        "• You might have run out of credits/pollen balance.\n\n"
-                        "Please try again later or adjust your prompt."
-                    ),
-                    color=discord.Color.orange(),
+            try:
+                result, full_url = await self._pollinations_request(
+                    prompt=prompt or "",
+                    model="grok-video",
+                    token=token,
+                    duration=duration,
+                    images=images,
                 )
-                await ctx.send(embed=embed)
-            else:
-                # fallback
-                await ctx.send(f"🎬 Your Seedance Pro video is ready: [Here]({full_url})")
-
-            for m in temp_msgs:
-                try:
-                    await m.delete()
-                except:
-                    pass     
-
-
+                if isinstance(result, bytes):
+                    # Got video bytes - try to send as file
+                    try:
+                        await ctx.send(
+                            content="✨ Your Grok video is ready!",
+                            file=discord.File(io.BytesIO(result), "grok_video.mp4")
+                        )
+                    except discord.HTTPException:
+                        # File too large, send link instead
+                        await ctx.send(
+                            f"✨ Your Grok video is ready! [View Video]({full_url})"
+                        )
+                elif isinstance(result, dict) and result.get("error"):
+                    # API returned an error
+                    embed = discord.Embed(
+                        title="⚠️ Grok Video Generation Failed",
+                        description=(
+                            "Something went wrong while generating your video.\n\n"
+                            "**Error message:**\n"
+                            f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
+                            "**Possible reasons:**\n"
+                            "• The generation service might be temporarily down.\n"
+                            "• Your prompt might be invalid or too long.\n"
+                            "• You might have run out of credits/pollen balance.\n\n"
+                            "Please try again later or adjust your prompt."
+                        ),
+                        color=discord.Color.orange(),
+                    )
+                    await ctx.send(embed=embed)
+                else:
+                    # Unexpected response format
+                    await ctx.send(f"✨ Your Grok video is ready! [View Video]({full_url})")
+            except asyncio.TimeoutError:
+                await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
+            except Exception as e:
+                self.log.error(f"Grok video generation error: {e}", exc_info=True)
+                await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
 
     @commands.command(name="wan")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
     async def wan(self, ctx, *, prompt: str = None):
         """Generate videos using Alibaba Wan 2.6 model.
+        
+        Model: wan
         
         Supports text-to-video and image-to-video generation.
         
@@ -2029,7 +1837,7 @@ class AiGen(commands.Cog):
         token = poll_keys.get("token") if poll_keys else None
         if not token:
             return await ctx.send("❌ Missing Pollinations API token.")
-        
+
         processed_images = []
         temp_msgs = []
 
@@ -2039,21 +1847,21 @@ class AiGen(commands.Cog):
         if resolution_match:
             resolution = resolution_match.group(1).lower()
             prompt = re.sub(r"--resolution\s+(?:720p|1080p)", "", prompt or "", flags=re.IGNORECASE).strip()
-        
+
         # Parse aspect ratio from prompt
         aspect_ratio = "16:9"  # default
         aspect_match = re.search(r"--aspect_ratio\s+(16:9|9:16)", prompt or "", re.IGNORECASE)
         if aspect_match:
             aspect_ratio = aspect_match.group(1)
             prompt = re.sub(r"--aspect_ratio\s+(?:16:9|9:16)", "", prompt or "", flags=re.IGNORECASE).strip()
-        
+
         # Parse negative prompt
         negative_prompt = None
         neg_match = re.search(r"--negative_prompt\s+([^\-]+?)(?=--|$)", prompt or "", re.IGNORECASE)
         if neg_match:
             negative_prompt = neg_match.group(1).strip()
             prompt = re.sub(r"--negative_prompt\s+[^\-]+?(?=--|$)", "", prompt or "", flags=re.IGNORECASE).strip()
-        
+
         # Parse seed from prompt
         seed = None
         seed_match = re.search(r"--seed\s+(\d+)", prompt or "", re.IGNORECASE)
@@ -2081,7 +1889,7 @@ class AiGen(commands.Cog):
             # Remove URLs from prompt
             for url in found_urls:
                 prompt = prompt.replace(url, "").strip()
-        
+
         # Process attachments
         for a in ctx.message.attachments:
             buf, result = await self.process_image(a.url.rstrip("&"))
@@ -2131,10 +1939,10 @@ class AiGen(commands.Cog):
 
         # Get first image if available (Wan 2.6 supports image-to-video)
         images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-        
+
         # Parse duration from prompt (Wan 2.6: 2-15 seconds, Pollinations optimizes automatically)
         prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
-        
+
         async with ctx.typing():
             try:
                 result, full_url = await self._pollinations_request(
@@ -2192,7 +2000,6 @@ class AiGen(commands.Cog):
                         await m.delete()
                     except:
                         pass     
-
 
     @commands.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
@@ -2257,7 +2064,6 @@ class AiGen(commands.Cog):
         """Query with `claude`."""
         await self._run_pollinations_text(ctx, "claude", query)
 
-
     @commands.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
@@ -2319,7 +2125,9 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def klein(self, ctx: commands.Context, *, prompt: str = None):
         """
-        Image Gen via klein pro model.
+        Image Gen via FLUX.2 Klein 4B model.
+        
+        Model: klein
         Max size is 2048x2048
         Usage:
           [p]klein <prompt> [attach image(s), reply, mention, ID, or URL(s)]
@@ -2436,7 +2244,9 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def kleinpro(self, ctx: commands.Context, *, prompt: str = None):
         """
-        Image Gen via klein pro model.
+        Image Gen via FLUX.2 Klein 9B model.
+        
+        Model: klein-large
         Max size is 2048x2048
         Usage:
           [p]kleinpro <prompt> [attach image(s), reply, mention, ID, or URL(s)]
@@ -2548,45 +2358,63 @@ class AiGen(commands.Cog):
             width=width,
         )
 
-
-    @commands.command(name="gemini25pro")
+    @commands.command(name="qwencharacter")
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def gemini25pro(self, ctx: commands.Context, *, query: str = None):
-        """Query with Google's latest Gemini 2.5 Pro model for advanced text generation.
+    async def qwencharacter(self, ctx: commands.Context, *, query: str = None):
+        """Query with Qwen Character model.
         
-        Parameters
-        ----------
-        ctx : commands.Context
-            The command context.
-        query : str, optional
-            The text query or prompt.
-        
-        Notes
-        -----
-        - Cooldown: 3 uses per 5 seconds per guild.
-        - Powered by Google Gemini 2.5 Pro via Pollinations.ai API.
+        Model: qwen-character
         """
-        await self._run_pollinations_text(ctx, "gemini-2.5-pro", query)
+        await self._run_pollinations_text(ctx, "qwen-character", query)
+
+    @commands.command(name="novamicro")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def novamicro(self, ctx: commands.Context, *, query: str = None):
+        """Query with Amazon Nova Micro model.
+        
+        Model: nova-fast
+        """
+        await self._run_pollinations_text(ctx, "nova-fast", query)
+
+    @commands.command(name="minimax")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def minimax(self, ctx: commands.Context, *, query: str = None):
+        """Query with MiniMax M2.1 model.
+        
+        Model: minimax
+        """
+        await self._run_pollinations_text(ctx, "minimax", query)
+
+    @commands.command(name="kimi")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def kimi(self, ctx: commands.Context, *, query: str = None):
+        """Query with Moonshot Kimi K2.5 model.
+        
+        Model: kimi
+        """
+        await self._run_pollinations_text(ctx, "kimi", query)
+
+    @commands.command(name="glm")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def glm(self, ctx: commands.Context, *, query: str = None):
+        """Query with Z.ai GLM-4.7 model.
+        
+        Model: glm
+        """
+        await self._run_pollinations_text(ctx, "glm", query)
 
     @commands.command(name="nomnom")
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def nomnom(self, ctx: commands.Context, *, query: str = None):
-        """Query with NomNom (alias: gemini-scrape) for web research, scraping, and crawling.
+        """Query with NomNom for web research, scraping, and crawling.
         
-        Parameters
-        ----------
-        ctx : commands.Context
-            The command context.
-        query : str, optional
-            The search query or URL to scrape/crawl.
-        
-        Notes
-        -----
-        - Cooldown: 3 uses per 5 seconds per guild.
-        - Excellent for web research and scraping tasks.
-        - Powered by Pollinations.ai API.
+        Model: nomnom
         """
         await self._run_pollinations_text(ctx, "nomnom", query)
 
@@ -2681,7 +2509,7 @@ class EditModal(ui.Modal):
             await interaction.response.defer()
 
         try:
-            if self.model == "kontext" and self.image_url:
+            if self.model == "flux" and self.image_url:
                 await self.cog.img2img(
                     interaction, text=f"{new_prompt} {self.image_url}"
                 )
