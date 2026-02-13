@@ -69,8 +69,6 @@
 |   HowLongToBeat   | Obtain game completion stats from Hltb.com |                           Glas                           |        ✅        |
 |   Quoter   | Make epic quotes!|                           Glas                           |        ✅        |
 |   Valentine   | Send Valentine letters to your friends!|                           Glas                           |        ✅        |
-|   Rizz   | Rizzify your text. (I am so sorry) |                           [PhasecoreX*](https://github.com/PhasecoreX/PCXCogs)                            |        ✅        |
-|   RedBus    | Fetches detailed bus stop (Chile) information from an API                   |                           Glas                           |        ✅        |
 |   Ship    | Calculate the percentage of love compatibility between two people!                   |                           Glas                           |        ✅        |
 |   Umineko   | Umineko Screenshot Generator. |                           Glas & [Holo](https://github.com/hollowstrawberry)                     |        ✅        |
 |   Deals   | Find videogame deals in several storefronts. |                           Glas                           |        ✅        |
@@ -82,7 +80,6 @@
 |   Sekai    | Generate Project Sekai Stickers!                   |                           Glas                           |        ✅        |
 |  Ygocard   | Generate Yu-Gi-Oh Cards from users!                |                           Glas                           |        ✅        |
 |  Pokefuse  | Fusion Gen 1 Pokemon                               |                           Glas                           |        ✅        |
-|  Movietar  | Make videos with avatars!                          |                           Glas                           |        ✅        |
 | Youwouldnt | You wouldn't steal a car                           |                           Glas                           |        ✅        |
 | Anime  | Get info about anime characters, shows, staff, studio and so much more  |   TheDiscordHistorian                           |        ✅        |
 | Watamelon  | Posts a random Watamelon image\*                   |     [Kuro](https://github.com/Kuro-Rui/Kuro-Cogs)\*      |        ✅        |
