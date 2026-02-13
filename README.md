@@ -21,10 +21,8 @@
   <a href="https://github.com/Rapptz/discord.py">
     <img src="https://img.shields.io/badge/discord.py-v2.3.2-blue?style=for-the-badge&logo=github" alt="discord.py">
   </a>
-  <>
-
-  <img src="https://i.imgur.com/Wqx7rFH.jpeg" alt="Glas-Cogs"> <!--width=827 height=323-->
-    <img src="https://i.imgur.com/jRQef8P.png" alt="Glas-Cogs"> <!--width=827 height=323-->
+  <img src="https://i.imgur.com/Wqx7rFH.jpeg" alt="Doro"> <!--width=827 height=323-->
+  <img src="https://i.imgur.com/YWPCzjq.jpeg" alt="Watamelon"> <!--width=827 height=323-->
 </div>
 
 ## Installation
