@@ -59,6 +59,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+|   RemoveBg   | Remove Backgrounds from images using the [rembg](https://github.com/danielgatis/rembg) library |                           Glas                          |        ✅        |
 |   Trickcal   | Generate random Trickcal avatars |                           Glas                          |        ✅        |
 |   ShindanMaker   | ShindanMaker integration for Red Discord Bot |                           Glas                          |        ✅        |
 |   AiGen   | Generate Free AI images using several endpoints |                           Glas                          |        ✅        |
