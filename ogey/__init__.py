@@ -16,9 +16,8 @@ class Ogey(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.session = aiohttp.ClientSession()
 
-    __author__ = humanize_list(["Kuro"])
+    __author__ = humanize_list(["Kuro", "Glas"])
     __version__ = "1.1.3"
 
     def format_help_for_context(self, ctx: commands.Context):
@@ -31,7 +30,7 @@ class Ogey(commands.Cog):
         )
 
     def cog_unload(self):
-        self.bot.loop.create_task(self.session.close())
+        pass
 
     @commands.group()
     async def ogey(self, ctx):

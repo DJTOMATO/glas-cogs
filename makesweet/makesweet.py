@@ -14,6 +14,7 @@ from redbot.core import commands, data_manager
 
 import shutil
 import asyncio
+import aiohttp  # Add this import
 
 
 class MakeSweet(commands.Cog):
@@ -22,60 +23,49 @@ class MakeSweet(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.lock = asyncio.Lock()
+        self.session = aiohttp.ClientSession()  # Create session
 
-    async def generate_image(self, ctx, zip_template, user, gif_output):
+    async def download_image(self, url, user_id):
+        """Download image from URL and save it temporarily"""
+        async with self.session.get(url) as resp:  # Use self.session instead of self.bot.session
+            if resp.status != 200:
+                return None
 
+            temp_avatar_dir = data_manager.cog_data_path(self) / "avatars"
+            temp_avatar_dir.mkdir(parents=True, exist_ok=True)
+            temp_avatar_path = str(temp_avatar_dir / f"avatar_{user_id}.png")
+
+            data = await resp.read()
+            try:
+                # Verify it's a valid image by opening it with PIL
+                img = Image.open(io.BytesIO(data))
+                img = img.convert("RGBA")
+                img.save(temp_avatar_path, "PNG")
+                return temp_avatar_path
+            except:
+                return None
+
+    async def generate_image(self, ctx, zip_template, user, gif_output, custom_image_path=None):
         # If Heartlocked is used, create the text to be used as second image
         if "heart-locket.zip" in zip_template:
             text_image = self.create_text_image(f"    {user.name} \n   my beloved")
             temp_text_dir = data_manager.cog_data_path(self) / "text_images"
-            temp_text_dir.mkdir(
-                parents=True, exist_ok=True
-            )  # Create the directory if it doesn't exist
+            temp_text_dir.mkdir(parents=True, exist_ok=True)  # Create the directory if it doesn't exist
 
             temp_text_path = temp_text_dir / f"text_{user.id}.png"
             text_image.save(temp_text_path, "PNG")
 
-        if user.avatar.is_animated():
-            avatar_format = "gif"
-            # Create a temporary directory for the avatar frames
+        if not custom_image_path:
+            # Use original avatar logic
             temp_avatar_dir = data_manager.cog_data_path(self) / "avatars"
-            temp_avatar_dir.mkdir(
-                parents=True, exist_ok=True
-            )  # Create the directory if it doesn't exist
-
+            temp_avatar_dir.mkdir(parents=True, exist_ok=True)
             temp_avatar_path = str(temp_avatar_dir / f"avatar_{user.id}.png")
 
             avatar_data = await user.avatar.read()
             with open(temp_avatar_path, "wb") as temp_avatar:
                 temp_avatar.write(avatar_data)
-
-            # Use PIL to open the animated avatar and extract the first frame as an image
-            animated_avatar = Image.open(temp_avatar_path)
-            first_frame = animated_avatar.convert("RGBA").copy()
-
-            # Save the first frame as a static image (PNG)
-            first_frame_path = temp_avatar_dir / f"avatar_{user.id}.png"
-            first_frame.save(first_frame_path)
-            # Now, use the saved animated avatar with text for generating the animation
-            reanimator_command = [
-                f"{data_manager.bundled_data_path(self)}/reanimator",
-                "--zip",
-                zip_template,
-                "--in",
-                str(first_frame_path),  # Use the animated avatar with text
-                "--gif",
-                str(gif_output),  # Convert the Path to a string
-            ]
         else:
-            # For static avatars, use the original avatar data
-            avatar_format = "png"
-            user_id = str(user.id)
-            temp_avatar_dir = data_manager.cog_data_path(self) / "avatars"
-            temp_avatar_path = str(temp_avatar_dir / f"avatar_{user.id}.png")
-            avatar_data = await user.avatar.read()
-            with open(temp_avatar_path, "wb") as temp_avatar:
-                temp_avatar.write(avatar_data)
+            temp_avatar_path = custom_image_path
 
         if "heart-locket.zip" in zip_template:
             reanimator_command = [
@@ -129,6 +119,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def heart(self, ctx, member: FuzzyMember = commands.Author):
         """Make a heartlocket, my beloved"""
         async with ctx.typing():
@@ -142,6 +133,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def flag2(self, ctx, member: FuzzyMember = commands.Author):
         """Flagify (Older version)"""
         async with ctx.typing():
@@ -156,6 +148,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def bears(self, ctx, member: FuzzyMember = commands.Author):
         """Flying bear"""
         async with ctx.typing():
@@ -172,6 +165,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def fcookie(self, ctx, member: FuzzyMember = commands.Author):
         """Fortune Cookify"""
         async with ctx.typing():
@@ -188,6 +182,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def ndoll(self, ctx, member: FuzzyMember = commands.Author):
         """Nesting Dolls"""
         async with ctx.typing():
@@ -204,6 +199,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def rubix(self, ctx, member: FuzzyMember = commands.Author):
         """Rubix Cube someone!"""
         async with ctx.typing():
@@ -218,6 +214,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def toaster(self, ctx, member: FuzzyMember = commands.Author):
         """Toastifier!"""
         async with ctx.typing():
@@ -232,6 +229,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def valentine(self, ctx, member: FuzzyMember = commands.Author):
         """Valentine Wishes"""
         async with ctx.typing():
@@ -246,6 +244,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def tattoo(self, ctx, member: FuzzyMember = commands.Author):
         """Tattoo someone!"""
         async with ctx.typing():
@@ -262,6 +261,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def book(self, ctx, member: FuzzyMember = commands.Author):
         """Bookify!"""
         async with ctx.typing():
@@ -276,6 +276,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def circuit(self, ctx, member: FuzzyMember = commands.Author):
         """Put someone in a circuit board"""
         async with ctx.typing():
@@ -292,6 +293,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def circuit2(self, ctx, member: FuzzyMember = commands.Author):
         """Put someone in a circuit board (Older version)"""
         async with ctx.typing():
@@ -308,6 +310,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def flag(self, ctx, member: FuzzyMember = commands.Author):
         """Flagarize yourself!"""
         async with ctx.typing():
@@ -322,6 +325,7 @@ class MakeSweet(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def billboard(self, ctx, member: FuzzyMember = commands.Author):
         """Billboard yourself~"""
         async with ctx.typing():
@@ -338,11 +342,35 @@ class MakeSweet(commands.Cog):
     async def process_command(self, ctx, zip_template, user, gif_output):
         async with self.lock:
             async with ctx.typing():
-                generated_image = await self.generate_image(
-                    ctx, zip_template, user, gif_output
-                )
+                # Check for attachments or URLs
+                image_url = None
+                if ctx.message.attachments:
+                    image_url = ctx.message.attachments[0].url
+                elif len(ctx.message.content.split()) > 1:
+                    # Check if the last argument is a URL
+                    potential_url = ctx.message.content.split()[-1]
+                    if potential_url.startswith(('http://', 'https://')):
+                        image_url = potential_url
+                        user = ctx.author  # Override user if URL is provided
+
+                if image_url:
+                    temp_path = await self.download_image(image_url, user.id)
+                    if temp_path:
+                        generated_image = await self.generate_image(
+                            ctx, zip_template, user, gif_output, custom_image_path=temp_path
+                        )
+                    else:
+                        await ctx.send("Failed to download or process the image.")
+                        return
+                else:
+                    generated_image = await self.generate_image(
+                        ctx, zip_template, user, gif_output
+                    )
+
                 if generated_image:
                     await ctx.send(file=discord.File(generated_image))
+                else:
+                    await ctx.send("Failed to generate the file.")
 
     async def get_avatar(self, user: discord.User):
         if user.avatar.is_animated():
@@ -366,9 +394,7 @@ class MakeSweet(commands.Cog):
 
     def cleanup_cog_data(self):
         # Use the cog's class name as the directory name
-        cog_name = self.__class__.__name__
-        # Create the cog data path by concatenating the cog's name as a string
-        data_path = data_manager.cog_data_path(self, cog_name)
+        data_path = data_manager.cog_data_path(self)
 
         avatars_path = data_path / "avatars"
         animations_path = data_path / "animations"
@@ -392,6 +418,8 @@ class MakeSweet(commands.Cog):
     def cog_unload(self):
         # Clean up when the cog is unloaded (reloaded)
         self.cleanup_cog_data()
+        # Create a task to close the session
+        asyncio.create_task(self.session.close())
 
     def cog_load(self):
         # Clean up when the cog is loaded initially

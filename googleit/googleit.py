@@ -26,6 +26,7 @@ class GoogleIt(commands.Cog):
         self.config.register_global(lmgtfy_endpoint="https://cog-creators.github.io")
 
     @commands.group(invoke_without_command=True)
+    @commands.bot_has_permissions(embed_links=True)
     async def googleit(self, ctx: commands.Context, *, query: str = None):
         """
         Google it!
@@ -47,15 +48,7 @@ class GoogleIt(commands.Cog):
             await self._search(ctx, search_string)
 
     async def _search(self, ctx, search_string):
-        if not ctx.channel.permissions_for(ctx.me).embed_links:
-            try:
-                await ctx.send(
-                    "I don't have permission to embed links in this channel."
-                )
-            except discord.Forbidden:
-                # Cannot even send a message, perhaps log this or do nothing.
-                pass
-            return
+
 
         encoded_search_string = urllib.parse.quote(search_string)
         current_endpoint = await self.config.lmgtfy_endpoint()
@@ -79,7 +72,6 @@ class GoogleIt(commands.Cog):
         [p]googleit setendpoint https://cog-creators.github.io
 
         """
-        await self.config.lmgtfy_endpoint.set(endpoint_url)
         if not endpoint_url.startswith("http://") and not endpoint_url.startswith(
             "https://"
         ):
@@ -87,6 +79,7 @@ class GoogleIt(commands.Cog):
                 "Please provide a valid URL starting with http:// or https://"
             )
             return
+        await self.config.lmgtfy_endpoint.set(endpoint_url)
         await ctx.send(
             f"LMGTFY endpoint set to: {chat_formatting.inline(endpoint_url)}"
         )

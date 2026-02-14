@@ -13,7 +13,7 @@ log = logging.getLogger("red.glas-cogs-Doro")
 
 
 class Doro(commands.Cog):
-    """Description"""
+    """A cog that transforms user avatars into Doro-style images based on dominant colors."""
 
     __author__ = "[Glas](https://github.com/djtomato/glas-cogs)"
     __version__ = "0.0.1"
@@ -143,20 +143,17 @@ class Doro(commands.Cog):
             output_buffer = BytesIO()
             base_image.save(output_buffer, format="PNG")
             output_buffer.seek(0)
-            if not ctx.channel.permissions_for(ctx.me).attach_files:
-                await ctx.send(
-                    "I don't have permission to attach files in this channel."
-                )
-                return
             # Send the modified image in the channel
             file = discord.File(output_buffer, filename="processed_avatar.png")
             await ctx.send(file=file)
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def doro(self, ctx: commands.Context, target: discord.Member = None):
-        """Dorify an user.
+        """Transform a user's avatar into a Doro-style image based on dominant colors.
 
-        Creates a Doro-style image for the user or a specified target based on it's profile picture colors.
+        Creates a Doro-style image for the user or a specified target based on their profile picture colors.
+        The resulting image uses the 7 most dominant colors from the avatar, transformed into a stylized Doro design.
         """
         async with ctx.typing():
             await self.process_avatar(ctx, target)

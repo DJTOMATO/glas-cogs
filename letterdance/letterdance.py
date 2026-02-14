@@ -14,6 +14,7 @@ class LetterDance(commands.Cog):
 
     @commands.cooldown(1, 8, commands.BucketType.user)
     @commands.command(aliases=["ld"], cooldown_after_parsing=True)
+    @commands.bot_has_permissions(embed_links=True)
     async def letterdance(
         self,
         ctx,
@@ -33,9 +34,7 @@ class LetterDance(commands.Cog):
         """
         # discord.utils.escape_mentions on phrase
 
-        if not ctx.channel.permissions_for(ctx.me).attach_files:
-            await ctx.send("I don't have permission to attach files in this channel.")
-            return
+
         async with ctx.typing():
             if Phrase is None:
                 ctx.command.reset_cooldown(ctx)

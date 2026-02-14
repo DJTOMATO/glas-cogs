@@ -5,7 +5,7 @@
     "install_msg": "Thanks for installing `valentine` cog! Please enjoy it :D",
     "author": ["Glas"],
     "tags": ["love", "meme", "valentine"],
-    "requirements": ["pillow==9.5.0", "unidecode", "rapidfuzz"],
+    "requirements": ["pillow==9.5.0"],
     "hidden": false,
     "disabled": false,
     "type": "COG",

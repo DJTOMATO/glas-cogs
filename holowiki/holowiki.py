@@ -32,9 +32,9 @@ class YourView(discord.ui.View):
 
 
 class HoloWiki(commands.Cog):
-    """HoloWiki Commands"""
+    """HoloWiki Commands
 
-    """Your friend wiki of your favourite Chuubas"""
+    Your friend wiki of your favourite Chuubas"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -50,14 +50,16 @@ class HoloWiki(commands.Cog):
                 soup = BeautifulSoup(response_text, "html.parser")
         data = {}
         odd = 0
-        official_bio_greet = soup.select_one("div.mw-parser-output p big")
-        official_bio_greet_text = official_bio_greet.text.strip()
-        official_bio_greet = official_bio_greet_text
+        paragraphs = soup.select("div.mw-parser-output > p")
 
-        official_bio = soup.select_one("p:nth-child(5)")
-        # await ctx.send("bio:" + str(official_bio))
-        data["greet"] = official_bio_greet
-        data["bio"] = official_bio.text.strip()
+        clean_paragraphs = []
+        for p in paragraphs:
+            text = p.get_text(strip=True)
+            if text and not text.startswith("This article is"):
+                clean_paragraphs.append(text)
+
+        data["greet"] = clean_paragraphs[0] if len(clean_paragraphs) > 0 else "No greeting found."
+        data["bio"] = clean_paragraphs[1] if len(clean_paragraphs) > 1 else ""
 
         for row in soup.select(
             "#mw-content-text > div.mw-parser-output > table.infobox tr"
@@ -215,7 +217,7 @@ class HoloWiki(commands.Cog):
         color = discord.Colour(int(color.strip("#"), 16))
         emb.colour = color
         images = []
-
+        session.close()
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 response_text = await response.text()
@@ -265,7 +267,9 @@ class HoloWiki(commands.Cog):
         images = fixedimages
         emb.set_image(url=baseimage)
         emb.set_footer(
-            text="Powered by hololive.wiki - Search with !holo <query>",
+            text="Powered by hololive.wiki - Search with {prefix}holo <name>".format(
+                prefix=ctx.clean_prefix
+            ),
             icon_url="https://static.miraheze.org/hololivewiki/b/ba/HFW-Favicon.png",
         )
         view = YourView()
@@ -286,41 +290,47 @@ class HoloWiki(commands.Cog):
                 button.callback = lambda i, u=image[1], e=emb: callback(self, i, u, e)
                 count += 1
                 view.add_item(button)
+        session.close()
+
         await ctx.send(embed=emb, view=view)
 
-    @commands.command()
+    @commands.command(cooldown_after_parsing=True)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     @commands.cooldown(1, 8, commands.BucketType.user)
     async def holo(self, ctx, chuuba):
         """Search a VTuber"""
-        result = search(self.chuubas, chuuba)
 
-        if len(result) > 1:
-            names = [item["Name"] for item in result]
-            resultlist = "- " + "\n- ".join(names)
-            number = len(result)
-            await ctx.send(
-                f"{number} __results found, try again with a more precise name__: \n {resultlist} \n\n **Remember you can see the whole list typing** ``!hololist``"
-            )
-        if len(result) == 0:
-            await ctx.send("No results found, try again with a more precise name.")
-        else:
-            entry = result[0]
 
-            iurl = entry["url"].replace("https://hololive.wiki/wiki/", "")
+        async with ctx.typing():
+            result = search(self.chuubas, chuuba)
 
-            url = entry["url"]
-            await self.parse(ctx, entry, url, iurl)
+            if len(result) > 1:
+                names = [item["Name"] for item in result]
+                resultlist = "- " + "\n- ".join(names)
+                number = len(result)
+                await ctx.send(
+                    f"{number} __results found, try again with a more precise name__: \n {resultlist} \n\n **Remember you can see the whole list typing** ``{0}hololist``".format(ctx.prefix)
+                )
+            if len(result) == 0:
+                await ctx.send("No results found, try again with a more precise name.")
+            else:
+                entry = result[0]
+
+                iurl = entry["url"].replace("https://hololive.wiki/wiki/", "")
+
+                url = entry["url"]
+                await self.parse(ctx, entry, url, iurl)
 
     @commands.command()
     @commands.cooldown(1, 8, commands.BucketType.user)
+    @commands.bot_has_permissions(embed_links=True)
     async def hololist(self, ctx):
+        """Display a list of all Hololive members."""
+
         emb = discord.Embed()
 
-        # obtain all data from json
-        json_path = str(data_manager.bundled_data_path(self) / "data.json")
-        chuubas = import_json_file(self, json_path)
-
-        sorted_chuubas = sorted(chuubas, key=lambda x: x["Category"])
+        # Use already loaded data from self.chuubas
+        sorted_chuubas = sorted(self.chuubas, key=lambda x: x["Category"])
         chuubas_by_category = {chuuba["Category"]: [] for chuuba in sorted_chuubas}
 
         for chuuba in sorted_chuubas:
@@ -332,7 +342,7 @@ class HoloWiki(commands.Cog):
             emb.add_field(name=category, value=all_names)
 
         emb.set_footer(
-            text="Powered by hololive.wiki - Search with !holo <query>",
+            text="Powered by hololive.wiki - Search with {}holo <query>".format(ctx.prefix),
             icon_url="https://static.miraheze.org/hololivewiki/b/ba/HFW-Favicon.png",
         )
         await ctx.send(embed=emb)

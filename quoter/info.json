@@ -3,8 +3,12 @@
     "short": "Make epic quotes!.",
     "description": "Generates a quote based on a message !.",
     "install_msg": "Thanks for installing `quoter` cog! Please enjoy it :D",
-    "author": ["Glas"],
-    "tags": ["image", "quote", "meme", "quotes"],
+    "author": ["TrustyJaid", "Glas"],
+    "tags": ["image", "quote", "meme"],
+    "requirements": [
+        "pillow",
+        "regex"
+    ],
     "hidden": false,
     "disabled": false,
     "type": "COG",

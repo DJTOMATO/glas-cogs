@@ -4,7 +4,7 @@
     "name": "HowLongToBeat",
     "short": "Fetch game information from HowLongToBeat.com",
     "requirements": [
-        "howlongtobeatpy", "fake-useragent>=2.0.3", "fuzzywuzzy"
+        "howlongtobeatpy==1.0.20", "fake-useragent>=2.0.3", "fuzzywuzzy"
     ],
     "tags": [
         "games",

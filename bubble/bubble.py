@@ -14,6 +14,12 @@ from aiohttp import ClientSession
 
 
 class Bubble(commands.Cog):
+    """
+    Generates a bubble speech on images!
+    
+    This cog allows users to create speech bubbles on images using either
+    a user's avatar or an image from the channel history.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
@@ -25,8 +31,8 @@ class Bubble(commands.Cog):
         async for message in channel.history(
             limit=10
         ):  # You can adjust the limit as needed
-            # Priority 1: Message has !bubble and an image attachment
-            if "!bubble" in message.content.lower():
+            # Priority 1: Message has bubble command and an image attachment
+            if any(cmd in message.content.lower() for cmd in ["!bubble", "[p]bubble", "bubble"]) and message.content.lower().startswith(("!", "[p]", "")):
                 for attachment in message.attachments:
                     if attachment.filename.lower().endswith(
                         ("png", "jpg", "jpeg", "gif")
@@ -55,9 +61,9 @@ class Bubble(commands.Cog):
     async def speech(self, ctx: commands.Context, member: discord.Member = None):
         """Make a speech bubble.
 
-        Example: ``!bubble @User/username``
+        Example: ``[p]bubble @User/username``
 
-        Use it alone mention to grab the last image/attachment in a channel."""
+        Use it without a mention to grab the last image/attachment in a channel."""
 
         if member:
             avatar = await self.get_avatar(member)

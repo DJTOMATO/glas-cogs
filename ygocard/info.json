@@ -2,12 +2,13 @@
     "name": "Yu-Gi-Oh Card maker!",
     "short": "Makes a yugioh card.",
     "description": "Custom Yu-gi-oh cards generator",
-    "install_msg": "Thanks for installing `ygocard` cog! Please enjoy it :D type !help ygo for details",
+    "install_msg": "Thanks for installing `ygocard` cog! Please enjoy it :D\nTo use the command, use the prefix set in your bot settings.",
     "author": ["Glas"],
     "tags": ["image", "Yu-gi-oh", "meme", "fun"],
     "hidden": false,
     "disabled": false,
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
-    "min_bot_version": "3.5.0"
+    "min_bot_version": "3.5.0",
+    "requirements": ["pillow", "regex", "rapidfuzz", "unidecode"]
 }

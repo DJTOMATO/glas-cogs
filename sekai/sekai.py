@@ -39,7 +39,7 @@ characters = [
     {
         "label": "Emu Otori",
         "description": "えむ 鳳",
-        "image_path": "https://cdn.discordapp.com/attachments/1157096154664796311/1157096231986790450/emu-01.png",
+        "image_path": "https://cdn.discordapp.com/attachments/1093304431870742528/1093615643653328927/emu-01.png",
         "color": "FF66BB",
         "emoji": "emu:1094261561155133480",
     },
@@ -123,7 +123,7 @@ characters = [
     {
         "label": "Miku Hatsune",
         "description": "ミク 初音",
-        "image_path": "https://cdn.discordapp.com/attachments/1157096154664796311/1157096311871508561/miku-01.png",
+        "image_path": "https://media.discordapp.net/attachments/1093304431870742528/1094245582228422757/miku-01.png",
         "color": "33CCBB",
         "emoji": "miku:1094263461011263519",
     },
@@ -165,7 +165,7 @@ characters = [
     {
         "label": "Saki Tenma",
         "description": "天馬 咲希",
-        "image_path": "https://cdn.discordapp.com/attachments/861428239012069416/1157110525382107187/saki-01.png",
+        "image_path": "https://cdn.discordapp.com/attachments/1093304431870742528/1094254290996052058/saki-01.png",
         "color": "F5B303",
         "emoji": "saki:1094264979781328919",
     },
@@ -202,7 +202,7 @@ characters = [
 
 # Dropdown Selector
 class CharacterDropdown(discord.ui.Select):
-    def __init__(self, characters, embed, message):
+    def __init__(self, prefix: str, characters, embed):
         select_options = [
             discord.SelectOption(
                 label=character["label"],
@@ -215,7 +215,7 @@ class CharacterDropdown(discord.ui.Select):
         super().__init__(placeholder="Select your Character...", options=select_options)
         self.characters = characters
         self.embed = embed
-        self.message = message
+        self.prefix = prefix
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -238,22 +238,29 @@ class CharacterDropdown(discord.ui.Select):
             self.embed.set_image(url=f"{selected_character['image_path']}")
             self.embed.set_footer(
                 icon_url="https://bae.lena.moe/l9q3mnnat3i3.gif",
-                text=f"Originally made by Ayaka! Try it with [p]sekai",
+                text=f"Originally made by Ayaka! Try it with {self.prefix}sekai",
             )
-            await interaction.response.edit_message(embed=self.embed, view=self.view)
-            await self.message.edit(embed=self.embed, view=self.view)
-        except Exception as e:
-            self.embed.description = f"An error occurred: {e}"
-            await interaction.response.edit_message(embed=self.embed, view=self.view)
+            if not interaction.response.is_done():
+                await interaction.response.edit_message(embed=self.embed, view=self.view)
+            if self.message:
+                await self.message.edit(embed=self.embed, view=self.view)
         except discord.errors.InteractionResponded:
+            # Handle case where interaction is already responded to
             pass
+        except Exception as e:
+            # Handle other exceptions
+            self.embed.description = f"An error occurred: {e}"
+            if not interaction.response.is_done():
+                await interaction.response.edit_message(embed=self.embed, view=self.view)
 
 
 # The view
 class CharacterView(discord.ui.View):
-    def __init__(self, characters, embed, message):
+    def __init__(self, prefix: str, characters, embed):
         super().__init__()
-        self.add_item(CharacterDropdown(characters, embed, message))
+        self.add_item(CharacterDropdown(prefix, characters, embed))
+        self.message = None
+        self.prefix = prefix
 
 
 # The commands
@@ -275,13 +282,14 @@ class Sekai(commands.Cog):
     @commands.hybrid_command()
     async def characters(self, ctx):
         """Show available characters!"""
-        view = CharacterView(characters, self.embed, self.message)
+        view = CharacterView(ctx.prefix, characters, self.embed)
         self.message = await ctx.send(embed=self.embed, view=view)
+        view.message = self.message
 
     # Create sticker command
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.hybrid_command()
+    @ commands.hybrid_command(cooldown_after_parsing=True) 
     async def sekai(
         self,
         ctx: commands.Context,
@@ -310,7 +318,7 @@ class Sekai(commands.Cog):
             # await ctx.send(
             #     f"Debug: character: {character}, chara_face: {chara_face}, text: {text}, textx: {textx}, texty: {texty}, fontsize: {fontsize}"
             # )
-            character = character.lower()  # para que el dova no me pida weas
+            character = character.lower() 
             async with ctx.typing():
                 task = functools.partial(
                     self.gen_card,
@@ -461,7 +469,8 @@ class Sekai(commands.Cog):
             characolor = "#FF66BB"
         im.paste(sticker_base, (0, 0), sticker_base)
         draw = ImageDraw.Draw(im)
-        font = ImageFont.truetype(f"{bundled_data_path(self)}/ahoy.ttf", fontsize)
+        font_path = f"{bundled_data_path(self)}/ahoy.ttf"
+        font = ImageFont.truetype(font_path, fontsize)
 
         # Calculate the maximum number of characters per line
         try:
@@ -485,7 +494,7 @@ class Sekai(commands.Cog):
 
         # Resize the image if necessary
         if new_height > height:
-            im = im.resize((widthh, new_height), resample=Image.LANCZOS)
+            im = im.resize((widthh, int(new_height)), resample=Image.Resampling.LANCZOS)
             height = new_height
 
         text_y = int(texty)

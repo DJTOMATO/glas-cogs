@@ -14,7 +14,7 @@ import logging
 log = logging.getLogger("red.quoter")
 
 
-class QuoterCog(commands.Cog):
+class Quoter(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
@@ -26,13 +26,24 @@ class QuoterCog(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=["epicquote"], cooldown_after_parsing=True)
     async def quoter(self, ctx: commands.Context):
+        """Generate a quote from a replied message.
+        
+        This command creates an image quote based on a message you reply to.
+        The quote includes the user's avatar, message content, and display name.
+        
+        Args:
+            ctx: The command context
+            
+        Returns:
+            None: Sends the generated quote image or an error message
+        """
         if ctx.message.reference:
             replied_message = await ctx.channel.fetch_message(
                 ctx.message.reference.message_id
             )
             if replied_message.content.strip() in ["!quoter", "Reloaded `quoter`."]:
                 await ctx.send(
-                    "ah you're so funny huh <:moustache:1362530256111665232>"
+                    "That's a funny message!"
                 )
                 return
 
@@ -43,7 +54,7 @@ class QuoterCog(commands.Cog):
 
             # Check if the message content is empty after processing
             if not message_content.strip():
-                await ctx.send("quote a message dummy <:moustache:1362530256111665232>")
+                await ctx.send("Please quote a message with content.")
                 return
 
             nickname = replied_message.author.display_name
@@ -71,10 +82,10 @@ class QuoterCog(commands.Cog):
             image = await asyncio.wait_for(task, timeout=60)
         except asyncio.TimeoutError:
             log.error("Image generation timed out.")
-            return "An error occurred while generating this image. Try again later."
+            return "An error occurred while generating the image. Please try again later."
         except Exception as e:
             log.exception("Unexpected error during image generation.")
-            return f"An unexpected error occurred: {e}"
+            return "An unexpected error occurred while generating the image. Please try again."
         else:
             return image
 
@@ -129,6 +140,11 @@ class QuoterCog(commands.Cog):
         font_path_nickname = f"{bundled_data_path(self)}/ARIALBI.TTF"
         emoji_font_path = f"{bundled_data_path(self)}/NotoEmoji-VariableFont_wght.ttf"
 
+        # Create fonts once outside the loop to prevent resource leaks
+        font_message_cursive = None
+        font_nickname_bold = None
+        font_emoji = None
+        
         font_size = 40
         while font_size > 10:
             try:

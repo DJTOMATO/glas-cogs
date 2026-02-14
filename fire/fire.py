@@ -5,7 +5,12 @@ from redbot.core import commands
 
 
 class Fire(commands.Cog):
+    """A cog for firing fireworks to celebrate holidays!
+
+    This cog provides a command to launch fireworks with fun holiday celebrations.
+    """
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def fire(self, ctx):
         """Fireworks!
 
@@ -29,7 +34,4 @@ class Fire(commands.Cog):
         em.color = discord.Color(8599000)
         em.timestamp = datetime.now()
         em.set_image(url=random.choice(fires))
-        if not ctx.channel.permissions_for(ctx.me).embed_links:
-            await ctx.send("I don't have permission to embed links in this channel.")
-            return
         await ctx.send(embed=em)

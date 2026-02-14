@@ -1,12 +1,10 @@
 import discord
-from rapidfuzz import process
 from redbot.core import commands
 from redbot.core.commands import BadArgument, MemberConverter
-from unidecode import unidecode
 from redbot.core.data_manager import bundled_data_path
 import regex as re
 from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageEnhance
-import io, os, random, re
+import io, os, random
 from redbot.core.app_commands import Choice
 import logging
 import textwrap
@@ -36,9 +34,9 @@ async def wrap_text(self, draw, text, x, y, max_width):
     current_x, current_y = x, y
 
     for line in text.split("\n"):
-        self.log.error("Line: %s", line)
+        #self.log.error("Line: %s", line)
         words = re.findall(r"(\w+)?;(.*?)(?=\w+;|$)|([^\s]+)", line)
-        self.log.error("Words: %s", words)
+        #self.log.error("Words: %s", words)
         for word in words:
             color, content, plain_text = word
 
@@ -285,14 +283,14 @@ async def generate(self, ctx, **parameters):
     canvas = Image.new("RGBA", (640, 480), (0, 0, 0, 255))
 
     # Load the background image
-    self.log.info("Selected Background Image Path: %s", final_path)
+    #self.log.info("Selected Background Image Path: %s", final_path)
     background = Image.open(final_path).convert("RGBA")
-    self.log.info("Selected Background Image Size: %s", background.size)
-    self.log.error("Background Size:: %s", background.size)
-    self.log.error("Canvas Size:: %s", canvas.size)
+    #self.log.info("Selected Background Image Size: %s", background.size)
+    #self.log.error("Background Size:: %s", background.size)
+    #self.log.error("Canvas Size:: %s", canvas.size)
     # Paste the background onto the canvas
     canvas.paste(background, (0, 0), background)
-    self.log.info("Canvas Size after Loading Background: %s", canvas.size)
+    #self.log.info("Canvas Size after Loading Background: %s", canvas.size)
     meta_image = Image.open(
         f"{bundled_data_path(self)}/metaworld/hana1.webp"
     )  # Replace with the correct image path
@@ -352,8 +350,8 @@ async def generate(self, ctx, **parameters):
     )
     max_width = canvas.width * 0.9
     text = parameters["text"]
-
     text = text.replace("\\n", "\n")
+
     # Define a translation table for accented characters
     accented_chars = "áéíóúÁÉÍÓÚ"
     unaccented_chars = "aeiouAEIOU"

@@ -110,3 +110,7 @@ msgstr "You are a couple made in heaven."
 #: ship_rate_90
 msgid "ship_rate_90"
 msgstr "This is true beauty."
+
+#: ship_rate_100
+msgid "ship_rate_100"
+msgstr "This is a miracle."

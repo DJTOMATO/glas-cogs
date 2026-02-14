@@ -21,11 +21,13 @@ def __init__(self, bot):
 
 
 class Deals(commands.Cog):
+    """A cog for finding game deals from various storefronts."""
     def __init__(self, bot):
         self.bot = bot
         self.log = logging.getLogger("glas.glas-cogs.ggdeals")
 
-    @commands.command()
+    @commands.command(cooldown_after_parsing=True)
+    @commands.bot_has_permissions(embed_links=True)
     async def deals(
         self,
         ctx,
@@ -165,7 +167,10 @@ class Deals(commands.Cog):
                 )
             else:
                 embed.description = "No deals found."
+            # Check if the bot has embed_links permission before sending embed
+
             await ctx.send(embed=embed)
+
             # Optionally, you can also send a message if no Steam details were found
             if not steam_details:
                 await ctx.send("ℹ️ No extra Steam info found for this game.")
@@ -219,7 +224,170 @@ class Deals(commands.Cog):
             elif bundles_result and "error" in bundles_result:
                 await ctx.send(f"Bundles API error: {bundles_result['error']}")
 
+
+
     @commands.command()
+    async def deallist(self, ctx):
+        """Read the invoking message for a list of game titles, fetch the lowest key price for each, and return a CSV + formatted list.
+
+        Usage examples:
+        - Multi-line list after the command:
+            !deallist
+            * Game One
+            * Game Two
+
+        - Single-line comma/semicolon separated:
+            !deallist Game One, Game Two
+        """
+        raw = ctx.message.content or ""
+        # Parse game titles from message
+        lines = raw.splitlines()
+        items = []
+        if len(lines) > 1:
+            # Everything after the first line is treated as an item list
+            for ln in lines[1:]:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                if ln.startswith("*"):
+                    ln = ln.lstrip("*").strip()
+                items.append(ln)
+        else:
+            # single-line: try to capture the remainder after the command invocation
+            parts = raw.split(None, 1)
+            rest = parts[1].strip() if len(parts) > 1 else ""
+            if rest:
+                # try common separators
+                sep_found = False
+                for sep in ["\n", ";", ",", "|"]:
+                    if sep in rest:
+                        items = [p.strip().lstrip("*").strip() for p in rest.split(sep) if p.strip()]
+                        sep_found = True
+                        break
+                if not sep_found:
+                    items = [rest]
+
+        if not items:
+            await ctx.send(
+                "I couldn't find any games in your message. Please put a list of games after the command, one per line or comma-separated."
+            )
+            return
+
+        # Show typing while resolving ids, calling APIs and building CSV/message
+        async with ctx.typing():
+            # Resolve Steam app ids concurrently
+            lookup_tasks = [get_steam_app_id_from_name(self.bot, title) for title in items]
+            try:
+                steam_ids = await asyncio.gather(*lookup_tasks)
+            except Exception as e:
+                await ctx.send(f"Error while resolving games: {e}")
+                return
+
+            # Map titles to steam ids (None if not found)
+            title_to_steam = {title: sid for title, sid in zip(items, steam_ids)}
+
+            # Prepare list of ids to query (unique, filter None)
+            ids_to_query = [sid for sid in {sid for sid in steam_ids if sid}]
+
+            api_result = None
+            if ids_to_query:
+                try:
+                    api_result = await get_ggdeals_api_prices_by_steamid(self.bot, ids_to_query)
+                except ClientConnectorError:
+                    await ctx.send("Price service unavailable (maintenance). Try later.")
+                    return
+                except Exception as e:
+                    await ctx.send(f"Unexpected error fetching prices: {e}")
+                    return
+
+            # Build results (also collect numeric values for total when possible)
+            rows = []  # list of tuples (title, price_text, price_num_or_None, currency_str)
+            data = api_result.get("data") if api_result else {}
+            for title, sid in title_to_steam.items():
+                if not sid:
+                    rows.append((title, "NOT FOUND", None, None))
+                    continue
+                api_game_data = None
+                if data:
+                    api_game_data = data.get(str(sid)) or data.get(int(sid))
+                if not api_game_data:
+                    rows.append((title, "N/A", None, None))
+                    continue
+                prices = api_game_data.get("prices", {}) or {}
+                # Prefer current keyshops price (lowest key price)
+                price_val = prices.get("currentKeyshops")
+                # Fallback to currentRetail
+                if price_val in (None, "", 0, 0.0):
+                    price_val = prices.get("currentRetail")
+                if price_val in (None, "", 0, 0.0):
+                    rows.append((title, "N/A", None, None))
+                else:
+                    # Determine currency
+                    currency = prices.get("currency") or ""
+                    # Attempt to parse numeric value
+                    price_num = None
+                    try:
+                        # Some APIs return strings or numbers; normalize
+                        price_num = float(str(price_val).replace(",", "").strip())
+                    except Exception:
+                        price_num = None
+                    currency_display = f" {currency}" if currency else ""
+                    rows.append((title, f"${price_val}{currency_display}", price_num, currency))
+
+            # Compute total if currencies are consistent across numeric entries
+            numeric_values = [r[2] for r in rows if r[2] is not None]
+            currencies = {r[3] for r in rows if r[2] is not None and r[3] is not None}
+            total_text = None
+            if numeric_values:
+                if len(currencies) <= 1:
+                    total_value = sum(numeric_values)
+                    currency_label = (next(iter(currencies)) or "").strip()
+                    currency_suffix = f" {currency_label}" if currency_label else ""
+                    total_text = f"${total_value:.2f}{currency_suffix}"
+                else:
+                    # Mixed currencies - can't meaningfully sum
+                    total_text = "(mixed currencies, total unavailable)"
+            rows.sort(key=lambda r: (r[2] is None, r[2]))
+            names_only = [title for title, _, _, _ in rows]
+            names_only_msg = "\n - ".join(names_only)
+            # Create CSV
+            import io
+
+            csv_lines = ["title,price"]
+            for t, p, _, _ in rows:
+                # Escape double quotes and wrap title in quotes if comma in title
+                safe_title = t.replace('"', '""')
+                if "," in safe_title or "\n" in safe_title:
+                    safe_title = f'"{safe_title}"'
+                csv_lines.append(f"{safe_title},{p}")
+            if total_text:
+                csv_lines.append(f"TOTAL,{total_text}")
+
+            csv_text = "\n".join(csv_lines)
+
+            # Build formatted message
+            formatted_lines = [f"{t} — {p}" for t, p, _, _ in rows]
+            if total_text:
+                formatted_lines.append("")
+                formatted_lines.append(f"Total value: {total_text}")
+            formatted_msg = "\n".join(formatted_lines)
+
+            # Create embed (sending is done after typing context)
+            embed = discord.Embed(title="Deal list: lowest key prices", description=formatted_msg)
+            await ctx.send("**Games sorted by lowest price:**\n" + names_only_msg)
+        # send CSV + embed (outside typing context)
+        try:
+            # send CSV as file
+            fp = io.BytesIO(csv_text.encode("utf-8"))
+            fp.seek(0)
+            file = discord.File(fp, filename="deals.csv")
+            await ctx.send(embed=embed, file=file)
+        except Exception:
+            # If sending file fails, just send the text
+            await ctx.send(formatted_msg)
+
+    @commands.command()
+    @commands.bot_has_permissions(add_reactions=True)
     async def risks(self, ctx):
         """Warns you about risks of using keyshops"""
         warning = (
@@ -235,18 +403,22 @@ class Deals(commands.Cog):
         )
 
         embed = discord.Embed(title="Risks", description=warning)
-        embed.set_image(url="https://bae.lena.moe/tHZFfvvP5HRt.jpg")
+        embed.set_image(url="https://bae.lena.moe/KHHRKQE1FoJl.jpg")
 
-        await ctx.message.add_reaction("✅")
+        # Check if the bot has add_reactions permission
+ 
+        try:
+            await ctx.message.add_reaction("✅")
+        except discord.Forbidden:
+            pass
 
         try:
             await ctx.author.send(embed=embed)
+            # Use ctx.tick() to handle reactions gracefully instead of manual sleep/delete
             dm_message = await ctx.send("ℹ️ Sent you a DM with the risks.")
+            # Delete the message after 10 seconds using delete_after
+            await dm_message.delete(delay=10)
         except discord.Forbidden:
             await ctx.send(
                 "⚠️ I couldn't send you a DM. Please enable DMs from server members to receive the risks."
             )
-        else:
-            # Schedule a task to delete the message after 10 seconds
-            await asyncio.sleep(10)
-            await dm_message.delete()

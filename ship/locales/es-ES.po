@@ -1,34 +1,3 @@
-#
-msgid ""
-msgstr ""
-"Project-Id-Version: \n"
-"POT-Creation-Date: 2025-06-01 15:09-0400\n"
-"PO-Revision-Date: 2025-06-01 16:00-0400\n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"Language: es\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 3.4.2\n"
-"X-Generator: Poedit 3.6\n"
-
-#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/ship/ship.py:55
-msgid "Calculate the percentage of love compatibility between two people.\n"
-"\n"
-"        Example usage: `[p]ship @user1 @user2`\n"
-"        This command generates a ship name and a compatibility rate based on the names of the users.\n"
-"        "
-msgstr "Calcula el porcentaje de compatibilidad amorosa entre dos personas.\n"
-"\n"
-"        Ejemplo de uso: `[p]ship @usuario1 @usuario2`\n"
-"        Este comando genera un nombre de ship y un porcentaje de compatibilidad basado en los nombres de los usuarios."
-
-
-#: /mnt/hdd/data/lenabot/cogs/CogManager/cogs/ship/ship.py:88
-msgid "❤️ | The ship name is {ship_name} ❤️ | The compatibility rate is {rate}%"
-msgstr "❤️ | El nombre del ship es {ship_name} ❤️ | La compatibilidad es {rate}%"
-
 #: ship_rate_0
 msgid "ship_rate_0"
 msgstr "No... simplemente no."
@@ -108,11 +77,3 @@ msgstr "¡Almas gemelas! ¡Esto es real!"
 #: ship_rate_100
 msgid "ship_rate_100"
 msgstr "Esto es un milagro"
-
-#: command_error_same_person
-msgid "You cannot ship a user with themselves!"
-msgstr "¡No puedes emparejar a un usuario consigo mismo!"
-
-
-msgid "ship_error_no_messages"
-msgstr "Error: Los mensajes de compatibilidad de ship no están definidos."

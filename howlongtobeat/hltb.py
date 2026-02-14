@@ -20,16 +20,14 @@ class HowLongToBeatCog(commands.Cog):
             0.0
         )  # Similarity threshold up to 0.7, 0.0 will return all games.
 
-    @commands.bot_has_permissions(attach_files=True)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     @commands.command(name="howlongtobeat", aliases=["hltb"])
     async def HowLongToBeat(self, ctx: commands.Context, *, game_name: str):
         """Search how long a games takes to be beaten.
 
         Searches for the game name provided and returns the estimated time to beat it.
         """
-        if not ctx.channel.permissions_for(ctx.me).embed_links:
-            await ctx.send("I don't have permission to embed links in this channel.")
-            return
+
 
         processed_game_name = game_name.strip()
         if not processed_game_name:

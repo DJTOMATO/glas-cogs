@@ -4,7 +4,7 @@
     "description": "Makes a Proseka Sticker with custom text",
     "install_msg": "Thanks for installing `sekai` cog! \nThis cog requires a specific version of pillow, be sure to restart your bot after installation if it doesn't work! \nPlease enjoy it :D Wonderhoy!",
     "author": ["Glas"],
-    "requirements": ["pillow==9.5.0"],
+    "requirements": ["pillow==9.5.0", "rapidfuzz", "unidecode"],
     "tags": ["image", "sekai", "vocaloid", "meme", "fun"],
     "hidden": false,
     "disabled": false,

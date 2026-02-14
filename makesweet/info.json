@@ -7,7 +7,7 @@
     "tags": ["image", "heart", "meme"],
     "hidden": false,
     "disabled": false,
-    "requirements": ["unidecode"],
+    "requirements": ["unidecode", "pillow", "rapidfuzz"],
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
     "min_bot_version": "3.5.0"

@@ -32,7 +32,16 @@ class Valentine(commands.Cog):
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def valentines(self, ctx, user2: discord.Member):
-        """Send love letter to an user!.."""
+        """Send a Valentine's Day card to another user.
+
+        This command generates a personalized Valentine's card and sends it
+        to the specified user. The card includes avatars and names of both
+        users.
+
+        Args:
+            ctx: The command context.
+            user2: The Discord member to send the valentine card to.
+        """
         async with ctx.typing():
             user1 = ctx.author
             name1 = self.sanitize_name(user1.display_name)

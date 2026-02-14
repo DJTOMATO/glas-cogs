@@ -1,3 +1,4 @@
+
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
@@ -32,11 +33,17 @@ RATE_MESSAGES_MAP = {
     80: "Definitely the cutest couple.",
     85: "You are a couple made in heaven.",
     90: "This is true beauty.",
-    100: "This is a miracle",
+    100: "This is a miracle.",
 }
 
 
 class Ship(commands.Cog):
+    """Fun Valentine-style shipping command.
+
+    Calculates love compatibility between two members,
+    generates a ship name, and creates a custom image
+    showing their compatibility percentage.
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -107,10 +114,10 @@ class Ship(commands.Cog):
     async def get_message(self, rate: int):
         """Gets the appropriate translated message string based on the compatibility rate."""
         if not RATE_MESSAGES_MAP:
-
             return _("ship_error_no_messages")
+        
+        # Find the closest rate key in our map
         actual_rate_for_message_lookup = rate
-
         if rate > 100:
             if 100 in RATE_MESSAGES_MAP:
                 actual_rate_for_message_lookup = 100
@@ -120,9 +127,19 @@ class Ship(commands.Cog):
             key=lambda k: abs(k - actual_rate_for_message_lookup),
         )
 
-        message_translation_key = RATE_MESSAGES_MAP[closest_numeric_key]
-        translator_func = _
-        return translator_func(message_translation_key)
+        # Create translation key
+        message_translation_key = f"ship_rate_{closest_numeric_key}"
+        
+        # Try to get the translation
+        try:
+            translated_message = _(message_translation_key)
+            # If translation is the same as key, fallback to base message
+            if translated_message == message_translation_key:
+                return RATE_MESSAGES_MAP[closest_numeric_key]
+            return translated_message
+        except Exception:
+            # If translation fails for any reason, return base message
+            return RATE_MESSAGES_MAP[closest_numeric_key]
 
     async def get_avatar(self, member: discord.abc.User):
         avatar = BytesIO()

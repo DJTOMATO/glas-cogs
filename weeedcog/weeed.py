@@ -9,6 +9,7 @@ from redbot.core.data_manager import bundled_data_path
 from redbot.core.bot import Red
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 from .textwrapper import TextWrapper
+import logging
 
 
 class WeeedBot(commands.Cog):
@@ -51,7 +52,7 @@ class WeeedBot(commands.Cog):
     # worrying about command name collisions
     @commands.group()
     async def weeed(self, ctx: commands.Context):
-        """This is the primary cog group. Try ``"""
+        """This is the primary cog group. Creates comics from Discord messages."""
         pass
 
     @weeed.group(name="set")
@@ -209,7 +210,7 @@ class WeeedBot(commands.Cog):
         if len(panel) > 0:
             comic.append(panel)
         # Our data is now ready. Time to build an image!
-        print(f"[WEEEDCOG] Comic data generated! Data follows:\n{comic}")
+        logging.debug(f"[WEEEDCOG] Comic data generated! Data follows:\n{comic}")
         return comic
 
     # Defines our main 'comic' command
@@ -220,6 +221,7 @@ class WeeedBot(commands.Cog):
     # past 120 seconds or until there's a gap greater than 20 seconds between
     # any message and the one prior
     @weeed.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def comic(self, ctx: commands.Context, count: int, message_id: int = None):
         """
         Generates a comic using the last specified number of messages. Can optionally send a message ID as well
@@ -243,7 +245,7 @@ class WeeedBot(commands.Cog):
         # Now let's just catch any other input that's invalid.
         elif count not in range(1, max_messages + 1):
             await ctx.send(
-                "What to heck are u doin??? The number needs to be between 1 and 10."
+                f"What to heck are u doin??? The number needs to be between 1 and {max_messages}."
             )
             return
         # TODO: also make the messages either configurable, i18n, or both
@@ -428,6 +430,8 @@ class WeeedBot(commands.Cog):
         # TODO: make the filename a unique hash or something so that we can
         # also store comic data under the same name with a different extension
         # This would let us debug any weird stuff rendered into comics.
+        # Check if the bot has attach_files permission before sending
+
         canvas_bytes.seek(0)
         await ctx.send(
             content=comic_text, file=discord.File(canvas_bytes, filename="comic.png")

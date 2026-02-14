@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import asyncio
 import functools
-import regex as re
+import re
 from .functions_js import (
     CHARACTER_CHOICES,
     CHOICES,

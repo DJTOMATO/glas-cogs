@@ -32,6 +32,8 @@ class Anime(Finder, commands.Cog):
         """
         Searches for an anime with the given title.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             embeds = await self.anilist_search(ctx, title, AniListSearchType.Anime)
             if embeds:
@@ -54,6 +56,8 @@ class Anime(Finder, commands.Cog):
         """
         Searches for a manga with the given title.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             embeds = await self.anilist_search(ctx, title, AniListSearchType.Manga)
             if embeds:
@@ -79,9 +83,13 @@ class Anime(Finder, commands.Cog):
         """
         Searches for a character with the given name.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             embeds = await self.anilist_search(ctx, name, AniListSearchType.Character)
             if embeds:
+                if not ctx.channel.permissions_for(ctx.me).add_reactions:
+                    return await ctx.send("I don't have add reactions permission to use menus.")
                 menu = menus.MenuPages(
                     source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
                 )
@@ -100,11 +108,15 @@ class Anime(Finder, commands.Cog):
         Searches for a staff with the given name and displays information about the search results such as description,
         staff roles, and character roles!
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             embeds = await self.anilist_search(ctx, name, AniListSearchType.Staff)
             if embeds:
                 if len(embeds) == 1:
                     return await ctx.send(embed=embeds[0])
+                if not ctx.channel.permissions_for(ctx.me).add_reactions:
+                    return await ctx.send("I don't have add reactions permission to use menus.")
                 menu = menus.MenuPages(
                     source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
                 )
@@ -123,11 +135,15 @@ class Anime(Finder, commands.Cog):
         Searches for a studio with the given name and displays information about the search results such as the studio
         productions!
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             embeds = await self.anilist_search(ctx, name, AniListSearchType.Studio)
             if embeds:
                 if len(embeds) == 1:
                     return await ctx.send(embed=embeds[0])
+                if not ctx.channel.permissions_for(ctx.me).add_reactions:
+                    return await ctx.send("I don't have add reactions permission to use menus.")
                 menu = menus.MenuPages(
                     source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
                 )
@@ -139,205 +155,66 @@ class Anime(Finder, commands.Cog):
                 )
                 await ctx.channel.send(embed=embed)
 
-    @commands.command(name="random")
+    @commands.command(name="animerandom")
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def rnd(self, ctx: commands.Context, media: str, *, genre: str):
         """
         Displays a random anime or manga of the specified genre.
         """
         async with ctx.channel.typing():
-            if media.lower() == AniListMediaType.Anime.lower():
-                embed = await self.anilist_random(
-                    ctx,
-                    genre,
-                    AniListMediaType.Anime.upper(),
-                    ["TV", "MOVIE", "OVA", "ONA", "TV_SHORT", "MUSIC", "SPECIAL"],
-                )
-                if not embed:
-                    embed = discord.Embed(
-                        title=f"An anime with the genre `{genre}` could not be found.",
-                        color=await ctx.embed_color(),
-                    )
-                await ctx.channel.send(embed=embed)
-            elif media.lower() == AniListMediaType.Manga.lower():
-                embed = await self.anilist_random(
-                    ctx,
-                    genre,
-                    AniListMediaType.Manga.upper(),
-                    ["MANGA", "ONE_SHOT", "NOVEL"],
-                )
-                if not embed:
-                    embed = discord.Embed(
-                        title=f"A manga with the genre `{genre}` could not be found.",
-                        color=await ctx.embed_color(),
-                    )
-                await ctx.channel.send(embed=embed)
-            else:
-                try:
-                    ctx.command.reset_cooldown(ctx)
-                except AttributeError:
-                    pass
-                raise commands.BadArgument(
-                    f"{media} is not a valid media type. Choose one from anime/manga."
-                )
-
-    @commands.command(name="themes")
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    async def themes(self, ctx: commands.Context, *, anime: str):
-        """
-        Searches for the openings and endings of the given anime and displays them.
-        """
-        async with ctx.channel.typing():
             try:
-                async with self.session.get(
-                    ANIMETHEMES_BASE_URL + "/search/",
-                    params={
-                      "q":anime, 
-                      "include[anime]": "animethemes.animethemeentries.videos,animethemes.song.artists,images"
-                    },
-                    headers={
-                      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
-                    }
-                ) as resp:
-                    data = await resp.json()
-            except Exception as e:
-                self.logger.exception(e)
-                embed = discord.Embed(
-                    title="Error",
-                    color=await ctx.embed_color(),
-                    description=f"An error occurred while loading the embed for the theme.",
-                )
-                await ctx.send(embed=embed)
-                return
-            if data.get("search").get("anime"):
-                embeds = []
-                for page, entry in enumerate(data.get("search").get("anime")):
-                    try:
-                        embed = await self.get_themes_embed(
-                            entry, page + 1, len(data.get("search").get("anime"))
-                        )
-                        if not isinstance(ctx.channel, discord.channel.DMChannel):
-                            if (
-                                is_adult(entry.get("animethemes")[0]["animethemeentries"][0])
-                                and not ctx.channel.is_nsfw()
-                            ):
-                                embed = discord.Embed(
-                                    title="Error",
-                                    color=await ctx.embed_color(),
-                                    description=f"Adult content. No NSFW channel.",
-                                )
-                                embed.set_footer(
-                                    text=f"Provided by https://animethemes.moe/ • Page {page + 1}/"
-                                    f'{len(data.get("search").get("anime"))}'
-                                )
-                    except Exception as e:
-                        self.logger.exception(e)
+                if media.lower() == AniListMediaType.Anime.lower():
+                    embed = await self.anilist_random(
+                        ctx,
+                        genre,
+                        AniListMediaType.Anime.upper(),
+                        ["TV", "MOVIE", "OVA", "ONA", "TV_SHORT", "MUSIC", "SPECIAL"],
+                    )
+                    if not embed:
                         embed = discord.Embed(
-                            title="Error",
+                            title=f"An anime with the genre `{genre}` could not be found.",
                             color=await ctx.embed_color(),
-                            description=f"An error occurred while loading the embed for the anime.",
                         )
-                        embed.set_footer(
-                            text=f"Provided by https://animethemes.moe/ • Page "
-                            f'{page + 1}/{len(data.get("search").get("anime"))}'
+                    await ctx.channel.send(embed=embed)
+                elif media.lower() == AniListMediaType.Manga.lower():
+                    embed = await self.anilist_random(
+                        ctx,
+                        genre,
+                        AniListMediaType.Manga.upper(),
+                        ["MANGA", "ONE_SHOT", "NOVEL"],
+                    )
+                    if not embed:
+                        embed = discord.Embed(
+                            title=f"A manga with the genre `{genre}` could not be found.",
+                            color=await ctx.embed_color(),
                         )
-                    embeds.append(embed)
-                if len(embeds) == 1:
-                    return await ctx.send(embed=embeds[0])
-                menu = menus.MenuPages(
-                    source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
-                )
-                await menu.start(ctx)
-            else:
-                embed = discord.Embed(
-                    title=f"No themes for the anime `{anime}` found.",
-                    color=await ctx.embed_color(),
-                )
-                await ctx.channel.send(embed=embed)
-
-    @commands.command(name="theme")
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    async def theme(self, ctx: commands.Context, theme: str, *, anime: str):
-        """
-        Displays a specific opening or ending of the given anime.
-        Theme could be ED or OP.
-        """
-        async with ctx.channel.typing():
-            try:
-                async with self.session.get(
-                    ANIMETHEMES_BASE_URL + "/search/",
-                    params={
-                      "q":anime, 
-                      "include[anime]": "animethemes.animethemeentries.videos,animethemes.song.artists,images"
-                    },
-                    headers={
-                      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
-                    }
-                ) as resp:
-                    data = await resp.json()
+                    await ctx.channel.send(embed=embed)
+                else:
+                    try:
+                        ctx.command.reset_cooldown(ctx)
+                    except AttributeError:
+                        pass
+                    raise commands.BadArgument(
+                        f"{media} is not a valid media type. Choose one from anime/manga."
+                    )
             except Exception as e:
                 self.logger.exception(e)
                 embed = discord.Embed(
                     title="Error",
                     color=await ctx.embed_color(),
-                    description=f"An error occurred while loading the embed for the theme.",
-                )
-                await ctx.send(embed=embed)
-                return
-            if data.get("search").get("anime"):
-                anime_ = data.get("search").get("anime")[0]
-                for entry in anime_.get("animethemes"):
-                    if (
-                        theme.upper() == entry.get("slug")
-                        or (theme.upper() == "OP" and entry.get("slug") == "OP1")
-                        or (theme.upper() == "ED" and entry.get("slug") == "ED1")
-                        or (theme.upper() == "OP1" and entry.get("slug") == "OP")
-                        or (theme.upper() == "ED1" and entry.get("slug") == "ED")
-                    ):
-                        try:
-                            embed = await self.get_theme_embed(anime_, entry)
-                            if not isinstance(ctx.channel, discord.channel.DMChannel):
-                                if (
-                                    is_adult(entry.get("animethemeentries")[0])
-                                    and not ctx.channel.is_nsfw()
-                                ):
-                                    embed = discord.Embed(
-                                        title="Error",
-                                        color=await ctx.embed_color(),
-                                        description=f"Adult content. No NSFW channel.",
-                                    )
-                                    embed.set_footer(text=f"Provided by https://animethemes.moe/")
-                                    return await ctx.channel.send(embed=embed)
-                        except Exception as e:
-                            self.logger.exception(e)
-                            embed = discord.Embed(
-                                title="Error",
-                                color=await ctx.embed_color(),
-                                description=f"An error occurred while loading the embed for the theme.",
-                            )
-                            embed.set_footer(text=f"Provided by https://animethemes.moe/")
-                            return await ctx.channel.send(embed=embed)
-                        return await ctx.channel.send(
-                            content=f"https://animethemes.moe/video/{entry.get('animethemeentries')[0]['videos'][0]['basename']}",
-                            embed=embed,
-                        )
-                embed = discord.Embed(
-                    title=f"Cannot find `{theme.upper()}` for the anime `{anime}`.",
-                    color=await ctx.embed_color(),
-                )
-                await ctx.channel.send(embed=embed)
-            else:
-                embed = discord.Embed(
-                    title=f"No theme for the anime `{anime}` found.", color=await ctx.embed_color()
+                    description=f"An error occurred while searching for a random {media.lower()} with the genre `{genre}`. Please check the genre name and try again.",
                 )
                 await ctx.channel.send(embed=embed)
 
-    @commands.command(name="next")
+
+    @commands.command(name="animenext")
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def _next(self, ctx: commands.Context):
         """
         Displays the next airing anime episodes.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             try:
                 data = await self.anilist.schedule(
@@ -381,6 +258,8 @@ class Anime(Finder, commands.Cog):
                     embeds.append(embed)
                 if len(embeds) == 1:
                     return await ctx.channel.send(embed=embeds[0])
+                if not ctx.channel.permissions_for(ctx.me).add_reactions:
+                    return await ctx.send("I don't have add reactions permission to use menus.")
                 menu = menus.MenuPages(
                     source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
                 )
@@ -392,12 +271,14 @@ class Anime(Finder, commands.Cog):
                 )
                 await ctx.channel.send(embed=embed)
 
-    @commands.command(name="last")
+    @commands.command(name="anelast")
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def last(self, ctx: commands.Context):
         """
         Displays the most recently aired anime episodes.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             try:
                 data = await self.anilist.schedule(
@@ -441,6 +322,8 @@ class Anime(Finder, commands.Cog):
                     embeds.append(embed)
                 if len(embeds) == 1:
                     return await ctx.channel.send(embed=embeds[0])
+                if not ctx.channel.permissions_for(ctx.me).add_reactions:
+                    return await ctx.send("I don't have add reactions permission to use menus.")
                 menu = menus.MenuPages(
                     source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
                 )
@@ -458,6 +341,8 @@ class Anime(Finder, commands.Cog):
         """
         Displays the latest anime news from Anime News Network.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             try:
                 data = await self.animenewsnetwork.news(count=15)
@@ -495,53 +380,6 @@ class Anime(Finder, commands.Cog):
                 )
                 await ctx.channel.send(embed=embed)
 
-    @commands.command(
-        name="crunchynews",
-        aliases=["crnews"],
-    )
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    async def crunchynews(self, ctx: commands.Context):
-        """
-        Displays the latest anime news from Crunchyroll.
-        """
-        async with ctx.channel.typing():
-            try:
-                data = await self.crunchyroll.news(count=15)
-            except Exception as e:
-                self.logger.exception(e)
-                embed = discord.Embed(
-                    title=f"An error occurred while searching for the Crunchyroll news. Try again.",
-                    color=await ctx.embed_color(),
-                )
-                return await ctx.channel.send(embed=embed)
-            if data is not None and len(data) > 0:
-                embeds = []
-                for page, news in enumerate(data):
-                    try:
-                        embed = await self.get_crunchynews_embed(news, page + 1, len(data))
-                    except Exception as e:
-                        self.logger.exception(e)
-                        embed = discord.Embed(
-                            title="Error",
-                            color=await ctx.embed_color(),
-                            description=f"An error occurred while loading the embed for the Crunchyroll news.",
-                        )
-                        embed.set_footer(
-                            text=f"Provided by https://www.crunchyroll.com/ • Page {page + 1}/{len(data)}"
-                        )
-                    embeds.append(embed)
-                if len(embeds) == 1:
-                    return await ctx.channel.send(embed=embeds[0])
-                menu = menus.MenuPages(
-                    source=EmbedListMenu(embeds), clear_reactions_after=True, timeout=30
-                )
-                await menu.start(ctx)
-            else:
-                embed = discord.Embed(
-                    title=f"The Crunchyroll news could not be found.",
-                    color=await ctx.embed_color(),
-                )
-                await ctx.channel.send(embed=embed)
 
     @commands.command(
         name="trending",
@@ -552,6 +390,8 @@ class Anime(Finder, commands.Cog):
         """
         Displays the current trending anime or manga on AniList.
         """
+        if not ctx.channel.permissions_for(ctx.me).embed_links:
+            return await ctx.send("I don't have embed links permission to send an embed.")
         async with ctx.channel.typing():
             if media.lower() == AniListMediaType.Anime.lower():
                 type_ = AniListMediaType.Anime.upper()

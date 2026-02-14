@@ -59,6 +59,11 @@ class PfpImgen(commands.Cog):
         )
         self.session = aiohttp.ClientSession()
 
+    @commands.group(name="pfp", aliases=["avatarpic"])
+    async def pfp_group(self, ctx):
+        """Avatar manipulation commands."""
+        pass
+
     async def send_with_retries(self, ctx, content=None, file=None, retries=3, delay=2):
         for attempt in range(retries):
             try:
@@ -86,7 +91,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["catgirl"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["catgirl"], cooldown_after_parsing=True)
     async def ineko(self, ctx, *, member: FuzzyMember = None):
         """Make a neko avatar..."""
         if not member:
@@ -103,7 +108,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["ameto"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["ameto"], cooldown_after_parsing=True)
     async def dj(self, ctx, *, member: FuzzyMember = None):
         """Make a DJ..."""
         if not member:
@@ -120,7 +125,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["discord"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["discord"], cooldown_after_parsing=True)
     async def cloudflare(self, ctx, *, member: FuzzyMember = None):
         """Cloudflare someone!..."""
         if not member:
@@ -137,7 +142,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["amazon"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["amazon"], cooldown_after_parsing=True)
     async def primeday(self, ctx, *, member: FuzzyMember = None):
         """it's primeday!..."""
         if not member:
@@ -154,7 +159,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["youu"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["youu"], cooldown_after_parsing=True)
     async def you(self, ctx, *, member: FuzzyMember = None):
         """Make a you avatar..."""
         if not member:
@@ -171,7 +176,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["mrbest"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["mrbest"], cooldown_after_parsing=True)
     async def fraud(self, ctx, *, member: FuzzyMember = None):
         """He's a fraud..."""
         if member:
@@ -207,7 +212,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["fumopicture"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["fumopicture"], cooldown_after_parsing=True)
     async def fumopic(self, ctx, *, member: FuzzyMember = None):
         """Remilia caughts you in 4K..."""
         if not member:
@@ -224,7 +229,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["gos"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["gos"], cooldown_after_parsing=True)
     async def gosling(self, ctx, *, member: FuzzyMember = None):
         """Totally not gosling at all..."""
         if not member:
@@ -241,7 +246,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["selfie"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["selfie"], cooldown_after_parsing=True)
     async def marisa(self, ctx, *, member: FuzzyMember = None):
         """Selfie with Marisa..."""
         if not member:
@@ -258,7 +263,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["youcould"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["youcould"], cooldown_after_parsing=True)
     async def religion(self, ctx, *, member: FuzzyMember = None):
         """We could make a religion out off this!..."""
         if not member:
@@ -275,7 +280,8 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["nepnep"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["nepnep"], cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def nep(self, ctx, *, member: FuzzyMember = None):
         """Rom & Ram spooked at you..."""
         if not member:
@@ -292,7 +298,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["playbetter"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["playbetter"], cooldown_after_parsing=True)
     async def better(self, ctx, *, member: FuzzyMember = None):
         """Play better games..."""
         if not member:
@@ -309,7 +315,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["liar"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["liar"], cooldown_after_parsing=True)
     async def lies(self, ctx, *, member: FuzzyMember = None):
         """Don't believe his lies..."""
         if not member:
@@ -326,7 +332,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["lookat"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["lookat"], cooldown_after_parsing=True)
     async def ahri(self, ctx, *, member: FuzzyMember = None):
         """Look at this shit..."""
         if not member:
@@ -343,7 +349,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["otsucringe"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["otsucringe"], cooldown_after_parsing=True)
     async def pippa(self, ctx, *, member: FuzzyMember = None):
         """Pippa stares at you..."""
         if not member:
@@ -360,7 +366,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["sapeado"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["sapeado"], cooldown_after_parsing=True)
     async def cage(self, ctx, *, member: FuzzyMember = None):
         """to the cage..."""
         if not member:
@@ -377,7 +383,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["inapic"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["inapic"], cooldown_after_parsing=True)
     async def ina(self, ctx, *, member: FuzzyMember = None):
         """Ina is totally disgusted at you..."""
         if not member:
@@ -394,7 +400,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["nofunallowed"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["nofunallowed"], cooldown_after_parsing=True)
     async def nofun(self, ctx, *, member: FuzzyMember = None):
         """No fun allowed!..."""
         if not member:
@@ -411,7 +417,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["emiko"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["emiko"], cooldown_after_parsing=True)
     async def elite(self, ctx, *, member: FuzzyMember = None):
         """Elite Miko!..."""
         if not member:
@@ -428,7 +434,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def conference(self, ctx, *, member: FuzzyMember = None):
         """Well well, what do you have to say?..."""
         if not member:
@@ -445,7 +451,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def doctor(self, ctx, *, member: FuzzyMember = None):
         """The Doctor is IN..."""
         if not member:
@@ -462,7 +468,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def bonk(self, ctx, *, member: FuzzyMember = None):
         """Bonk! Go to horny jail."""
 
@@ -488,7 +494,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def simp(self, ctx, *, member: FuzzyMember = None):
         """You are now a simp."""
         if not member:
@@ -504,7 +510,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def banner(self, ctx, *, member: FuzzyMember = None):
         """To war we go!"""
         if not member:
@@ -520,7 +526,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def nickel(
         self,
         ctx,
@@ -545,7 +551,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def stoptalking(
         self,
         ctx,
@@ -568,9 +574,10 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def horny(self, ctx, *, member: FuzzyMember = None):
-        """Assign someone a horny license."""
+
         member = member or ctx.author
         async with ctx.typing():
             avatar = await self.get_avatar(member)
@@ -583,7 +590,8 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def delulu(self, ctx, *, member: FuzzyMember = None):
         """Assign someone a delulu license."""
         member = member or ctx.author
@@ -598,7 +606,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def cutie(self, ctx, *, member: FuzzyMember = None):
         """Assign someone a cute license."""
         member = member or ctx.author
@@ -613,7 +621,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def shutup(
         self,
         ctx,
@@ -643,7 +651,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def ahoy(self, ctx, *, member: FuzzyMember = None):
         """You and Marine <3..."""
         if not member:
@@ -660,7 +668,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def waku(self, ctx, *, member: FuzzyMember = None):
         """Certified WakuWaku moment..."""
         if not member:
@@ -677,7 +685,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def idiot(self, ctx, *, member: FuzzyMember = None):
         """You're a fucking idiot..."""
         if not member:
@@ -694,7 +702,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def sanic(self, ctx, *, member: FuzzyMember = None):
         """Sonic Celebrates..."""
         if not member:
@@ -711,7 +719,8 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def thrilled(self, ctx, *, member: FuzzyMember = None):
         """Thrilled..."""
         if not member:
@@ -728,7 +737,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def kowone(self, ctx, *, member: FuzzyMember = None):
         """Korone......"""
         if not member:
@@ -745,7 +754,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def funado(self, ctx, *, member: FuzzyMember = None):
         """Estoy funado..."""
         if not member:
@@ -762,7 +771,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def dreams(self, ctx, *, member: FuzzyMember = None):
         """Has soñado..."""
         if not member:
@@ -779,7 +788,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def marihat(self, ctx, *, member: FuzzyMember = None):
         """Marisa Hat..."""
         if not member:
@@ -796,7 +805,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def thisnow(self, ctx, *, member: FuzzyMember = None):
         """We can end this now..."""
         if not member:
@@ -813,7 +822,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def ilove(self, ctx, *, member: FuzzyMember = None):
         """I love..."""
         if not member:
@@ -830,7 +839,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def didyou(self, ctx, *, member: FuzzyMember = None):
         """Did you know..."""
         if not member:
@@ -847,7 +856,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def itis(self, ctx, *, member: FuzzyMember = None):
         """You are running out..."""
         if not member:
@@ -864,7 +873,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def slur(self, ctx, *, member: FuzzyMember = None):
         """TIME TO GO CALL SOMEONE A SLUR ON DISCORD!..."""
         if not member:
@@ -881,7 +890,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def thejar(self, ctx, *, member: FuzzyMember = None):
         """To the jar!..."""
         if not member:
@@ -898,7 +907,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def ipunch(self, ctx, *, member: FuzzyMember = None):
         """Punch somebody!..."""
         if not member:
@@ -915,7 +924,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def mhr(self, ctx, *, member: FuzzyMember = None):
         """My honest reaction..."""
         if not member:
@@ -932,7 +941,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def denwa(self, ctx, *, member: FuzzyMember = None):
         """Point at..."""
         if not member:
@@ -949,7 +958,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def rika(self, ctx, *, member: FuzzyMember = None):
         """Point at..."""
         if not member:
@@ -966,7 +975,8 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def ireally(self, ctx, *, member: FuzzyMember = None):
         """I really shouln't..."""
         if not member:
@@ -983,7 +993,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def amigo(self, ctx, *, member: FuzzyMember = None):
         """Amigo at..."""
         if not member:
@@ -1000,7 +1010,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def secreto(self, ctx, *, member: FuzzyMember = None):
         """El Secreto de la creatividad"""
         if not member:
@@ -1017,7 +1027,8 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def thisuser(self, ctx, *, member: FuzzyMember = None):
         """This user makes me happy"""
         if not member:
@@ -1034,7 +1045,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def competition(self, ctx, *, member: FuzzyMember = None):
         """When you're at a competition"""
         if not member:
@@ -1051,7 +1062,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def sus(self, ctx, *, member: FuzzyMember = None):
         """You're among us..."""
         if not member:
@@ -1068,7 +1079,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def sugoi(self, ctx, *, member: FuzzyMember = None):
         """You become serval..."""
         if not member:
@@ -1085,7 +1096,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def jack(self, ctx, *, member: FuzzyMember = None):
         """Jack Sparrow's tresaure..."""
         if not member:
@@ -1102,7 +1113,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def ash(self, ctx, *, member: FuzzyMember = None):
         """You become ash..."""
         if not member:
@@ -1119,7 +1130,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def pretend(self, ctx, *, member: FuzzyMember = None):
         """You become Essex..."""
         if not member:
@@ -1136,7 +1147,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def evidence(self, ctx, *, member: FuzzyMember = None):
         """Here's the photographic evidence..."""
         if not member:
@@ -1153,7 +1164,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def twoguys(self, ctx, *, member: FuzzyMember = None):
         """Two guys in a bus..."""
         if not member:
@@ -1170,7 +1181,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def mulder(self, ctx, *, member: FuzzyMember = None):
         """Shitposting License..."""
         if not member:
@@ -1187,7 +1198,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def dreaming(self, ctx, *, member: FuzzyMember = None):
         """Dreaming of you..."""
         if not member:
@@ -1204,7 +1215,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def dark(self, ctx, *, member: FuzzyMember = None):
         """Horrfying secret..."""
         if not member:
@@ -1221,7 +1232,8 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
+    @commands.is_nsfw()
     async def nopets(self, ctx, *, member: FuzzyMember = None):
         """No Pets allowed..."""
         if not member:
@@ -1238,7 +1250,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def feeling(self, ctx, *, member: FuzzyMember = None):
         """Can I borrow a feeling..."""
         if not member:
@@ -1255,7 +1267,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def taiko(self, ctx, *, member: FuzzyMember = None):
         """Taiko..."""
         if not member:
@@ -1272,7 +1284,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def bill(self, ctx, *, member: FuzzyMember = None):
         """You become a billboard..."""
         if not member:
@@ -1289,7 +1301,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def clowno(self, ctx, *, member: FuzzyMember = None):
         """You become a clown..."""
         if not member:
@@ -1306,7 +1318,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def bau(self, ctx, *, member: FuzzyMember = None):
         """You become a bau bau..."""
         if not member:
@@ -1323,7 +1335,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def mygf(self, ctx, *, member: FuzzyMember = None):
         """My girlfriend..."""
         if not member:
@@ -1340,7 +1352,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def huaso(self, ctx, *, member: FuzzyMember = None):
         """Tikitikiti..."""
         if not member:
@@ -1357,7 +1369,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def honestly(self, ctx, *, member: FuzzyMember = None):
         """Quite incredible..."""
         if not member:
@@ -1374,7 +1386,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(aliases=["olreliable"], cooldown_after_parsing=True)
+    @pfp_group.command(aliases=["olreliable"], cooldown_after_parsing=True)
     async def reliable(self, ctx, *, member: FuzzyMember = None):
         """Call the ol' reliable..."""
         if not member:
@@ -1391,7 +1403,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def mikuphone(self, ctx, *, member: FuzzyMember = None):
         """Miku phone..."""
         if not member:
@@ -1408,7 +1420,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def clave(self, ctx, *, member: FuzzyMember = None):
         """X es clave..."""
         if not member:
@@ -1425,7 +1437,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def world(self, ctx, *, member: FuzzyMember = None):
         """You're my world..."""
         if not member:
@@ -1443,7 +1455,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def mlb(self, ctx, *, member: FuzzyMember = None):
         """Umamusume MLB card generator..."""
         if not member:
@@ -1461,7 +1473,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def computer(self, ctx, *, member: FuzzyMember = None):
         """pc..."""
         if not member:
@@ -1478,7 +1490,7 @@ class PfpImgen(commands.Cog):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @commands.command(cooldown_after_parsing=True)
+    @pfp_group.command(cooldown_after_parsing=True)
     async def aid(self, ctx, *, member: FuzzyMember = None):
         """AID..."""
         if not member:
@@ -1493,9 +1505,43 @@ class PfpImgen(commands.Cog):
         else:
             await ctx.send(file=image)
 
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @pfp_group.command(cooldown_after_parsing=True)
+    async def fathergift(self, ctx, *, member: FuzzyMember = None):
+        """Father's gift..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_father, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
+    @commands.bot_has_permissions(attach_files=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @pfp_group.command(cooldown_after_parsing=True)
+    async def failed(self, ctx, *, member: FuzzyMember = None):
+        """Failed Product..."""
+        if not member:
+            member = ctx.author
+
+        async with ctx.typing():
+            avatar = await self.get_avatar(member)
+            task = functools.partial(self.gen_failed, ctx, avatar)
+            image = await self.generate_image(task)
+        if isinstance(image, str):
+            await ctx.send(image)
+        else:
+            await ctx.send(file=image)
+
     # @commands.bot_has_permissions(attach_files=True)
     # @commands.cooldown(1, 10, commands.BucketType.user)
-    # @commands.command(cooldown_after_parsing=True)
+    # @pfp_group.command(cooldown_after_parsing=True)
     # async def petpet(self, ctx: commands.Context, member: FuzzyMember = None):
     #     """petpet someone"""
     #     member = member or ctx.author
@@ -3879,6 +3925,30 @@ class PfpImgen(commands.Cog):
         fp.close()
         return _file
 
+    def gen_failed(self, ctx, member_avatar):
+        member_avatar = self.bytes_to_image(member_avatar, 300)
+
+        # base canvas
+        im = Image.new("RGBA", (1008, 756), None)
+        computer = Image.open(
+            f"{bundled_data_path(self)}/failed/failed_mask.png", mode="r"
+        ).convert("RGBA")
+
+        im.paste(member_avatar, (360, 180), member_avatar)
+
+        im.paste(computer, (0, 0), computer)
+
+        computer.close()
+        member_avatar.close()
+
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+        _file = discord.File(fp, "failed.png")
+        fp.close()
+        return _file
+
     def gen_aid(self, ctx, member_avatar):
         member_avatar = self.bytes_to_image(member_avatar, 290)
 
@@ -3902,4 +3972,57 @@ class PfpImgen(commands.Cog):
         im.close()
         _file = discord.File(fp, "aid.png")
         fp.close()
+
         return _file
+
+    def gen_father(self, ctx, member_avatar):
+        # keep the original avatar bytes
+        avatar_bytes = member_avatar
+
+        # main avatar (rotated)
+        member_avatar_img = self.bytes_to_image(avatar_bytes, 290).convert("RGBA")
+        member_avatar_img = member_avatar_img.rotate(15, Image.NEAREST, expand=1)
+
+        # base canvas
+        im = Image.new("RGBA", (576, 1296), None)
+        aid = Image.open(
+            f"{bundled_data_path(self)}/fathers/fathers_mask.png", mode="r"
+        ).convert("RGBA")
+
+        # Paste the main avatar
+        im.paste(member_avatar_img, (80, 270), member_avatar_img)
+
+        # Add the 3 avatars at specified positions and sizes
+        # 1. 32x23 at (309, 139)
+        avatar1 = self.bytes_to_image(avatar_bytes, 32).convert("RGBA")
+        avatar1 = avatar1.resize((35, 25), Image.LANCZOS)
+        im.paste(avatar1, (306, 139), avatar1)
+        avatar1.close()
+
+        # 2. 209x107 at (156, 889)
+        avatar2 = self.bytes_to_image(avatar_bytes, 209).convert("RGBA")
+        avatar2 = avatar2.resize((213, 117), Image.LANCZOS)
+        im.paste(avatar2, (156, 882), avatar2)
+        avatar2.close()
+
+        # 3. 31x45 at (225, 1124)
+        avatar3 = self.bytes_to_image(avatar_bytes, 45).convert("RGBA")
+        avatar3 = avatar3.resize((31, 45), Image.LANCZOS)
+        im.paste(avatar3, (223, 1110), avatar3)
+        avatar3.close()
+
+        # overlay mask
+        im.paste(aid, (0, 0), aid)
+
+        # cleanup
+        aid.close()
+        member_avatar_img.close()
+
+        # save result to BytesIO
+        fp = BytesIO()
+        im.save(fp, "PNG")
+        fp.seek(0)
+        im.close()
+
+        # return the file with correct name
+        return discord.File(fp, "father.png")

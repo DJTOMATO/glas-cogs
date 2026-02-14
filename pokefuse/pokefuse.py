@@ -16,14 +16,13 @@ class PokeFuse(commands.Cog):
         self.pokemon_names, self.pokemon_ids = load_pokemon_data(self)
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def pokefuse(self, ctx: commands.Context, name1: str, name2: str):
         """Searches for pokemons..
 
         Example: [p]pokefuse Pikachu Bulbasaur"""
 
-        if not ctx.channel.permissions_for(ctx.me).embed_links:
-            await ctx.send("I don't have permission to embed links in this channel.")
-            return
+
 
         # Check Poke 1
         if not VerifyName(self.pokemon_names, name1):

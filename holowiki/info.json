@@ -7,7 +7,7 @@
     "tags": ["Hololive", "Wiki", "Info"],
     "hidden": false,
     "disabled": false,
-    "requirements": ["unidecode"],
+    "requirements": ["unidecode", "beautifulsoup4"],
     "type": "COG",
     "end_user_data_statement": "This cog does not store end user data.",
     "min_bot_version": "3.5.0"
