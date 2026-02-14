@@ -2576,7 +2576,7 @@ class AiGen(commands.Cog):
             "model": "elevenmusic",
             "input": prompt,
             "duration": duration,
-            "instrumental": False  # guarantees no vocals/lyrics
+            "instrumental": False
         }
 
         async with ctx.typing():
@@ -2585,7 +2585,15 @@ class AiGen(commands.Cog):
                     async with session.post(url, headers=headers, json=data) as response:
                         if response.status == 200:
                             music_data = await response.read()
-                            music_file = discord.File(BytesIO(music_data), filename="music.mp3")
+                            
+                            # Create filename from part of the prompt to avoid long filenames
+                            filename = prompt[:30].replace(' ', '_').replace(',', '').replace('.', '') + ".mp3"
+                            # Limit filename length
+                            if len(filename) > 30:
+                                filename = filename[:30] + ".mp3"
+                            
+                            music_file = discord.File(BytesIO(music_data), filename=filename)
+
                             await ctx.send(file=music_file)
                         else:
                             response_text = await response.text()
