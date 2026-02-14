@@ -2576,7 +2576,7 @@ class AiGen(commands.Cog):
             "model": "elevenmusic",
             "input": prompt,
             "duration": duration,
-            "instrumental": True  # guarantees no vocals/lyrics
+            "instrumental": False  # guarantees no vocals/lyrics
         }
 
         async with ctx.typing():
