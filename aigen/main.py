@@ -2539,6 +2539,60 @@ class AiGen(commands.Cog):
     #     """
     #     await self._run_pollinations_text(ctx, "nomnom", query)
 
+    @commands.command(name="elevenmusic")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def elevenmusic(self, ctx: commands.Context, *, prompt: str):
+        """Generate music using ElevenMusic model.
+        
+        Model: elevenmusic
+        """
+        # Parse duration from prompt if specified
+        duration = 30  # default duration
+        match = re.search(r"--duration\s+(\d+)", prompt)
+        if match:
+            duration = int(match.group(1))
+            prompt = re.sub(r"--duration\s+\d+", "", prompt).strip()
+
+        # Validate duration (3-300 seconds)
+        if duration < 3 or duration > 300:
+            await ctx.send("Duration must be between 3 and 300 seconds.")
+            return
+
+        # Get API token
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = pollinations_keys.get("token")
+        if not token:
+            await ctx.send("Pollinations API token not set.")
+            return
+
+        # Generate music using POST endpoint (OpenAI-compatible)
+        url = "https://gen.pollinations.ai/v1/audio/speech"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "elevenmusic",
+            "input": prompt,
+            "duration": duration,
+            "instrumental": True  # guarantees no vocals/lyrics
+        }
+
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, headers=headers, json=data) as response:
+                        if response.status == 200:
+                            music_data = await response.read()
+                            music_file = discord.File(BytesIO(music_data), filename="music.mp3")
+                            await ctx.send(file=music_file)
+                        else:
+                            response_text = await response.text()
+                            await ctx.send(f"Error generating music: {response.status} - {response_text}")
+            except Exception as e:
+                self.log.error(f"Error generating music: {e}")
+                await ctx.send("An error occurred while generating music.")
 
 class EditModal(ui.Modal):
 
