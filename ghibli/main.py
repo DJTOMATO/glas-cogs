@@ -16,15 +16,21 @@ superghibli_lock = asyncio.Lock()
 class Ghibli(commands.Cog):
     """Ghibli Avatar Generator"""
 
-    __author__ = "[Glas](https://github.com/djtomato/glas-cogs/)"
-    __version__ = "0.0.2"
-
     def __init__(self, bot: Red):
         super().__init__()
         self.bot: Red = bot
 
+    async def cog_check(self, ctx: commands.Context) -> bool:
+        """Check if the bot has required permissions."""
+        if not ctx.guild:
+            return True
+        return ctx.channel.permissions_for(ctx.me).attach_files and ctx.channel.permissions_for(ctx.me).embed_links
+
+    __author__ = "[Glas](https://github.com/djtomato/glas-cogs/)"
+    __version__ = "0.0.2"
+
     @commands.command()
-    async def ghibli(self, ctx: commands.Context, user_or_url: str = None):
+    async def ghibli(self, ctx: commands.Context, user_or_url: str | None = None):
         """Generate a Ghibli-style image from your avatar, a mentioned user's avatar, an image URL, or an attached image.\nUsage: [p]ghibli [user|image_url] or attach an image."""
         user = None
         image_url = None
@@ -85,9 +91,10 @@ class Ghibli(commands.Cog):
         pass
 
     
-    @commands.command()
-    @commands.cooldown(1, 60, commands.BucketType.user) 
-    async def superghibli(self, ctx: commands.Context, user_or_url: str = None):
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 60, commands.BucketType.user)
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
+    async def superghibli(self, ctx: commands.Context, user_or_url: str | None = None):
         """Apply the Ghibli transformation 5 times, showing progress as a GIF."""
         # Enforce only one command running at a time
         if superghibli_lock.locked():
@@ -160,7 +167,7 @@ class Ghibli(commands.Cog):
                         if base_size is None:
                             base_size = img.size
                         else:
-                            img = img.resize(base_size, Image.LANCZOS)
+                            img = img.resize(base_size, Image.Resampling.LANCZOS)
                         frames.append(img)
                     frames[0].save(
                         gif_path,
@@ -183,7 +190,7 @@ class Ghibli(commands.Cog):
                     ],
                 )
 
-                # Cleanup
+                # Clean up temporary files AFTER sending
                 for path in temp_paths:
                     try:
                         os.remove(path)

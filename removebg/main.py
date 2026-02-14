@@ -46,10 +46,16 @@ AVAILABLE_MODELS = PI_SAFE_MODELS if IS_ARM else FULL_MODELS
 
 
 class BgRemover(commands.Cog):
+    """A cog for removing backgrounds from images using various AI models."""
     __author__ = "Glas"
     __version__ = "1.0.0"
 
     def __init__(self, bot: Red):
+        """Initialize the BgRemover cog.
+        
+        Args:
+            bot (Red): The Red Discord bot instance.
+        """
         self.bot: Red = bot
         self.config = Config.get_conf(self, 117, force_registration=True)
         self._semaphore = asyncio.Semaphore(1)
@@ -58,17 +64,48 @@ class BgRemover(commands.Cog):
         os.environ["NUMBA_THREADING_LAYER"] = "workqueue"
 
     def format_help_for_context(self, ctx: commands.Context):
+        """Format help text for the context.
+        
+        Args:
+            ctx (commands.Context): The command context.
+            
+        Returns:
+            str: The formatted help text.
+        """
         helpcmd = super().format_help_for_context(ctx)
         models = ", ".join(AVAILABLE_MODELS)
         return f"{helpcmd}\n\nAvailable models:\n{models}"
 
     async def red_delete_data_for_user(self, *, requester: str, user_id: int):
+        """Delete user data from the cog.
+        
+        Args:
+            requester (str): The requester of the deletion.
+            user_id (int): The ID of the user whose data is being deleted.
+        """
         return
 
     async def red_get_data_for_user(self, *, requester: str, user_id: int):
+        """Get user data from the cog.
+        
+        Args:
+            requester (str): The requester of the data.
+            user_id (int): The ID of the user whose data is being retrieved.
+            
+        Returns:
+            dict: The user data.
+        """
         return
 
     def _get_session(self, model: str):
+        """Get or create a session for the specified model.
+        
+        Args:
+            model (str): The model name.
+            
+        Returns:
+            Session: The rembg session for the model.
+        """
         from rembg import new_session
 
         if model not in self._sessions:
@@ -76,6 +113,15 @@ class BgRemover(commands.Cog):
         return self._sessions[model]
 
     def _process(self, image_bytes: bytes, model: str) -> BytesIO:
+        """Process an image to remove its background.
+        
+        Args:
+            image_bytes (bytes): The image data as bytes.
+            model (str): The model to use for background removal.
+            
+        Returns:
+            BytesIO: The processed image with background removed.
+        """
         from rembg import remove
         from PIL import Image
 
@@ -93,6 +139,14 @@ class BgRemover(commands.Cog):
         return buffer
 
     async def _run(self, send_func, image_bytes: bytes, model: str, typing_ctx=None):
+        """Run the background removal process.
+        
+        Args:
+            send_func: The function to send messages.
+            image_bytes (bytes): The image data as bytes.
+            model (str): The model to use for background removal.
+            typing_ctx: The context for typing indicator.
+        """
         if self._semaphore.locked():
             return await send_func("⏳ Another image is currently processing.")
 
@@ -104,6 +158,13 @@ class BgRemover(commands.Cog):
                 await self._execute(send_func, image_bytes, model)
 
     async def _execute(self, send_func, image_bytes: bytes, model: str):
+        """Execute the background removal process.
+        
+        Args:
+            send_func: The function to send messages.
+            image_bytes (bytes): The image data as bytes.
+            model (str): The model to use for background removal.
+        """
         loop = asyncio.get_running_loop()
         try:
             buffer = await asyncio.wait_for(
@@ -119,6 +180,7 @@ class BgRemover(commands.Cog):
         await send_func(file=discord.File(buffer, filename="no_bg.png"))
 
     @commands.command(name="bgremove", aliases=["nobg", "nobackground"])
+    @commands.bot_has_permissions(attach_files=True, embed_links=True)
     async def bgremove(
         self,
         ctx: commands.Context,
@@ -126,6 +188,14 @@ class BgRemover(commands.Cog):
         user: Optional[discord.Member] = None,
         url: Optional[str] = None,
     ):
+        """Remove background from an image using the specified model.
+        
+        Args:
+            ctx (commands.Context): The command context.
+            model (Optional[str]): The model to use for background removal.
+            user (Optional[discord.Member]): The user whose avatar to use.
+            url (Optional[str]): The URL of the image to process.
+        """
         model = model or "u2netp"
 
         if model not in AVAILABLE_MODELS:
@@ -177,6 +247,15 @@ class BgRemover(commands.Cog):
         url: Optional[str] = None,
         model: app_commands.Choice[str] = None,
     ):
+        """Remove background from an image using the specified model (slash command version).
+        
+        Args:
+            interaction (discord.Interaction): The slash command interaction.
+            attachment (Optional[discord.Attachment]): The image attachment.
+            user (Optional[discord.Member]): The user whose avatar to use.
+            url (Optional[str]): The URL of the image to process.
+            model (app_commands.Choice[str]): The model to use for background removal.
+        """
         await interaction.response.defer()
 
         selected_model = model.value if model else "u2netp"

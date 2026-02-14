@@ -559,28 +559,6 @@ class AiGen(commands.Cog):
         
         Model: flux
 
-        Parameters
-        ----------
-        ctx : commands.Context
-            The command context containing message and author information.
-        prompt : str
-            The text prompt describing the image to generate.
-            Supports optional seed at the end (e.g., "a cat 12345").
-            Supports negative prompt via --negative flag (e.g., "a cat --negative blurry").
-
-        Returns
-        -------
-        None
-            Sends the generated image to the channel with metadata embed.
-
-        Notes
-        -----
-        - Cooldown: 1 use per 60 seconds per guild.
-        - Requires bot permission to attach files.
-        - Seed is optional; if not provided, a random seed is used.
-        - Negative prompt defaults to "worst quality, blurry" if not specified.
-        - Output includes regenerate, edit, and delete buttons.
-        - Powered by Pollinations.ai API.
         """
         words = prompt.split()
         seed = None
@@ -1298,113 +1276,6 @@ class AiGen(commands.Cog):
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
 
-    @text.command()
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def gemini3(self, ctx: commands.Context, *, query: str = None):
-        """
-        Query via Gemini3
-        """
-
-        MODEL = "gemini-fast"  # Pollinations new API model name
-
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
-                "Get it from: <https://auth.pollinations.ai/>"
-            )
-            return
-
-        # Prompt fallback
-        if not query and ctx.message.attachments:
-            query = "Describe this image"
-        if not query and not ctx.message.attachments:
-            await ctx.send("❌ Please provide a prompt or attach an image.")
-            return
-
-        # Collect image URLs
-        image_urls = []
-        for att in ctx.message.attachments:
-            if att.content_type and att.content_type.startswith("image/"):
-                image_urls.append(att.url)
-
-        # Build messages
-        content_parts = [{"type": "text", "text": query}]
-        for url in image_urls:
-            content_parts.append({"type": "image_url", "image_url": {"url": url}})
-
-        messages = [{"role": "user", "content": content_parts}]
-
-        # Pollinations token
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = poll_keys.get("token") if poll_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
-            )
-            return
-
-        payload = {
-            "model": MODEL,
-            "messages": messages,
-            "temperature": 1,
-            "top_p": 1,
-            "max_tokens": 4096,
-            "seed": 0,
-
-            # Pollinations custom fields
-            "referrer": referrer,
-            "isPrivate": bool(poll_token),
-
-            # streaming disabled
-            "stream": False
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-
-        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, json=payload, headers=headers) as resp:
-                        text = await resp.text()
-
-                        if resp.status != 200:
-                            await ctx.send(
-                                f"❌ **API Error:** HTTP {resp.status}\n"
-                                f"```\n{text[:1000]}\n```"
-                            )
-                            return
-
-                        # Parse response
-                        try:
-                            data = json.loads(text)
-                            result = data["choices"][0]["message"]["content"]
-                        except Exception:
-                            result = text  # fallback
-
-                        # Send in 2000-char chunks
-                        for i in range(0, len(result), 2000):
-                            embed = discord.Embed(
-                                title="🤖 Pollinations Response",
-                                description=result[i : i + 2000],
-                                color=discord.Color.blue(),
-                            )
-                            embed.set_footer(text=f"Model: {MODEL} | pollinations.ai")
-                            await ctx.send(embed=embed)
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ **Request Failed:** `{e}`")
-            except Exception as e:
-                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
     @text.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
@@ -1789,6 +1660,133 @@ class AiGen(commands.Cog):
                 except:
                     pass
 
+
+
+    @commands.command(name="wan")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.has_permissions(attach_files=True)
+    async def wan(self, ctx, *, prompt: str = None):
+        """Generate videos using Wan model.
+        
+        Model: Wan
+        """
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Provide a prompt and/or images.")
+        processed_images = []
+        temp_msgs = []
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = pollinations_keys.get("token") if pollinations_keys else None
+        if prompt:
+            # Extract URLs from the prompt
+            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
+            found_urls = re.findall(url_regex, prompt)
+            for url in found_urls:
+                buf, result = await self.process_image(url)
+                if buf:
+                    msg = await ctx.channel.send(
+                        content="Processing Image... Please wait",
+                        file=discord.File(buf, filename=result),
+                    )
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+            # Remove URLs from prompt so Pollinations doesn't try to read them as text
+            for url in found_urls:
+                prompt = prompt.replace(url, "").strip()
+        # a
+        for a in ctx.message.attachments:
+            buf, result = await self.process_image(a.url.rstrip("&"))
+            if buf:
+                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                temp_msgs.append(msg)
+                processed_images.append(msg.attachments[0].url)
+            else:
+                processed_images.append(result)
+
+        if ctx.message.reference:
+            try:
+                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                for a in ref.attachments:
+                    buf, result = await self.process_image(a.url)
+                    if buf:
+                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                        temp_msgs.append(msg)
+                        processed_images.append(msg.attachments[0].url)
+                    else:
+                        processed_images.append(result)
+                for embed in ref.embeds:
+                    if embed.image and embed.image.url:
+                        buf, result = await self.process_image(embed.image.url)
+                        if buf:
+                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                            temp_msgs.append(msg)
+                            processed_images.append(msg.attachments[0].url)
+                        else:
+                            processed_images.append(result)
+            except Exception as e:
+                self.log.error(f"Failed fetching referenced message: {e}")
+
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                buf, result = await self.process_image(avatar_url)
+                if buf:
+                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+                prompt = prompt.replace(user.mention, "").strip()
+
+        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
+        async with ctx.typing():
+            result, full_url = await self._pollinations_request(
+                prompt=prompt or "",
+                model="wan",
+                token=token,
+                images=images if images else None,
+                duration=duration,
+                aspect_ratio="16:9",
+            )
+            if isinstance(result, bytes):
+                # normal case: we got video bytes
+                try:
+                    await ctx.send(
+                        file=discord.File(io.BytesIO(result), "Wan.mp4")
+                    )
+                except discord.HTTPException:
+                    await ctx.send(
+                        f"🎬 Your Wan video is ready: [Here]({full_url})"
+                    )
+            elif isinstance(result, dict) and result.get("error"):
+                # API returned an error, e.g., no credits
+                embed = discord.Embed(
+                    title="⚠️ Oops! Wan Generation Failed",
+                    description=(
+                        "Something went wrong while generating your Wan video.\n\n"
+                        "**Error message:**\n"
+                        f"```\n{result['error']['message']}\n```"
+                        "**Possible reasons:**\n"
+                        "• The generation service might be temporarily down.\n"
+                        "• Your prompt might be invalid or too long.\n"
+                        "• You might have run out of credits/pollen balance.\n\n"
+                        "Please try again later or adjust your prompt."
+                    ),
+                    color=discord.Color.orange(),
+                )
+                await ctx.send(embed=embed)
+            else:
+                # fallback
+                await ctx.send(f"🎬 Your Wan video is ready: [Here]({full_url})")
+
+            for m in temp_msgs:
+                try:
+                    await m.delete()
+                except:
+                    pass
+
     @commands.command(name="grokvideo")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
@@ -1931,198 +1929,198 @@ class AiGen(commands.Cog):
                 self.log.error(f"Grok video generation error: {e}", exc_info=True)
                 await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
 
-    @commands.command(name="wan")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @commands.has_permissions(attach_files=True)
-    async def wan(self, ctx, *, prompt: str = None):
-        """Generate videos using Alibaba Wan 2.6 model.
+    # @commands.command(name="wan")
+    # @commands.cooldown(1, 60, commands.BucketType.guild)
+    # @commands.has_permissions(attach_files=True)
+    # async def wan(self, ctx, *, prompt: str = None):
+    #     """Generate videos using Alibaba Wan 2.6 model.
         
-        Model: wan
+    #     Model: wan
         
-        Supports text-to-video and image-to-video generation.
+    #     Supports text-to-video and image-to-video generation.
         
-        Usage:
-        !wan a girl dancing in a field
-        !wan --resolution 720p --aspect_ratio 9:16 a vertical video of someone singing
+    #     Usage:
+    #     !wan a girl dancing in a field
+    #     !wan --resolution 720p --aspect_ratio 9:16 a vertical video of someone singing
         
-        Parameters in prompt:
-        --resolution: 720p or 1080p (default: 1080p)
-        --aspect_ratio: 16:9 or 9:16 (default: 16:9)
-        --negative_prompt: things to avoid in the video
+    #     Parameters in prompt:
+    #     --resolution: 720p or 1080p (default: 1080p)
+    #     --aspect_ratio: 16:9 or 9:16 (default: 16:9)
+    #     --negative_prompt: things to avoid in the video
         
-        Image-to-video: attach an image and provide a prompt.
-        Duration: automatically optimized (2-15 seconds).
-        """
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Please provide a prompt and/or images.")
+    #     Image-to-video: attach an image and provide a prompt.
+    #     Duration: automatically optimized (2-15 seconds).
+    #     """
+    #     if not prompt and not ctx.message.attachments and not ctx.message.reference:
+    #         return await ctx.send("❌ Please provide a prompt and/or images.")
 
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = poll_keys.get("token") if poll_keys else None
-        if not token:
-            return await ctx.send("❌ Missing Pollinations API token.")
+    #     poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+    #     token = poll_keys.get("token") if poll_keys else None
+    #     if not token:
+    #         return await ctx.send("❌ Missing Pollinations API token.")
 
-        processed_images = []
-        temp_msgs = []
+    #     processed_images = []
+    #     temp_msgs = []
 
-        # Parse resolution from prompt
-        resolution = "1080p"  # default
-        resolution_match = re.search(r"--resolution\s+(720p|1080p)", prompt or "", re.IGNORECASE)
-        if resolution_match:
-            resolution = resolution_match.group(1).lower()
-            prompt = re.sub(r"--resolution\s+(?:720p|1080p)", "", prompt or "", flags=re.IGNORECASE).strip()
+    #     # Parse resolution from prompt
+    #     resolution = "1080p"  # default
+    #     resolution_match = re.search(r"--resolution\s+(720p|1080p)", prompt or "", re.IGNORECASE)
+    #     if resolution_match:
+    #         resolution = resolution_match.group(1).lower()
+    #         prompt = re.sub(r"--resolution\s+(?:720p|1080p)", "", prompt or "", flags=re.IGNORECASE).strip()
 
-        # Parse aspect ratio from prompt
-        aspect_ratio = "16:9"  # default
-        aspect_match = re.search(r"--aspect_ratio\s+(16:9|9:16)", prompt or "", re.IGNORECASE)
-        if aspect_match:
-            aspect_ratio = aspect_match.group(1)
-            prompt = re.sub(r"--aspect_ratio\s+(?:16:9|9:16)", "", prompt or "", flags=re.IGNORECASE).strip()
+    #     # Parse aspect ratio from prompt
+    #     aspect_ratio = "16:9"  # default
+    #     aspect_match = re.search(r"--aspect_ratio\s+(16:9|9:16)", prompt or "", re.IGNORECASE)
+    #     if aspect_match:
+    #         aspect_ratio = aspect_match.group(1)
+    #         prompt = re.sub(r"--aspect_ratio\s+(?:16:9|9:16)", "", prompt or "", flags=re.IGNORECASE).strip()
 
-        # Parse negative prompt
-        negative_prompt = None
-        neg_match = re.search(r"--negative_prompt\s+([^\-]+?)(?=--|$)", prompt or "", re.IGNORECASE)
-        if neg_match:
-            negative_prompt = neg_match.group(1).strip()
-            prompt = re.sub(r"--negative_prompt\s+[^\-]+?(?=--|$)", "", prompt or "", flags=re.IGNORECASE).strip()
+    #     # Parse negative prompt
+    #     negative_prompt = None
+    #     neg_match = re.search(r"--negative_prompt\s+([^\-]+?)(?=--|$)", prompt or "", re.IGNORECASE)
+    #     if neg_match:
+    #         negative_prompt = neg_match.group(1).strip()
+    #         prompt = re.sub(r"--negative_prompt\s+[^\-]+?(?=--|$)", "", prompt or "", flags=re.IGNORECASE).strip()
 
-        # Parse seed from prompt
-        seed = None
-        seed_match = re.search(r"--seed\s+(\d+)", prompt or "", re.IGNORECASE)
-        if seed_match:
-            seed = int(seed_match.group(1))
-            prompt = re.sub(r"--seed\s+\d+", "", prompt or "", flags=re.IGNORECASE).strip()
-        else:
-            seed = random.randint(0, 1000000)
+    #     # Parse seed from prompt
+    #     seed = None
+    #     seed_match = re.search(r"--seed\s+(\d+)", prompt or "", re.IGNORECASE)
+    #     if seed_match:
+    #         seed = int(seed_match.group(1))
+    #         prompt = re.sub(r"--seed\s+\d+", "", prompt or "", flags=re.IGNORECASE).strip()
+    #     else:
+    #         seed = random.randint(0, 1000000)
 
-        if prompt:
-            # Extract URLs from the prompt
-            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
-            found_urls = re.findall(url_regex, prompt)
-            for url in found_urls:
-                buf, result = await self.process_image(url)
-                if buf:
-                    msg = await ctx.channel.send(
-                        content="🔄 Processing image...",
-                        file=discord.File(buf, filename=result),
-                    )
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-            # Remove URLs from prompt
-            for url in found_urls:
-                prompt = prompt.replace(url, "").strip()
+    #     if prompt:
+    #         # Extract URLs from the prompt
+    #         url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
+    #         found_urls = re.findall(url_regex, prompt)
+    #         for url in found_urls:
+    #             buf, result = await self.process_image(url)
+    #             if buf:
+    #                 msg = await ctx.channel.send(
+    #                     content="🔄 Processing image...",
+    #                     file=discord.File(buf, filename=result),
+    #                 )
+    #                 temp_msgs.append(msg)
+    #                 processed_images.append(msg.attachments[0].url)
+    #             else:
+    #                 processed_images.append(result)
+    #         # Remove URLs from prompt
+    #         for url in found_urls:
+    #             prompt = prompt.replace(url, "").strip()
 
-        # Process attachments
-        for a in ctx.message.attachments:
-            buf, result = await self.process_image(a.url.rstrip("&"))
-            if buf:
-                msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-                temp_msgs.append(msg)
-                processed_images.append(msg.attachments[0].url)
-            else:
-                processed_images.append(result)
+    #     # Process attachments
+    #     for a in ctx.message.attachments:
+    #         buf, result = await self.process_image(a.url.rstrip("&"))
+    #         if buf:
+    #             msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+    #             temp_msgs.append(msg)
+    #             processed_images.append(msg.attachments[0].url)
+    #         else:
+    #             processed_images.append(result)
 
-        # Process referenced message
-        if ctx.message.reference:
-            try:
-                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                for a in ref.attachments:
-                    buf, result = await self.process_image(a.url)
-                    if buf:
-                        msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-                        temp_msgs.append(msg)
-                        processed_images.append(msg.attachments[0].url)
-                    else:
-                        processed_images.append(result)
-                for embed in ref.embeds:
-                    if embed.image and embed.image.url:
-                        buf, result = await self.process_image(embed.image.url)
-                        if buf:
-                            msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-                            temp_msgs.append(msg)
-                            processed_images.append(msg.attachments[0].url)
-                        else:
-                            processed_images.append(result)
-            except Exception as e:
-                self.log.error(f"Failed fetching referenced message: {e}")
+    #     # Process referenced message
+    #     if ctx.message.reference:
+    #         try:
+    #             ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+    #             for a in ref.attachments:
+    #                 buf, result = await self.process_image(a.url)
+    #                 if buf:
+    #                     msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+    #                     temp_msgs.append(msg)
+    #                     processed_images.append(msg.attachments[0].url)
+    #                 else:
+    #                     processed_images.append(result)
+    #             for embed in ref.embeds:
+    #                 if embed.image and embed.image.url:
+    #                     buf, result = await self.process_image(embed.image.url)
+    #                     if buf:
+    #                         msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+    #                         temp_msgs.append(msg)
+    #                         processed_images.append(msg.attachments[0].url)
+    #                     else:
+    #                         processed_images.append(result)
+    #         except Exception as e:
+    #             self.log.error(f"Failed fetching referenced message: {e}")
 
-        # Process mentions
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                buf, result = await self.process_image(avatar_url)
-                if buf:
-                    msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-                prompt = prompt.replace(user.mention, "").strip()
+    #     # Process mentions
+    #     if prompt and ctx.message.mentions:
+    #         for user in ctx.message.mentions:
+    #             avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+    #             buf, result = await self.process_image(avatar_url)
+    #             if buf:
+    #                 msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
+    #                 temp_msgs.append(msg)
+    #                 processed_images.append(msg.attachments[0].url)
+    #             else:
+    #                 processed_images.append(result)
+    #             prompt = prompt.replace(user.mention, "").strip()
 
-        # Get first image if available (Wan 2.6 supports image-to-video)
-        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
+    #     # Get first image if available (Wan 2.6 supports image-to-video)
+    #     images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
 
-        # Parse duration from prompt (Wan 2.6: 2-15 seconds, Pollinations optimizes automatically)
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
+    #     # Parse duration from prompt (Wan 2.6: 2-15 seconds, Pollinations optimizes automatically)
+    #     prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
 
-        async with ctx.typing():
-            try:
-                result, full_url = await self._pollinations_request(
-                    prompt=prompt or "",
-                    model="wan",
-                    token=token,
-                    images=images if images else None,
-                    duration=duration,
-                    aspect_ratio=aspect_ratio,
-                    resolution=resolution,
-                    negative_prompt=negative_prompt,
-                    seed=seed,
-                )
-                if isinstance(result, bytes):
-                    # Got video bytes - try to send as file
-                    try:
-                        await ctx.send(
-                            content="✨ Your Wan 2.6 video is ready!",
-                            file=discord.File(io.BytesIO(result), "wan.mp4")
-                        )
-                    except discord.HTTPException:
-                        # File too large, send link instead
-                        await ctx.send(
-                            f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})"
-                        )
-                elif isinstance(result, dict) and result.get("error"):
-                    # API returned an error
-                    embed = discord.Embed(
-                        title="⚠️ Wan 2.6 Generation Failed",
-                        description=(
-                            "Something went wrong while generating your video.\n\n"
-                            "**Error message:**\n"
-                            f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
-                            "**Possible reasons:**\n"
-                            "• The generation service might be temporarily down.\n"
-                            "• Your prompt might be invalid or too long.\n"
-                            "• You might have run out of credits/pollen balance.\n\n"
-                            "Please try again later or adjust your prompt."
-                        ),
-                        color=discord.Color.orange(),
-                    )
-                    await ctx.send(embed=embed)
-                else:
-                    # Unexpected response format
-                    await ctx.send(f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})")
-            except asyncio.TimeoutError:
-                await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
-            except Exception as e:
-                self.log.error(f"Wan 2.6 generation error: {e}", exc_info=True)
-                await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
-            finally:
-                # Clean up temporary messages
-                for m in temp_msgs:
-                    try:
-                        await m.delete()
-                    except:
-                        pass     
+    #     async with ctx.typing():
+    #         try:
+    #             result, full_url = await self._pollinations_request(
+    #                 prompt=prompt or "",
+    #                 model="wan",
+    #                 token=token,
+    #                 images=images if images else None,
+    #                 duration=duration,
+    #                 aspect_ratio=aspect_ratio,
+    #                 resolution=resolution,
+    #                 negative_prompt=negative_prompt,
+    #                 seed=seed,
+    #             )
+    #             if isinstance(result, bytes):
+    #                 # Got video bytes - try to send as file
+    #                 try:
+    #                     await ctx.send(
+    #                         content="✨ Your Wan 2.6 video is ready!",
+    #                         file=discord.File(io.BytesIO(result), "wan.mp4")
+    #                     )
+    #                 except discord.HTTPException:
+    #                     # File too large, send link instead
+    #                     await ctx.send(
+    #                         f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})"
+    #                     )
+    #             elif isinstance(result, dict) and result.get("error"):
+    #                 # API returned an error
+    #                 embed = discord.Embed(
+    #                     title="⚠️ Wan 2.6 Generation Failed",
+    #                     description=(
+    #                         "Something went wrong while generating your video.\n\n"
+    #                         "**Error message:**\n"
+    #                         f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
+    #                         "**Possible reasons:**\n"
+    #                         "• The generation service might be temporarily down.\n"
+    #                         "• Your prompt might be invalid or too long.\n"
+    #                         "• You might have run out of credits/pollen balance.\n\n"
+    #                         "Please try again later or adjust your prompt."
+    #                     ),
+    #                     color=discord.Color.orange(),
+    #                 )
+    #                 await ctx.send(embed=embed)
+    #             else:
+    #                 # Unexpected response format
+    #                 await ctx.send(f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})")
+    #         except asyncio.TimeoutError:
+    #             await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
+    #         except Exception as e:
+    #             self.log.error(f"Wan 2.6 generation error: {e}", exc_info=True)
+    #             await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
+    #         finally:
+    #             # Clean up temporary messages
+    #             for m in temp_msgs:
+    #                 try:
+    #                     await m.delete()
+    #                 except:
+    #                     pass     
 
     @text.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
