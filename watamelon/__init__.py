@@ -1,5 +1,3 @@
-import aiohttp
-
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import humanize_list
 
@@ -29,8 +27,7 @@ class Watamelon(commands.Cog):
             f"`Cog Version :` {self.__version__}"
         )
 
-    def cog_unload(self):
-        self.bot.loop.create_task(self.session.close())
+  
 
     @commands.group()
     async def watamelon(self, ctx):
