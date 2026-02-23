@@ -31,13 +31,19 @@ class AiGen(commands.Cog):
     __version__ = "0.0.3"
 
     @commands.group()
+    async def aigen(self, ctx: commands.Context):
+        """AI generation commands and settings."""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
+
+    @aigen.group()
     async def text(self, ctx: commands.Context):
         """Text AI commands."""
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    @commands.group()
-    async def settings(self, ctx: commands.Context):
+    @aigen.group(invoke_without_command=True)
+    async def aisettings(self, ctx: commands.Context):
         """Settings commands."""
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
@@ -454,7 +460,7 @@ class AiGen(commands.Cog):
         if not referrer or referrer.lower() == "none":
             await ctx.send(
                 "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
+                "Use `[p]settings referrer <your_referrer>` (bot owner only).\n"
                 "Get it from: <https://auth.pollinations.ai/>"
             )
             return
@@ -540,7 +546,7 @@ class AiGen(commands.Cog):
             except Exception as e:
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
 
-    @settings.command(name="externalupload")
+    @aisettings.command(name="externalupload")
     @commands.admin_or_permissions(manage_guild=True)
     async def externalupload(self, ctx, toggle: bool):
         """Enable or disable external uploads like Chibisafe for this server."""
@@ -674,7 +680,7 @@ class AiGen(commands.Cog):
 
         await self._pollinations_generate(ctx, "imagen-4", prompt, seed, negative_prompt=negative_prompt)
 
-    @settings.command()
+    @aisettings.command()
     @commands.is_owner()
     async def referrer(self, ctx: commands.Context, *, new_referrer: str):
         """Set the global referrer used in Pollinations API requests."""
@@ -1497,6 +1503,10 @@ class AiGen(commands.Cog):
         Supports Wan 2.6 video generation with proper parameter handling.
         """
         encoded_prompt = urllib.parse.quote(prompt, safe="")
+        if model == "grok-video":
+            base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
+        else:
+            base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
         base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
         params = {
             k: v
@@ -2183,7 +2193,7 @@ class AiGen(commands.Cog):
     @checks.bot_has_permissions(attach_files=True)
     async def claude(self, ctx: commands.Context, *, query: str = None):
         """Query with `claude`."""
-        await self._run_pollinations_text(ctx, "claude", query)
+        await self._run_pollinations_text(ctx, "claude-fast", query)
 
     @text.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
@@ -2576,7 +2586,7 @@ class AiGen(commands.Cog):
             "model": "elevenmusic",
             "input": prompt,
             "duration": duration,
-            "instrumental": False
+            "instrumental": False,
         }
 
         async with ctx.typing():
