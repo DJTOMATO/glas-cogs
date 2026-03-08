@@ -1,0 +1,11 @@
+{
+    "author": ["Glas"],
+    "description": "Create a retro degraded image with noisy, glitchy, blocky artifacts.",
+    "install_msg": "Thanks for installing the Gabib cog!",
+    "short": "Retro image degradation tool.",
+    "type": "COG",
+    "min_bot_version": "3.50.0",
+    "name": "Gabib",
+    "requirements": ["Pillow", "aiohttp"],
+    "tags": ["image", "utility", "retro"]
+}
