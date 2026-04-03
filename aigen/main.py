@@ -106,6 +106,23 @@ class AiGen(commands.Cog):
 
         return prompt, duration
 
+    def sanitize_error_message(self, error_message: str) -> str:
+        """Remove IP addresses and promotional URLs from error messages."""
+        # Handle "Queue full for IP: : X requests already queued" pattern
+        queue_match = re.search(r'Queue full.*?(\d+)\s+requests?\s+already\s+queued', error_message)
+        if queue_match:
+            num_requests = queue_match.group(1)
+            error_message = f"Queue full, {num_requests} requests"
+            return error_message
+        
+        # Remove IP addresses (both xxx.xxx.xxx.xxx pattern and actual IPs like 192.168.1.1)
+        error_message = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', '', error_message)
+        # Remove the "Get unlimited access at https://enter.pollinations.ai" string and similar
+        error_message = re.sub(r'\.?\s*Get unlimited access at.*', '', error_message)
+        # Clean up extra whitespace and line breaks
+        error_message = re.sub(r'\s+', ' ', error_message).strip()
+        return error_message
+
     async def _pollinations_generate(
         self,
         ctx: commands.Context | discord.Interaction,
@@ -223,7 +240,8 @@ class AiGen(commands.Cog):
         if images:
             params["image"] = ",".join(images)
         encoded_prompt = quote(prompt, safe="")
-        url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
+        url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
+
         payload = {
             "model": model,
             "width": width,
@@ -262,6 +280,9 @@ class AiGen(commands.Cog):
                                 error_message = response_json.get("message", response_text)
                         except Exception:
                             error_message = response_text  # fallback if JSON parsing fails
+
+                        # Sanitize error message to remove IPs and promotional URLs
+                        error_message = self.sanitize_error_message(error_message)
 
                         # Include status code, headers, and body
                         error = discord.Embed(
@@ -558,16 +579,27 @@ class AiGen(commands.Cog):
         await ctx.send(f"External uploads are now **{status}** for this server.")
 
     @commands.command(name="flux")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.cooldown(1, 3, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def flux(self, ctx: commands.Context, *, prompt: str):
         """Generate an image using the Flux model.
-        
+
         Model: flux
 
         """
-        words = prompt.split()
         seed = None
+        # Parse height if present in format --height <number>
+        height = 3072  # default height
+        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
+        if height_match:
+            height = int(height_match.group(1))
+            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        # Parse width if present in format --width <number>
+        width = 5504  # default width
+        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
+        if width_match:
+            width = int(width_match.group(1))
+            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
 
         # Parse negative prompt if present in format --negative <text>
         negative_prompt = "worst quality, blurry"  # default negative prompt
@@ -575,8 +607,12 @@ class AiGen(commands.Cog):
         if negative_match:
             negative_prompt = negative_match.group(1).strip()
             # Remove the --negative part from the prompt
-            prompt = re.sub(r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE).strip()
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
 
+        # Re-split after cleaning parameters to properly extract seed
+        words = prompt.split()
         if words and words[-1].isdigit():
             seed = int(words[-1])
             words = words[:-1]
@@ -584,7 +620,136 @@ class AiGen(commands.Cog):
         else:
             seed = random.randint(0, 1000000)
 
-        await self._pollinations_generate(ctx, "flux", prompt, seed, negative_prompt=negative_prompt)
+        await self._pollinations_generate(
+            ctx,
+            "flux",
+            prompt,
+            seed,
+            negative_prompt=negative_prompt,
+            width=width,
+            height=height,
+        )
+
+    @commands.command(name="flux2")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def flux2(self, ctx: commands.Context, *, prompt: str = None):
+        """
+        Generate an Image via FLUX.2 Klein 4B model.
+
+        Model: flux-2-dev
+        Max size is 2048x2048
+        Usage:
+          [p]flux2dev <prompt> [attach image(s), reply, mention, ID, or URL(s)]
+          [p]flux2dev <prompt> (text-only prompt is supported)
+          Multiple images supported (comma-separated).
+        """
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        # Parse height if present in format --height <number>
+        height = 3072  # default height
+        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
+        if height_match:
+            height = int(height_match.group(1))
+            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        # Parse width if present in format --width <number>
+        width = 5504  # default width
+        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
+        if width_match:
+            width = int(width_match.group(1))
+            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+
+        # --- Parse --seed ---
+        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
+        if seed_match:
+            seed = int(seed_match.group(1))
+            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+        images = []
+        if ctx.message.attachments:
+            images.extend([a.url for a in ctx.message.attachments])
+        if ctx.message.reference:
+            try:
+                referenced = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
+                if referenced.attachments:
+                    images.extend([a.url for a in referenced.attachments])
+                elif referenced.embeds:
+                    for embed in referenced.embeds:
+                        if embed.image and embed.image.url:
+                            images.append(embed.image.url)
+            except Exception:
+                pass
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                if hasattr(user, "display_avatar"):
+                    images.append(
+                        user.display_avatar.with_format("png").with_size(1024).url
+                    )
+                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
+                else:
+                    images.append(user.avatar_url)
+                prompt = prompt.replace(user.mention, "").strip()
+        if prompt:
+            url_matches = re.findall(r"(https?://\S+)", prompt)
+            for url in url_matches:
+                images.append(url)
+                prompt = prompt.replace(url, "").strip()
+        if prompt:
+            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
+            for mid in id_matches:
+                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
+                if not user:
+                    try:
+                        user = await self.bot.fetch_user(int(mid))
+                    except Exception:
+                        user = None
+                if user:
+                    if hasattr(user, "display_avatar"):
+                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                        images.append(
+                            user.display_avatar.with_format("png").with_size(1024).url
+                        )
+                    else:
+
+                        images.append(user.avatar_url)
+                    prompt = prompt.replace(mid, "").strip()
+        images = [
+            (
+                img.replace(".gif", ".png")
+                if img.endswith(".gif") and "discordapp.com/avatars/" in img
+                else img
+            )
+            for img in images
+        ]
+        seen = set()
+        images = [x for x in images if not (x in seen or seen.add(x))]
+
+        if not prompt:
+            await ctx.send("❌ Please provide a prompt.")
+            return
+
+        seed = None
+        if not seed:
+            seed = random.randint(0, 1000000)
+        await self._pollinations_generate(
+            ctx,
+            "flux-2-dev",
+            prompt or "",
+            seed=seed,
+            images=images if images else None,
+            negative_prompt=negative_prompt,
+            height=height,
+            width=width,
+        )
 
     @commands.command(name="turbo")
     @commands.cooldown(1, 60, commands.BucketType.guild)
@@ -679,6 +844,37 @@ class AiGen(commands.Cog):
             seed = random.randint(0, 1000000)
 
         await self._pollinations_generate(ctx, "imagen-4", prompt, seed, negative_prompt=negative_prompt)
+
+    @commands.command(name="gimagine")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def grokimagine(self, ctx: commands.Context, *, prompt: str):
+        """Generate an Image via grok model.
+        
+        Model: grok
+        """
+
+        # Parse negative prompt if present in format --negative <text>
+        negative_prompt = "worst quality, blurry"  # default negative prompt
+        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
+        if negative_match:
+            negative_prompt = negative_match.group(1).strip()
+            # Remove the --negative part from the prompt
+            prompt = re.sub(
+                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
+            ).strip()
+
+        words = prompt.split()
+        seed = None
+
+        if words and words[-1].isdigit():
+            seed = int(words[-1])
+            words = words[:-1]
+            prompt = " ".join(words)
+        else:
+            seed = random.randint(0, 1000000)
+
+        await self._pollinations_generate(ctx, "grok-imagine", prompt, seed, negative_prompt=negative_prompt)
 
     @aisettings.command()
     @commands.is_owner()
@@ -1044,7 +1240,7 @@ class AiGen(commands.Cog):
             "enhance": "True",
         }
 
-        base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
+        base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
         query_str = urlencode(query_params)
         full_url = f"{base_url}?{query_str}&image={images_param}"
 
@@ -1173,6 +1369,281 @@ class AiGen(commands.Cog):
 
         await send_func(file=File(file, filename="img2img.png"), embed=embed, view=view)
 
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def linkedin2(self, ctx: commands.Context, *, query: str = None):
+        """
+        Query via linkedin2
+        """
+
+        MODEL = "openai"  # Pollinations new API model name
+
+        referrer = await self.config.referrer()
+        if not referrer or referrer.lower() == "none":
+            await ctx.send(
+                "⚠️ Pollinations referrer not set.\n"
+                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
+                "Get it from: <https://auth.pollinations.ai/>"
+            )
+            return
+        user = ctx.author if hasattr(ctx, "author") else ctx.user
+        # Prompt fallback
+        if not query and ctx.message.attachments:
+            query = "Describe this image"
+        if not query and not ctx.message.attachments:
+            await ctx.send("❌ Please provide a prompt or attach an image.")
+            return
+
+        # Collect image URLs
+        image_urls = []
+        for att in ctx.message.attachments:
+            if att.content_type and att.content_type.startswith("image/"):
+                image_urls.append(att.url)
+
+        linkedin_prompt = (
+            "You are a seasoned expert in \"LinkedIn Speak\" — the exaggerated, motivational, "
+            "corporate-jargon-heavy style used in LinkedIn posts and updates. "
+            "Your role is to transform ANY input text (casual, mundane, negative, humorous, or dark) "
+            "into a polished, enthusiastic, and slightly over-the-top LinkedIn-style post while "
+            "preserving the original core meaning as much as possible.\n\n"
+            "Core behavior and style guidelines:\n"
+            "1) Always begin with a high-energy professional opener such as: "
+            "\"I'm thrilled to announce...\", \"Excited to share that...\", "
+            "\"Reflecting on a pivotal moment...\", \"Big news!\", or "
+            "\"Honored and humbled to share...\".\n"
+            "2) Maintain an overwhelmingly positive, empowering, and forward-looking tone. "
+            "Reframe negative or neutral content as opportunities, lessons learned, growth moments, "
+            "or radical ownership. Avoid cynicism or overt negativity.\n"
+            "3) Use rich corporate and startup buzzwords where natural, such as: leverage, optimize, "
+            "pivot, strategic, high-impact, world-class, disruptive, game-changing, scalable, ROI, "
+            "ecosystem, stakeholder, innovation, value-add, mission-critical, best-in-class, "
+            "growth mindset, resilience, thought leadership, strategic alignment, operational excellence, "
+            "cross-functional, journey, roadmap.\n"
+            "4) Structure the post clearly:\n"
+            "- Start: Energetic opener + brief context.\n"
+            "- Middle: Clearly convey the main facts from the original text (do not invent new factual content), "
+            "wrap challenges or failures as learning experiences or strategic pivots, and add 1–3 natural "
+            "key learnings or insights.\n"
+            "- End: Include a soft call to action such as \"Let's connect!\", "
+            "\"What are your thoughts?\", \"How are you approaching this?\", "
+            "or \"Open to collaborations and new opportunities!\".\n"
+            "5) Include 2–4 relevant emojis where they feel natural (for example: 🚀 💼 💡 🙌 🌱 🔁 📈 🤝). "
+            "Do not spam emojis; keep them professional and contextually relevant.\n"
+            "6) End the post with 4–6 relevant professional hashtags adapted to the topic, for example:\n"
+            "#Leadership #GrowthMindset #Innovation #CareerGrowth #Resilience #Networking #Strategy #Learning.\n"
+            "7) Preserve all core facts, key events, and logical meaning from the original text. "
+            "You may reorganize or condense details to fit LinkedIn style, but do not contradict or omit "
+            "critical facts and do not introduce new specific facts, companies, or numbers.\n\n"
+            "Output ONLY the transformed LinkedIn-style post. "
+            "No explanations, no meta-comments, no quotes of the original text."
+        )
+
+        content_parts = [{"type": "text", "text": query}]
+        for url in image_urls:
+            content_parts.append({"type": "image_url", "image_url": {"url": url}})
+
+        messages = [
+            {"role": "system", "content": linkedin_prompt},
+            {"role": "user", "content": content_parts}
+        ]
+
+        # Pollinations token
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        poll_token = poll_keys.get("token") if poll_keys else None
+
+        if not poll_token:
+            await ctx.send(
+                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
+            )
+            return
+
+        payload = {
+            "model": MODEL,
+            "messages": messages,
+            "temperature": 1,
+            "top_p": 1,
+            "max_tokens": 4096,
+            "seed": 0,
+
+            # Pollinations custom fields
+            "referrer": referrer,
+            "isPrivate": bool(poll_token),
+
+            # streaming disabled
+            "stream": False
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {poll_token}",
+            "referer": referrer,
+        }
+
+        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
+
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, json=payload, headers=headers) as resp:
+                        text = await resp.text()
+
+                        if resp.status != 200:
+                            await ctx.send(
+                                f"❌ **API Error:** HTTP {resp.status}\n"
+                                f"```\n{text[:1000]}\n```"
+                            )
+                            return
+
+                        # Parse response
+                        try:
+                            data = json.loads(text)
+                            result = data["choices"][0]["message"]["content"]
+                        except Exception:
+                            result = text  # fallback
+
+                        # Send in 2000-char chunks
+                        for i in range(0, len(result), 2000):
+                            embed = discord.Embed(
+                                title=f"What {user} actually wanted to say:",
+                                description=result[i : i + 2000],
+                                color=discord.Color.blue(),
+                            )
+                            embed.set_footer(text=f"lol, lmao even")
+                            await ctx.send(embed=embed)
+
+            except aiohttp.ClientError as e:
+                await ctx.send(f"❌ **Request Failed:** `{e}`")
+            except Exception as e:
+                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def linkedin(self, ctx: commands.Context, *, query: str = None):
+        """
+        Query via linkedin
+        """
+
+        MODEL = "gemini-fast"  # Pollinations new API model name
+
+        referrer = await self.config.referrer()
+        if not referrer or referrer.lower() == "none":
+            await ctx.send(
+                "⚠️ Pollinations referrer not set.\n"
+                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
+                "Get it from: <https://auth.pollinations.ai/>"
+            )
+            return
+        user = ctx.author if hasattr(ctx, "author") else ctx.user
+        # Prompt fallback
+        if not query and ctx.message.attachments:
+            query = "Describe this image"
+        if not query and not ctx.message.attachments:
+            await ctx.send("❌ Please provide a prompt or attach an image.")
+            return
+
+        # Collect image URLs
+        image_urls = []
+        for att in ctx.message.attachments:
+            if att.content_type and att.content_type.startswith("image/"):
+                image_urls.append(att.url)
+
+        linkedin_prompt = (
+            "You are a master of \"LinkedIn Speak\" \u2014 the exaggerated, motivational, corporate jargon-filled writing style used in LinkedIn posts and updates. "
+            "Your job is to translate ANY input text (casual, mundane, negative, humorous, or even dark) into a polished, enthusiastic, and absurdly professional LinkedIn-style announcement or post while preserving the original meaning and context as much as possible.\n\n"
+            "Core rules of LinkedIn Speak:\n"
+            "1. If the input contains Discord-style user mentions (e.g., <@ID>), preserve them exactly. If a person is mentioned by name, use their name. NEVER invent or use placeholder IDs like <@123456789> if they are not present in the input.\n"
+            "2. The goal is COMEDIC EXAGGERATION. Lean into the ridiculousness of corporate posturing. The more buzzwords, the better.\n"
+            "3. Do NOT use generic filler. If the input is 'he is lazy', do not write about 'growth mindset' generally; instead, write about 'his radical ownership of energy-optimization and strategic downtime for maximum long-term ROI'.\n"
+            "4. Always start with an energetic opener: \"I'm thrilled to announce...\", \"Excited to share...\", \"Reflecting on a pivotal moment...\", \"Big news!\" or similar.\n"
+            "5. Use heavy corporate buzzwords: leverage, optimize, pivot, high-impact, world-class, disruptive, game-changing, scalable, ROI, ecosystem, growth mindset, resilience, strategic alignment, value-add, mission-critical, etc.\n"
+            "6. Turn everything positive: reframe negatives as \"opportunities\", \"lessons learned\", \"radical ownership\", or \"innovative cognitive friction\".\n"
+            "7. Write in short, punchy sentences with high energy.\n"
+            "8. Include 2\u20134 relevant emojis (\ud83d\ude80 \ud83d\udcbc \ud83d\udd25 \ud83d\udcc8 etc.) where natural.\n"
+            "9. End with 4\u20136 relevant hashtags (#Leadership #GrowthMindset #Innovation #Networking #CareerGrowth #Disruption).\n"
+            "10. Frequently add a soft call to action: \"Let's connect!\", \"What are your thoughts?\", \"Open to opportunities!\", or \"How are you approaching this?\".\n\n"
+            "Output ONLY the LinkedIn Speak version. No explanations, no quotes, no extra text."
+        )
+
+        content_parts = [{"type": "text", "text": query}]
+        for url in image_urls:
+            content_parts.append({"type": "image_url", "image_url": {"url": url}})
+
+        messages = [
+            {"role": "system", "content": linkedin_prompt},
+            {"role": "user", "content": content_parts}
+        ]
+
+        # Pollinations token
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        poll_token = poll_keys.get("token") if poll_keys else None
+
+        if not poll_token:
+            await ctx.send(
+                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
+            )
+            return
+
+        payload = {
+            "model": MODEL,
+            "messages": messages,
+            "temperature": 1,
+            "top_p": 1,
+            "max_tokens": 4096,
+            "seed": 0,
+
+            # Pollinations custom fields
+            "referrer": referrer,
+            "isPrivate": bool(poll_token),
+
+            # streaming disabled
+            "stream": False
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {poll_token}",
+            "referer": referrer,
+        }
+
+        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
+
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, json=payload, headers=headers) as resp:
+                        text = await resp.text()
+
+                        if resp.status != 200:
+                            await ctx.send(
+                                f"❌ **API Error:** HTTP {resp.status}\n"
+                                f"```\n{text[:1000]}\n```"
+                            )
+                            return
+
+                        # Parse response
+                        try:
+                            data = json.loads(text)
+                            result = data["choices"][0]["message"]["content"]
+                        except Exception:
+                            result = text  # fallback
+
+                        # Send in 2000-char chunks
+                        for i in range(0, len(result), 2000):
+                            embed = discord.Embed(
+                                title=f"What {user} actually wanted to say:",
+                                description=result[i : i + 2000],
+                                color=discord.Color.blue(),
+                            )
+                            embed.set_footer(text=f"lol, lmao even")
+                            await ctx.send(embed=embed)
+
+            except aiohttp.ClientError as e:
+                await ctx.send(f"❌ **Request Failed:** `{e}`")
+            except Exception as e:
+                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+
     @text.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
@@ -1280,8 +1751,6 @@ class AiGen(commands.Cog):
                 await ctx.send(f"❌ **Request Failed:** `{e}`")
             except Exception as e:
                 await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
-
-
 
     @text.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
@@ -1497,6 +1966,7 @@ class AiGen(commands.Cog):
         resolution=None,
         negative_prompt=None,
         seed=None,
+        enhance=None,
     ):
         """
         Handles Pollinations GET requests for all models, capturing all parameters for debugging.
@@ -1506,8 +1976,8 @@ class AiGen(commands.Cog):
         if model == "grok-video":
             base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
         else:
-            base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
-        base_url = f"https://gen.pollinations.ai/api/generate/image/{encoded_prompt}"
+            base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
+        base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
         params = {
             k: v
             for k, v in {
@@ -1518,6 +1988,7 @@ class AiGen(commands.Cog):
                 "resolution": resolution,
                 "negative_prompt": negative_prompt,
                 "seed": seed,
+                "enhance": enhance,
             }.items()
             if v is not None
         }
@@ -1669,8 +2140,6 @@ class AiGen(commands.Cog):
                     await m.delete()
                 except:
                     pass
-
-
 
     @commands.command(name="wan")
     @commands.cooldown(1, 60, commands.BucketType.guild)
@@ -1900,6 +2369,7 @@ class AiGen(commands.Cog):
                     token=token,
                     duration=duration,
                     images=images,
+                    #enhance="true",
                 )
                 if isinstance(result, bytes):
                     # Got video bytes - try to send as file
@@ -1944,20 +2414,20 @@ class AiGen(commands.Cog):
     # @commands.has_permissions(attach_files=True)
     # async def wan(self, ctx, *, prompt: str = None):
     #     """Generate videos using Alibaba Wan 2.6 model.
-        
+
     #     Model: wan
-        
+
     #     Supports text-to-video and image-to-video generation.
-        
+
     #     Usage:
     #     !wan a girl dancing in a field
     #     !wan --resolution 720p --aspect_ratio 9:16 a vertical video of someone singing
-        
+
     #     Parameters in prompt:
     #     --resolution: 720p or 1080p (default: 1080p)
     #     --aspect_ratio: 16:9 or 9:16 (default: 16:9)
     #     --negative_prompt: things to avoid in the video
-        
+
     #     Image-to-video: attach an image and provide a prompt.
     #     Duration: automatically optimized (2-15 seconds).
     #     """
@@ -2130,7 +2600,7 @@ class AiGen(commands.Cog):
     #                 try:
     #                     await m.delete()
     #                 except:
-    #                     pass     
+    #                     pass
 
     @text.command()
     @commands.cooldown(3, 5, commands.BucketType.guild)
@@ -2370,6 +2840,7 @@ class AiGen(commands.Cog):
             width=width,
         )
 
+
     @commands.command(name="kleinpro")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
@@ -2549,13 +3020,13 @@ class AiGen(commands.Cog):
     #     """
     #     await self._run_pollinations_text(ctx, "nomnom", query)
 
-    @commands.command(name="elevenmusic")
+    @commands.command(name="qwentts")
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def elevenmusic(self, ctx: commands.Context, *, prompt: str):
-        """Generate music using ElevenMusic model.
+    async def qwentts(self, ctx: commands.Context, *, prompt: str):
+        """Generate music using Qwen TTS model.
         
-        Model: elevenmusic
+        Model: qwentts
         """
         # Parse duration from prompt if specified
         duration = 30  # default duration
@@ -2583,7 +3054,7 @@ class AiGen(commands.Cog):
             "Content-Type": "application/json"
         }
         data = {
-            "model": "elevenmusic",
+            "model": "qwen3",
             "input": prompt,
             "duration": duration,
             "instrumental": False,
@@ -2595,13 +3066,13 @@ class AiGen(commands.Cog):
                     async with session.post(url, headers=headers, json=data) as response:
                         if response.status == 200:
                             music_data = await response.read()
-                            
+
                             # Create filename from part of the prompt to avoid long filenames
                             filename = prompt[:30].replace(' ', '_').replace(',', '').replace('.', '') + ".mp3"
                             # Limit filename length
                             if len(filename) > 30:
                                 filename = filename[:30] + ".mp3"
-                            
+
                             music_file = discord.File(BytesIO(music_data), filename=filename)
 
                             await ctx.send(file=music_file)
@@ -2611,6 +3082,82 @@ class AiGen(commands.Cog):
             except Exception as e:
                 self.log.error(f"Error generating music: {e}")
                 await ctx.send("An error occurred while generating music.")
+
+    @commands.command(name="elevenmusic")
+    @commands.cooldown(3, 5, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def elevenmusic(self, ctx: commands.Context, *, prompt: str):
+        """Generate music using ElevenMusic model.
+
+        Model: elevenmusic
+        """
+        # Parse duration from prompt if specified
+        duration = 30  # default duration
+        match = re.search(r"--duration\s+(\d+)", prompt)
+        if match:
+            duration = int(match.group(1))
+            prompt = re.sub(r"--duration\s+\d+", "", prompt).strip()
+
+        # Validate duration (3-300 seconds)
+        if duration < 3 or duration > 300:
+            await ctx.send("Duration must be between 3 and 300 seconds.")
+            return
+
+        # Get API token
+        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = pollinations_keys.get("token")
+        if not token:
+            await ctx.send("Pollinations API token not set.")
+            return
+
+        # Generate music using POST endpoint (OpenAI-compatible)
+        url = "https://gen.pollinations.ai/v1/audio/speech"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": "elevenmusic",
+            "input": prompt,
+            "duration": duration,
+            "instrumental": False,
+        }
+
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        url, headers=headers, json=data
+                    ) as response:
+                        if response.status == 200:
+                            music_data = await response.read()
+
+                            # Create filename from part of the prompt to avoid long filenames
+                            filename = (
+                                prompt[:30]
+                                .replace(" ", "_")
+                                .replace(",", "")
+                                .replace(".", "")
+                                + ".mp3"
+                            )
+                            # Limit filename length
+                            if len(filename) > 30:
+                                filename = filename[:30] + ".mp3"
+
+                            music_file = discord.File(
+                                BytesIO(music_data), filename=filename
+                            )
+
+                            await ctx.send(file=music_file)
+                        else:
+                            response_text = await response.text()
+                            await ctx.send(
+                                f"Error generating music: {response.status} - {response_text}"
+                            )
+            except Exception as e:
+                self.log.error(f"Error generating music: {e}")
+                await ctx.send("An error occurred while generating music.")
+
 
 class EditModal(ui.Modal):
 
