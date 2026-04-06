@@ -59,8 +59,8 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
-| DuckDuckGo | DuckDuckGo search cog with image support fork from [Npc203's Google](https://github.com/npc203/npc-cogs/tree/main/duckduckgo) |                           Glas                          |        ✅        |                   Glas                          |        ✅        |
-|   Gabib   | Create a retro degraded image with noisy, glitchy, blocky artifacts. Inspired by [Gabib](https://amix-design.com/tl/tool-gabibi/) library |                           Glas                          |        ✅        |
+| DuckDuckGo | DuckDuckGo search with img support (fork from [Npc203's Google](https://github.com/npc203/npc-cogs/tree/main/duckduckgo)) |                            epic guy, ow0x, fixator10, Glas                       |        ✅        |                   Glas                          |        ✅        |
+|   Gabib   | Create a retro degraded image with noisy, glitchy, blocky artifacts. Inspired by [Gabib](https://amix-design.com/tl/tool-gabibi/) library |                                                    |        ✅        |
 |   RemoveBg   | Remove Backgrounds from images using the [rembg](https://github.com/danielgatis/rembg) library |                           Glas                          |        ✅        |
 |   Trickcal   | Generate random Trickcal avatars |                           Glas                          |        ✅        |
 |   ShindanMaker   | ShindanMaker integration for Red Discord Bot |                           Glas                          |        ✅        |
