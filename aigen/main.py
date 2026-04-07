@@ -1973,7 +1973,7 @@ class AiGen(commands.Cog):
         Supports Wan 2.6 video generation with proper parameter handling.
         """
         encoded_prompt = urllib.parse.quote(prompt, safe="")
-        if model == "grok-video":
+        if model == "nova-reel" or model == "ltx-2":
             base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
         else:
             base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
@@ -2266,19 +2266,19 @@ class AiGen(commands.Cog):
                 except:
                     pass
 
-    @commands.command(name="grokvideo")
+    @commands.command(name="nova")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @commands.has_permissions(attach_files=True)
-    async def grok_video(self, ctx, *, prompt: str = None):
-        """Generate videos using Grok Video model.
+    async def nova_video(self, ctx, *, prompt: str = None):
+        """Generate videos using nova-reel Video model.
         
-        Model: grok-video
+        Model: nova-reel
         
         Supports text-to-video generation.
         
         Usage:
-        !grok-video a girl dancing in a field
-        !grok-video --duration 5 a person waving
+        !nova a girl dancing in a field
+        !nova --duration 5 a person waving
         """
         if not prompt:
             return await ctx.send("❌ Please provide a prompt for video generation.")
@@ -2365,7 +2365,7 @@ class AiGen(commands.Cog):
             try:
                 result, full_url = await self._pollinations_request(
                     prompt=prompt or "",
-                    model="grok-video",
+                    model="nova-reel",
                     token=token,
                     duration=duration,
                     images=images,
@@ -2375,18 +2375,18 @@ class AiGen(commands.Cog):
                     # Got video bytes - try to send as file
                     try:
                         await ctx.send(
-                            content="✨ Your Grok video is ready!",
-                            file=discord.File(io.BytesIO(result), "grok_video.mp4")
+                            content="✨ Your Nova video is ready!",
+                            file=discord.File(io.BytesIO(result), "nova_video.mp4")
                         )
                     except discord.HTTPException:
                         # File too large, send link instead
                         await ctx.send(
-                            f"✨ Your Grok video is ready! [View Video]({full_url})"
+                            f"✨ Your Nova video is ready! [View Video]({full_url})"
                         )
                 elif isinstance(result, dict) and result.get("error"):
                     # API returned an error
                     embed = discord.Embed(
-                        title="⚠️ Grok Video Generation Failed",
+                        title="⚠️ Nova Video Generation Failed",
                         description=(
                             "Something went wrong while generating your video.\n\n"
                             "**Error message:**\n"
@@ -2402,11 +2402,155 @@ class AiGen(commands.Cog):
                     await ctx.send(embed=embed)
                 else:
                     # Unexpected response format
-                    await ctx.send(f"✨ Your Grok video is ready! [View Video]({full_url})")
+                    await ctx.send(f"✨ Your Nova video is ready! [View Video]({full_url})")
             except asyncio.TimeoutError:
                 await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
             except Exception as e:
-                self.log.error(f"Grok video generation error: {e}", exc_info=True)
+                self.log.error(f"Nova video generation error: {e}", exc_info=True)
+                await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
+
+
+    @commands.command(name="ltx", aliases=["ltx2"])
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @commands.has_permissions(attach_files=True)
+    async def ltx(self, ctx, *, prompt: str = None):
+        """Generate videos using ltx-2 Video model.
+        
+        Model: ltx-2
+        
+        Supports text-to-video generation.
+        
+        Usage:
+        !ltx a girl dancing in a field
+        !ltx --duration 5 a person waving
+        """
+        if not prompt:
+            return await ctx.send("❌ Please provide a prompt for video generation.")
+
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = poll_keys.get("token") if poll_keys else None
+        if not token:
+            return await ctx.send("❌ Missing Pollinations API token.")
+
+        # Parse duration from prompt
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
+        if not prompt and not ctx.message.attachments and not ctx.message.reference:
+            return await ctx.send("❌ Provide a prompt and/or images.")
+        processed_images = []
+        temp_msgs = []
+
+        if prompt:
+            # Extract URLs from the prompt
+            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
+            found_urls = re.findall(url_regex, prompt)
+            for url in found_urls:
+                buf, result = await self.process_image(url)
+                if buf:
+                    msg = await ctx.channel.send(
+                        content="Processing Image... Please wait",
+                        file=discord.File(buf, filename=result),
+                    )
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+            # Remove URLs from prompt so Pollinations doesn't try to read them as text
+            for url in found_urls:
+                prompt = prompt.replace(url, "").strip()
+        # a
+        for a in ctx.message.attachments:
+            buf, result = await self.process_image(a.url.rstrip("&"))
+            if buf:
+                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                temp_msgs.append(msg)
+                processed_images.append(msg.attachments[0].url)
+            else:
+                processed_images.append(result)
+
+        if ctx.message.reference:
+            try:
+                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                for a in ref.attachments:
+                    buf, result = await self.process_image(a.url)
+                    if buf:
+                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                        temp_msgs.append(msg)
+                        processed_images.append(msg.attachments[0].url)
+                    else:
+                        processed_images.append(result)
+                for embed in ref.embeds:
+                    if embed.image and embed.image.url:
+                        buf, result = await self.process_image(embed.image.url)
+                        if buf:
+                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                            temp_msgs.append(msg)
+                            processed_images.append(msg.attachments[0].url)
+                        else:
+                            processed_images.append(result)
+            except Exception as e:
+                self.log.error(f"Failed fetching referenced message: {e}")
+
+        if prompt and ctx.message.mentions:
+            for user in ctx.message.mentions:
+                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
+                buf, result = await self.process_image(avatar_url)
+                if buf:
+                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
+                    temp_msgs.append(msg)
+                    processed_images.append(msg.attachments[0].url)
+                else:
+                    processed_images.append(result)
+                prompt = prompt.replace(user.mention, "").strip()
+
+        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
+        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
+
+        async with ctx.typing():
+            try:
+                result, full_url = await self._pollinations_request(
+                    prompt=prompt or "",
+                    model="ltx-2",
+                    token=token,
+                    duration=duration,
+                    images=images,
+                    #enhance="true",
+                )
+                if isinstance(result, bytes):
+                    # Got video bytes - try to send as file
+                    try:
+                        await ctx.send(
+                            content="✨ Your ltx-2 video is ready!",
+                            file=discord.File(io.BytesIO(result), "ltx_video.mp4")
+                        )
+                    except discord.HTTPException:
+                        # File too large, send link instead
+                        await ctx.send(
+                            f"✨ Your ltx-2 video is ready! [View Video]({full_url})"
+                        )
+                elif isinstance(result, dict) and result.get("error"):
+                    # API returned an error
+                    embed = discord.Embed(
+                        title="⚠️ ltx-2 Video Generation Failed",
+                        description=(
+                            "Something went wrong while generating your video.\n\n"
+                            "**Error message:**\n"
+                            f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
+                            "**Possible reasons:**\n"
+                            "• The generation service might be temporarily down.\n"
+                            "• Your prompt might be invalid or too long.\n"
+                            "• You might have run out of credits/pollen balance.\n\n"
+                            "Please try again later or adjust your prompt."
+                        ),
+                        color=discord.Color.orange(),
+                    )
+                    await ctx.send(embed=embed)
+                else:
+                    # Unexpected response format
+                    await ctx.send(f"✨ Your ltx-2 video is ready! [View Video]({full_url})")
+            except asyncio.TimeoutError:
+                await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
+            except Exception as e:
+                self.log.error(f"ltx-2 video generation error: {e}", exc_info=True)
                 await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
 
     # @commands.command(name="wan")
