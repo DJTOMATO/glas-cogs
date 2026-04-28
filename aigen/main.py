@@ -1,34 +1,60 @@
 import asyncio
 import logging
-
-from gradio_client import Client, handle_file
-import io, base64
+import discord
+import io
+import re
+import uuid
+import json
+import aiohttp
+import base64
+from io import BytesIO
+from typing import Optional, Union, List
 from redbot.core import Config, commands, checks
 from redbot.core.bot import Red
-import aiohttp
-from io import BytesIO
-from urllib.parse import quote, urlencode, quote_plus
-import urllib
-import random
-import datetime
-from discord import ui, Interaction, TextStyle, ButtonStyle, File
-import discord
-import re
-from PIL import Image
-from io import BytesIO
-import json
-import uuid
+from urllib.parse import quote, urlencode
+from discord import app_commands
+
+from .utils import safe_field, process_image
+from .parsers import PromptParser, ImageExtractor
+from .ai_logic import (
+    pollinations_image_generate, 
+    pollinations_text_generate, 
+    get_pollen_info,
+    pollinations_audio_generate,
+    hf_image_generate,
+    get_time_until_refill
+)
+from .constants import (
+    FLUX_DEFAULT_WIDTH, 
+    FLUX_DEFAULT_HEIGHT,
+    LINKEDIN_PROMPT_1,
+    LINKEDIN_PROMPT_2
+)
+
 log = logging.getLogger("red.glas-cogs-aigen")
 
-
 class AiGen(commands.Cog):
-    """A cog for generating images using various AI models.
-    Type ``!help text`` to see text commands
-    
-    """
+    """A cog for generating images, text and audio using various AI models via Pollinations.ai."""
 
     __author__ = "[Glas](https://github.com/djtomato/glas-cogs)"
-    __version__ = "0.0.3"
+    __version__ = "1.0.1"
+
+    def __init__(self, bot: Red):
+        super().__init__()
+        self.bot: Red = bot
+        self.config = Config.get_conf(self, 117, force_registration=True)
+        self.config.register_global(referrer="none")
+        self.log = logging.getLogger("glas.glas-cogs.aigen")
+        default_guild = {"external_upload_enabled": False}
+        self.config.register_guild(**default_guild)
+
+    async def cog_load(self) -> None:
+        asyncio.create_task(self.initialize())
+
+    async def initialize(self) -> None:
+        await self.bot.wait_until_red_ready()
+
+    # --- Groups ---
 
     @commands.group()
     async def aigen(self, ctx: commands.Context):
@@ -48,833 +74,119 @@ class AiGen(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    def __init__(self, bot: Red):
-        super().__init__()
-        self.bot: Red = bot
-        self.config = Config.get_conf(self, 117, force_registration=True)
-        self.config.register_global(referrer="none")  # Default value
-        self.log = logging.getLogger("glas.glas-cogs.aigen")
-        self.external_upload = False
-        default_guild = {"external_upload_enabled": False}
+    # --- Helper Methods ---
 
-        self.config.register_guild(**default_guild)
+    async def handle_image_generation(self, ctx, model, prompt, default_width=1024, default_height=1024, extract_images=False, 
+                                     negative_prompt=None, width=None, height=None, seed=None, images=None):
+        """Unified handler for image generation commands."""
+        if not images and extract_images:
+            images, prompt = await ImageExtractor.extract_images(ctx, prompt or "")
+        
+        params = PromptParser.parse_image_params(prompt or "", default_width, default_height)
+        
+        # Override with explicit params if provided (slash command)
+        final_prompt = params["prompt"]
+        final_neg = negative_prompt or params["negative_prompt"]
+        final_width = width or params["width"]
+        final_height = height or params["height"]
+        final_seed = seed or params["seed"]
+        
+        await pollinations_image_generate(
+            self, ctx, model, final_prompt, 
+            seed=final_seed, 
+            width=final_width, 
+            height=final_height, 
+            images=images,
+            negative_prompt=final_neg
+        )
 
-    async def cog_load(self) -> None:
-        asyncio.create_task(self.initialize())
+    async def handle_text_generation(self, ctx, model, query, system_prompt=None, custom_title=None, custom_footer=None, image_urls=None, temperature=1.0, max_tokens=4096):
+        """Unified handler for text generation commands."""
+        await pollinations_text_generate(
+            self, ctx, model, query, 
+            system_prompt=system_prompt, 
+            custom_title=custom_title, 
+            custom_footer=custom_footer,
+            image_urls=image_urls,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
 
-    async def cog_unload(self) -> None:
-        pass
+    async def handle_audio_generation(self, ctx, model, prompt, duration=None):
+        """Unified handler for audio generation commands."""
+        parsed_prompt, parsed_duration = self.parse_prompt_and_duration(prompt, 30)
+        final_duration = duration or parsed_duration
+        
+        if final_duration < 3 or final_duration > 300:
+            return await ctx.send("❌ Duration must be between 3 and 300 seconds.")
+        await pollinations_audio_generate(self, ctx, model, parsed_prompt, final_duration)
 
-    async def initialize(self) -> None:
-        await self.bot.wait_until_red_ready()
+    async def handle_video_generation(self, ctx, model, prompt, filename, image_url=None, duration=None):
+        """Unified handler for video generation commands."""
+        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
+        token = poll_keys.get("token") or poll_keys.get("api_key") or poll_keys.get("key")
+        if not token: return await ctx.send("❌ Missing API token.")
 
-    async def process_image(self, url):
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as r:
-                    data = await r.read()
-            img = Image.open(io.BytesIO(data))
-            min_size = 300
-            if img.width < min_size or img.height < min_size:
-                ratio = max(min_size / img.width, min_size / img.height)
-                img = img.resize((int(img.width * ratio), int(img.height * ratio)), Image.LANCZOS)
-                buf = io.BytesIO()
-                img.save(buf, format="PNG")
-                buf.seek(0)
-                return buf, f"image_{uuid.uuid4()}.png"
-            return None, url
-        except Exception as e:
-            self.log.error(f"Image processing failed for {url}: {e}")
-            return None, url
+        images = [image_url] if image_url else []
+        if not images:
+            images, prompt = await ImageExtractor.extract_images(ctx, prompt or "")
+        
+        prompt, parsed_duration = self.parse_prompt_and_duration(prompt, 5)
+        final_duration = duration or parsed_duration
 
-    def safe_field(embed, name, value, inline=False):
-        value = str(value)
-        wrapped = f"```\n{value}\n```"
-        if len(wrapped) > 1024:
-            trimmed = value[:1000] + "..."
-            wrapped = f"```\n{trimmed}\n```"
-        embed.add_field(name=name, value=wrapped, inline=inline)
+        async with ctx.typing():
+            try:
+                result, full_url = await self._pollinations_request(
+                    prompt=prompt, model=model, token=token, 
+                    duration=final_duration, image=images[0] if images else None
+                )
+                if isinstance(result, bytes):
+                    await ctx.send(file=discord.File(io.BytesIO(result), filename))
+                else:
+                    await ctx.send(f"✨ Video ready: [View Video]({full_url})")
+            except Exception as e:
+                await ctx.send(f"❌ Error: {e}")
+
+    async def _pollinations_request(self, *, prompt: str, model: str, token: str, **kwargs):
+        """Helper for generic Pollinations GET requests (used by video commands)."""
+        encoded_prompt = quote(prompt, safe="")
+        base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
+        
+        params = {"model": model, "key": token, "prompt": prompt}
+        params.update({k: v for k, v in kwargs.items() if v is not None})
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Referer": "https://pollinations.ai/",
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(base_url, params=params, headers=headers) as resp:
+                full_url = str(resp.url)
+                if "application/json" in resp.headers.get("Content-Type", ""):
+                    data = await resp.json()
+                else:
+                    data = await resp.read()
+        return data, full_url
 
     def parse_prompt_and_duration(self, prompt: str, default_duration: int):
         duration = default_duration
-
         match = re.search(r"--duration\s+(\d+)", prompt)
         if match:
             duration = int(match.group(1))
-
             prompt = re.sub(r"--duration\s+\d+", "", prompt).strip()
-
         return prompt, duration
 
-    def sanitize_error_message(self, error_message: str) -> str:
-        """Remove IP addresses and promotional URLs from error messages."""
-        # Handle "Queue full for IP: : X requests already queued" pattern
-        queue_match = re.search(r'Queue full.*?(\d+)\s+requests?\s+already\s+queued', error_message)
-        if queue_match:
-            num_requests = queue_match.group(1)
-            error_message = f"Queue full, {num_requests} requests"
-            return error_message
-        
-        # Remove IP addresses (both xxx.xxx.xxx.xxx pattern and actual IPs like 192.168.1.1)
-        error_message = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', '', error_message)
-        # Remove the "Get unlimited access at https://enter.pollinations.ai" string and similar
-        error_message = re.sub(r'\.?\s*Get unlimited access at.*', '', error_message)
-        # Clean up extra whitespace and line breaks
-        error_message = re.sub(r'\s+', ' ', error_message).strip()
-        return error_message
-
-    async def _pollinations_generate(
-        self,
-        ctx: commands.Context | discord.Interaction,
-        model: str,
-        prompt: str,
-        seed: int | None = None,
-        width: int | None = None,
-        height: int | None = None,
-        images: list[str] | None = None,
-        negative_prompt: str | None = None,  # new arg
-    ):
-
-        start_time = discord.utils.utcnow()
-        if negative_prompt is None:
-            negative_prompt = "worst quality, blurry"  # fallback default
-        if not width and not height:
-            width = 1024
-            height = 1024
-
-        if width and height:
-            try:
-                width = int(width)
-                height = int(height)
-            except ValueError:
-                # fallback if input is not a number
-                width = 1024
-                height = 1024
-        if model == "klein-large":
-            width = 2048
-            height = 2048
-        if seed is None:
-            seed = random.randint(0, 1000000)
-        if isinstance(ctx, commands.Context):
-            typing_cm = ctx.typing()
-            author_name = f"{ctx.author.name}#{ctx.author.discriminator}"
-
-            async def send_func(*args, **kwargs):
-                try:
-                    await ctx.send(*args, **kwargs)
-                except Exception as e:
-                    try:
-
-                        await ctx.send(f"Something went wrong, please try again. {e}")
-                    except Exception:
-                        pass
-
-        elif isinstance(ctx, discord.Interaction):
-            typing_cm = ctx.channel.typing()
-            author_name = f"{ctx.user.name}#{ctx.user.discriminator}"
-
-            async def send_func(*args, **kwargs):
-                try:
-                    if not ctx.response.is_done():
-                        await ctx.response.send_message(*args, **kwargs)
-                    else:
-                        await ctx.followup.send(*args, **kwargs)
-                except Exception:
-
-                    try:
-                        if not ctx.response.is_done():
-                            await ctx.response.send_message(
-                                "Something went wrong, please try again.",
-                                ephemeral=True,
-                            )
-                        else:
-                            await ctx.followup.send(
-                                "Something went wrong, please try again.",
-                                ephemeral=True,
-                            )
-                    except Exception:
-                        pass
-
-        else:
-            raise TypeError("ctx must be Context or Interaction")
-
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token")
-        if not token:
-            await send_func("Pollinations API token not set.")
-            return
-
-        min_pixels = 921600
-        if width and height:
-            if width * height < min_pixels:
-                scale = (min_pixels / (width * height)) ** 0.5
-                width = int(width * scale)
-                height = int(height * scale)
-        if model == "klein-large":
-            width = 2048
-            height = 2048
-        params = {
-            "model": model,
-            "width": width,
-            "height": height,
-            "seed": seed,
-            "nologo": "true",
-            "private": "false",
-            "nofeed": "false",
-            "safe": "false",
-            "quality": "high",
-            "enhance": "true",
-            "guidance_scale": 1,
-            "negative_prompt": negative_prompt,
-            "transparent": "false",
-        }
-        if images:
-            params["image"] = ",".join(images)
-
-        none_params = [k for k, v in params.items() if v is None]
-        if none_params:
-            pass
-
-        params = {k: v for k, v in params.items() if v is not None}
-
-        if images:
-            params["image"] = ",".join(images)
-        encoded_prompt = quote(prompt, safe="")
-        url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
-
-        payload = {
-            "model": model,
-            "width": width,
-            "height": height,
-            "seed": seed,
-            "enhance": True,
-            "private": True,
-            "nologo": True,
-            "quality": "high",
-            "negative_prompt": "worst quality, blurry",
-            "prompt": prompt,
-        }
-        if images:
-            payload["image"] = ",".join(images)
-
-        headers = {"Authorization": f"Bearer {token}"}
-        real_height = height
-        real_width = width
-
-        async with typing_cm:
-            async with aiohttp.ClientSession() as session:
-
-                async with session.get(url, params=params, headers=headers) as resp:
-
-                    if resp.status != 200:
-                        response_body = await resp.read()
-                        response_text = response_body.decode(errors="replace")  # always safe
-                        headers_text = json.dumps(dict(resp.headers), indent=2)
-
-                        try:
-                            response_json = json.loads(response_body)
-                            # Drill down into nested error message if present
-                            if "error" in response_json and isinstance(response_json["error"], dict):
-                                error_message = response_json["error"].get("message", response_text)
-                            else:
-                                error_message = response_json.get("message", response_text)
-                        except Exception:
-                            error_message = response_text  # fallback if JSON parsing fails
-
-                        # Sanitize error message to remove IPs and promotional URLs
-                        error_message = self.sanitize_error_message(error_message)
-
-                        # Include status code, headers, and body
-                        error = discord.Embed(
-                            title="⚠️ Oops! I couldn't generate your image",
-                            # description=(
-                            #     f"**HTTP Status:** {resp.status}\n"
-                            #     f"**Response Headers:**\n```\n{headers_text}\n```\n"
-                            #     f"**Response Body:**\n```\n{error_message}\n```"
-                            # ),
-                            description=(
-                                "Something went wrong while talking to the image service.\n\n"
-                                "**Error message:**\n"
-                                f"```\n{error_message}\n```"
-                                "**Possible reasons:**\n"
-                                "• One of the image links might be invalid or expired.\n"
-                                "• The image might be private or not accessible.\n"
-                                "• The generation service might be having temporary issues.\n\n"
-                                "Please try again with different images or later."
-                            ),
-                            color=discord.Color.orange(),
-                        )
-                        await send_func(embed=error)
-                        return
-
-                    data = await resp.read()
-                    image_bytes = await resp.read()
-
-                    # Para PIL dimensions
-                    with Image.open(BytesIO(image_bytes)) as img_for_pil:
-                        real_width, real_height = img_for_pil.size
-
-                    # Elimina params width/height para embed (opcional)
-                    for key in ["width", "height"]:
-                        if key in params:
-                            del params[key]
-
-        # Upload to chibisafe
-        chibisafe_tokens = await self.bot.get_shared_api_tokens("chibisafe")
-        upload_url = chibisafe_tokens.get("upload_url")
-        api_key = chibisafe_tokens.get("x_api_key")
-        external_upload = await self.config.guild(ctx.guild).external_upload_enabled() if ctx.guild else False
-        if external_upload:
-            if not upload_url or not api_key:
-                await send_func("External upload is enabled, but Chibisafe upload URL or API key is missing. Please set them first using `[p]set api chibisafe upload_url,<url> x_api_key,<key>`",
-                "Please set them first."
-                )
-            else:        
-                headers = {"x-api-key": api_key}
-                data_form = aiohttp.FormData()
-                chibisafe_buffer = BytesIO(image_bytes)
-                chibisafe_buffer.seek(0)
-                data_form.add_field(
-                    "file[]",
-                    chibisafe_buffer,
-                    filename="generated.png",
-                    content_type="image/png",
-                )
-
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(upload_url, data=data_form, headers=headers) as resp:
-                        if resp.status == 200:
-                            resp_json = await resp.json()
-                            uploaded_url = resp_json.get("url")
-                            thumb_url = resp_json.get("thumb")  # optional thumbnail if your API returns it
-                        else:
-                            uploaded_url = None
-                            thumb_url = None
-
-        time_taken = (discord.utils.utcnow() - start_time).total_seconds()
-        embed = discord.Embed(title="🖼️ Image Generated Successfully")
-        embed.set_image(url="attachment://generated.png")
-        embed.add_field(name="Width", value=f"```{real_width}```", inline=True)
-        embed.add_field(name="Height", value=f"```{real_height}```", inline=True)
-        MAX_FIELD_LEN = 1024
-        for k, v in params.items():
-            if v is None:
-                await ctx.send(f"⚠️ Param {k} is None")
-        for key, value in params.items():
-            if key.lower() not in [
-                "private",
-                "nologo",
-                "referrer",
-                "enhance",
-                "image",
-                "quality",
-            ]:
-
-                # Ensure value fits inside Discord's 1024-char limit (account for formatting)
-                val_str = str(value)
-                if len(val_str) > MAX_FIELD_LEN - 7:  # account for ```\n and \n```
-                    val_str = val_str[: MAX_FIELD_LEN - 30] + "..."
-                embed.add_field(name=key, value=f"```\n{val_str}\n```", inline=True)
-
-        embed.add_field(name="Time Taken", value=f"```{time_taken:.2f} seconds```")
-        if len(prompt) > 1000:
-            prompt = prompt[:800]
-        prompt = re.sub(r"^\d{3,4}x\d{3,4}\s+", "", prompt)
-        embed.add_field(name="Prompt", value=f"```\n{prompt}\n```", inline=False)
-        embed.set_footer(
-            text=f"Generated by {author_name} • {datetime.datetime.utcnow().strftime('%m/%d/%Y %I:%M %p')} • Powered by Pollinations.ai - Images may be resized due to Discord Constraints"
-        )
-
-        if images:
-            ref_value = "\n".join(
-                [f"[Image {i+1}]({img})" for i, img in enumerate(images)]
-            )
-
-            # Hard limit = 1024
-            if len(ref_value) > 1024:
-                # Keep it readable, but trimmed
-                ref_value = ref_value[:1000] + "..."
-
-            embed.add_field(
-                name="Reference Images",
-                value=ref_value,
-                inline=False,
-            )
-
-        view = discord.ui.View()
-        regenerate_button = discord.ui.Button(
-            label="Regenerate", style=discord.ButtonStyle.green
-        )
-        edit_button = discord.ui.Button(label="Edit", style=discord.ButtonStyle.blurple)
-        delete_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
-
-        async def regenerate_callback(interaction: discord.Interaction):
-            await interaction.response.defer()
-            await self._pollinations_generate(
-                interaction,
-                model,
-                prompt,
-                seed=random.randint(0, 1000000),
-                width=width,
-                height=height,
-                images=images,
-            )
-
-        async def edit_callback(interaction: discord.Interaction):
-            current_seed = seed
-            current_prompt = prompt
-            current_width = width
-            current_height = height
-            current_images = images
-            await interaction.response.send_modal(
-                EditModal(
-                    cog=self,
-                    interaction=interaction,
-                    model=model,
-                    prompt=current_prompt,
-                    seed=current_seed,
-                    width=current_width,
-                    height=current_height,
-                    images=current_images,
-                )
-            )
-
-        async def delete_callback(interaction: discord.Interaction):
-            await interaction.message.delete()
-
-        regenerate_button.callback = regenerate_callback
-        edit_button.callback = edit_callback
-        delete_button.callback = delete_callback
-
-        view.add_item(regenerate_button)
-        view.add_item(edit_button)
-        view.add_item(delete_button)
-        if external_upload: 
-            if uploaded_url:
-                embed.add_field(name="Shared Link (4K Download)", value=f"[View Image]({uploaded_url})", inline=False)
-
-        # Nuevo buffer para Discord
-        discord_buffer = BytesIO(image_bytes)
-        discord_buffer.seek(0)
-        await send_func(
-            file=File(discord_buffer, filename="generated.png"),
-            embed=embed,
-            view=view
-        )
-        if external_upload: 
-            if uploaded_url:
-                await ctx.send(f"High Quality Image uploaded to: {uploaded_url}")
-
-    async def callback(self, interaction: discord.Interaction):
-        new_prompt = self.children[0].value
-        await self._pollinations_generate(interaction, model, new_prompt)
-
-        ## TEST
-
-    async def _run_pollinations_text(
-        self,
-        ctx: commands.Context,
-        model: str,
-        query: str = None,
-    ):
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]settings referrer <your_referrer>` (bot owner only).\n"
-                "Get it from: <https://auth.pollinations.ai/>"
-            )
-            return
-
-        # Prompt fallback
-        if not query and ctx.message.attachments:
-            query = "Describe this image"
-        if not query and not ctx.message.attachments:
-            await ctx.send("❌ Please provide a prompt or attach an image.")
-            return
-
-        # Collect image URLs
-        image_urls = []
-        for att in ctx.message.attachments:
-            if att.content_type and att.content_type.startswith("image/"):
-                image_urls.append(att.url)
-
-        # Build messages (OpenAI‑compatible multimodal format)
-        content_parts = [{"type": "text", "text": query}]
-        for url in image_urls:
-            content_parts.append({"type": "image_url", "image_url": {"url": url}})
-
-        messages = [{"role": "user", "content": content_parts}]
-
-        # Pollinations token
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = poll_keys.get("token") if poll_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. "
-                "Use `[p]set api pollinations token,<value>`"
-            )
-            return
-
-        payload = {
-            "model": model,
-            "messages": messages,
-            "temperature": 1,
-            "top_p": 1,
-            "max_tokens": 4096,
-            "seed": 0,
-            "referrer": referrer,
-            "isPrivate": bool(poll_token),
-            "stream": False,
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-        API_URL = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-
-                    async with session.post(API_URL, json=payload, headers=headers) as resp:
-                        text = await resp.text()
-
-                        if resp.status != 200:
-                            if resp.status == 500 and model == "grok":
-                                await ctx.send("❌ The Grok model is currently unavailable due to server issues. Please try again later.")
-                            else:
-                                await ctx.send(
-                                    f"❌ **API Error:** HTTP {resp.status}\n"
-                                    f"``````"
-                                )
-                            return
-
-                        try:
-                            data = json.loads(text)
-                            result = data["choices"][0]["message"]["content"]
-                        except Exception:
-                            result = text  # fallback
-
-                        for i in range(0, len(result), 2000):
-                            chunk = result[i : i + 2000]
-                            await ctx.send(chunk)
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ **Request Failed:** `{e}`")
-            except Exception as e:
-                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+    # --- Settings Commands ---
 
     @aisettings.command(name="externalupload")
     @commands.admin_or_permissions(manage_guild=True)
     async def externalupload(self, ctx, toggle: bool):
         """Enable or disable external uploads like Chibisafe for this server."""
         if not ctx.guild:
-            await ctx.send("❌ This command can only be used in a server, not in DMs.")
-            return
+            return await ctx.send("❌ This command can only be used in a server.")
         await self.config.guild(ctx.guild).external_upload_enabled.set(toggle)
-        status = "enabled" if toggle else "disabled"
-        await ctx.send(f"External uploads are now **{status}** for this server.")
-
-    @commands.command(name="flux")
-    @commands.cooldown(1, 3, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def flux(self, ctx: commands.Context, *, prompt: str):
-        """Generate an image using the Flux model.
-
-        Model: flux
-
-        """
-        seed = None
-        # Parse height if present in format --height <number>
-        height = 3072  # default height
-        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
-        if height_match:
-            height = int(height_match.group(1))
-            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        # Parse width if present in format --width <number>
-        width = 5504  # default width
-        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
-        if width_match:
-            width = int(width_match.group(1))
-            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        # Re-split after cleaning parameters to properly extract seed
-        words = prompt.split()
-        if words and words[-1].isdigit():
-            seed = int(words[-1])
-            words = words[:-1]
-            prompt = " ".join(words)
-        else:
-            seed = random.randint(0, 1000000)
-
-        await self._pollinations_generate(
-            ctx,
-            "flux",
-            prompt,
-            seed,
-            negative_prompt=negative_prompt,
-            width=width,
-            height=height,
-        )
-
-    @commands.command(name="flux2")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def flux2(self, ctx: commands.Context, *, prompt: str = None):
-        """
-        Generate an Image via FLUX.2 Klein 4B model.
-
-        Model: flux-2-dev
-        Max size is 2048x2048
-        Usage:
-          [p]flux2dev <prompt> [attach image(s), reply, mention, ID, or URL(s)]
-          [p]flux2dev <prompt> (text-only prompt is supported)
-          Multiple images supported (comma-separated).
-        """
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        # Parse height if present in format --height <number>
-        height = 3072  # default height
-        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
-        if height_match:
-            height = int(height_match.group(1))
-            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        # Parse width if present in format --width <number>
-        width = 5504  # default width
-        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
-        if width_match:
-            width = int(width_match.group(1))
-            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-
-        # --- Parse --seed ---
-        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
-        if seed_match:
-            seed = int(seed_match.group(1))
-            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(
-                        user.display_avatar.with_format("png").with_size(1024).url
-                    )
-                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-                prompt = prompt.replace(user.mention, "").strip()
-        if prompt:
-            url_matches = re.findall(r"(https?://\S+)", prompt)
-            for url in url_matches:
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-        if prompt:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    if hasattr(user, "display_avatar"):
-                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                        images.append(
-                            user.display_avatar.with_format("png").with_size(1024).url
-                        )
-                    else:
-
-                        images.append(user.avatar_url)
-                    prompt = prompt.replace(mid, "").strip()
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt.")
-            return
-
-        seed = None
-        if not seed:
-            seed = random.randint(0, 1000000)
-        await self._pollinations_generate(
-            ctx,
-            "flux-2-dev",
-            prompt or "",
-            seed=seed,
-            images=images if images else None,
-            negative_prompt=negative_prompt,
-            height=height,
-            width=width,
-        )
-
-    @commands.command(name="turbo")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def turbo(self, ctx: commands.Context, *, prompt: str):
-        """Generate an Image via turbo model.
-
-        Model: turbo
-        """
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        words = prompt.split()
-        seed = None
-
-        if words and words[-1].isdigit():
-            seed = int(words[-1])
-
-            words = words[:-1]
-            prompt = " ".join(words)
-        else:
-            seed = random.randint(0, 1000000)
-
-        await self._pollinations_generate(ctx, "turbo", prompt, seed, negative_prompt=negative_prompt)
-
-    @commands.command(name="zimage")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def zimage(self, ctx: commands.Context, *, prompt: str):
-        """
-        Generate an Image via Z-Image Turbo model.
-        
-        Model: zimage
-        """
-
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        words = prompt.split()
-        seed = None
-
-        if words and words[-1].isdigit():
-            seed = int(words[-1])
-            words = words[:-1]
-            prompt = " ".join(words)
-        else:
-            seed = random.randint(0, 1000000)
-
-        await self._pollinations_generate(ctx, "zimage", prompt, seed, negative_prompt=negative_prompt)
-
-    @commands.command(name="imagen")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def imagen(self, ctx: commands.Context, *, prompt: str):
-        """Generate an Image via Imagen 4 model.
-        
-        Model: imagen-4
-        """
-
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        words = prompt.split()
-        seed = None
-
-        if words and words[-1].isdigit():
-            seed = int(words[-1])
-            words = words[:-1]
-            prompt = " ".join(words)
-        else:
-            seed = random.randint(0, 1000000)
-
-        await self._pollinations_generate(ctx, "imagen-4", prompt, seed, negative_prompt=negative_prompt)
-
-    @commands.command(name="gimagine")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def grokimagine(self, ctx: commands.Context, *, prompt: str):
-        """Generate an Image via grok model.
-        
-        Model: grok
-        """
-
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
-
-        words = prompt.split()
-        seed = None
-
-        if words and words[-1].isdigit():
-            seed = int(words[-1])
-            words = words[:-1]
-            prompt = " ".join(words)
-        else:
-            seed = random.randint(0, 1000000)
-
-        await self._pollinations_generate(ctx, "grok-imagine", prompt, seed, negative_prompt=negative_prompt)
+        await ctx.send(f"External uploads are now **{'enabled' if toggle else 'disabled'}**.")
 
     @aisettings.command()
     @commands.is_owner()
@@ -883,2534 +195,306 @@ class AiGen(commands.Cog):
         await self.config.referrer.set(new_referrer)
         await ctx.send(f"✅ Referrer has been set to: `{new_referrer}`")
 
-    async def _generate_hf_image(
-        self, ctx, prompt, endpoint, model=None, api_name_override=None
-    ):
-        """Helper to generate an image from a Hugging Face gradio space endpoint."""
-
-        api_key = (await self.bot.get_shared_api_tokens("huggingface")).get("api_key")
-        headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
-
-        def extract_hf_space(endpoint):
-
-            m = re.match(r"https?://huggingface.co/spaces/([^/]+)/([^/?#]+)", endpoint)
-            if m:
-                return f"{m.group(1)}/{m.group(2)}"
-            m = re.match(r"https?://huggingface.co/([^/]+)/([^/?#]+)", endpoint)
-            if m:
-                return f"{m.group(1)}/{m.group(2)}"
-            m = re.match(r"https?://([a-z0-9\-]+)\.hf\.space", endpoint)
-            if m:
-                sub = m.group(1)
-                parts = sub.split("-", 1)
-                if len(parts) == 2:
-                    org, space = parts
-                    return f"{org}/{space.replace('-', ' ').title().replace(' ', '-')}"
-                return sub
-            raise ValueError(
-                f"Cannot extract Hugging Face space from endpoint: {endpoint}"
-            )
-
-        space = extract_hf_space(endpoint)
-        client = Client(space, hf_token=api_key if api_key else None)
-        api_name = api_name_override if api_name_override else "/generate_image"
-        try:
-            api_info = client.view_api(return_format="dict")
-            # await ctx.send(api_info)
-            if (
-                api_info
-                and "named_endpoints" in api_info
-                and api_name in api_info["named_endpoints"]
-            ):
-                params = api_info["named_endpoints"][api_name].get("parameters", [])
-                param_names = [
-                    p.get("parameter_name") or p.get("name")
-                    for p in params
-                    if p.get("parameter_name") or p.get("name")
-                ]
-            else:
-                param_names = []
-        except Exception:
-            param_names = []
-        predict_kwargs = {"api_name": api_name}
-        if "prompt" in param_names:
-            predict_kwargs["prompt"] = prompt
-        elif "prompt_text" in param_names:
-            predict_kwargs["prompt_text"] = prompt
-        else:
-            predict_kwargs["prompt"] = prompt
-        if model and "model" in param_names:
-            predict_kwargs["model"] = model
-        try:
-            result = await asyncio.get_running_loop().run_in_executor(
-                None, lambda: client.predict(**predict_kwargs)
-            )
-        except Exception as e:
-            await ctx.send(f"Error: {e}")
-            return
-
-        image_bytes = None
-        if isinstance(result, dict):
-            if result.get("url"):
-                url = result["url"]
-                if url.startswith("data:image"):
-                    b64data = url.split(",", 1)[-1]
-                    image_bytes = io.BytesIO(base64.b64decode(b64data))
-                else:
-                    import aiohttp
-
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(url) as resp:
-                            image_bytes = io.BytesIO(await resp.read())
-            elif result.get("path"):
-                with open(result["path"], "rb") as f:
-                    image_bytes = io.BytesIO(f.read())
-        elif isinstance(result, str):
-            if result.startswith("data:image"):
-                b64data = result.split(",", 1)[-1]
-                image_bytes = io.BytesIO(base64.b64decode(b64data))
-            elif result.startswith("http://") or result.startswith("https://"):
-                import aiohttp
-
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(result) as resp:
-                        image_bytes = io.BytesIO(await resp.read())
-            else:
-                with open(result, "rb") as f:
-                    image_bytes = io.BytesIO(f.read())
-        elif isinstance(result, tuple):
-            image_result = result[0]
-            if isinstance(image_result, str):
-                if image_result.startswith("data:image"):
-                    b64data = image_result.split(",", 1)[-1]
-                    image_bytes = io.BytesIO(base64.b64decode(b64data))
-                elif image_result.startswith("http://") or image_result.startswith(
-                    "https://"
-                ):
-                    import aiohttp
-
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(image_result) as resp:
-                            image_bytes = io.BytesIO(await resp.read())
-                else:
-                    with open(image_result, "rb") as f:
-                        image_bytes = io.BytesIO(f.read())
-        if image_bytes:
-            image_bytes.seek(0)
-            file = discord.File(image_bytes, filename="image.png")
-            await ctx.send(file=file)
-        else:
-            await ctx.send("No image returned.")
-
-    @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def hidream(self, ctx: commands.Context, *, prompt: str):
-        """Generate an Image via HiDream endpoint."""
-        endpoint = "https://huggingface.co/spaces/HiDream-ai/HiDream-I1-Dev/"
+    @commands.hybrid_command(name="pollen")
+    async def pollen(self, ctx: commands.Context):
+        """Show current Pollen balance, recent usage, and refill timer."""
         async with ctx.typing():
-            await self._generate_hf_image(
-                ctx, prompt, endpoint, api_name_override="/generate_with_status"
-            )
+            info = await get_pollen_info(self)
+            if "error" in info:
+                return await ctx.send(f"❌ Error: {info['error']}")
 
-    # @commands.command()
-    # async def flux(self, ctx: commands.Context, *, prompt: str):
-    #     """Generate an Image via Fake-FLUX-Pro-Unlimited endpoint."""
-    #     endpoint = "https://huggingface.co/spaces/llamameta/Fake-FLUX-Pro-Unlimited/"
-    #     async with ctx.typing():
-    #         await self._generate_hf_image(ctx, prompt, endpoint, model="flux")
-
-    # @commands.command()
-    # @commands.cooldown(1, 10, commands.BucketType.guild)
-    # @checks.bot_has_permissions(attach_files=True)
-    # async def lumina(self, ctx: commands.Context, *, prompt: str):
-    #     """Generate an Image via NetaLumina."""
-    #     endpoint = "https://huggingface.co/spaces/neta-art/NetaLumina_T2I_Playground/"
-    #     async with ctx.typing():
-    #         await self._generate_hf_image(ctx, prompt, endpoint)
-
-    @commands.command()
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def analyze(self, ctx: commands.Context, *, arg: str = None):
-        """Analyze an image: provide an attachment, URL, or mention a user (for avatar)."""
-        image_url = None
-        if ctx.message.attachments:
-            image_url = ctx.message.attachments[0].url
-        elif ctx.message.reference:
-            # The command is replying to another message
+            balance = info.get("balance")
+        if balance is not None:
             try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    image_url = referenced.attachments[0].url
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            image_url = embed.image.url
-                            break
-            except Exception:
-                pass
-        elif arg and ctx.message.mentions:
-            user = ctx.message.mentions[0]
-            image_url = (
-                user.display_avatar.url
-                if hasattr(user, "display_avatar")
-                else user.avatar_url
-            )
-        elif arg and (arg.startswith("http://") or arg.startswith("https://")):
-            image_url = arg.strip()
-        elif arg and arg.strip().isdigit():
-            user_id = int(arg.strip())
-            user = ctx.guild.get_member(user_id) if ctx.guild else None
-            if not user:
-                try:
-                    user = await self.bot.fetch_user(user_id)
-                except Exception:
-                    user = None
-            if user:
-                image_url = (
-                    user.display_avatar.url
-                    if hasattr(user, "display_avatar")
-                    else user.avatar_url
-                )
-            else:
-                await ctx.send("Could not find user with that ID.")
-                return
+                balance_display = f"{float(balance):.4f} Pollen"
+            except (ValueError, TypeError):
+                balance_display = f"{balance} Pollen"
         else:
-            await ctx.send(
-                "Please provide an image attachment, a direct image URL, or mention a user."
-            )
-            return
+            balance_display = "Unknown"
+        
+        refill_in = get_time_until_refill()
+        description = f"**Current Balance:** {balance_display}\n**Next Refill In:** {refill_in}\n*Refills occur automatically every hour at :00.*"
+        if "balance_error" in info:
+            description += f"\n\n⚠️ **Balance Error:** {info['balance_error']}"
 
-        question = "What's in this image?"
-        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-        # url = "https://text.pollinations.ai/openai"
-        headers = {"Content-Type": "application/json"}
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = pollinations_keys.get("token") if pollinations_keys else None
-        if poll_token:
-            headers["Authorization"] = f"Bearer {poll_token}"
-        payload = {
-            "model": "claude-fast",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": question},
-                        {"type": "image_url", "image_url": {"url": image_url}},
-                    ],
-                }
-            ],
-            "max_tokens": 500,
-        }
-
-        async with ctx.typing():
-            api_result = None
-            error = None
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=payload) as resp:
-                    if resp.status != 200:
-                        error = f"Error: {resp.status}"
-                    else:
-                        try:
-                            api_result = await resp.json()
-                        except Exception as e:
-                            error = f"Received unexpected response:\n{str(e)}"
-            try:
-                a = 1  # await ctx.send(image_url)
-            except Exception:
-                pass
-            if error:
-                await ctx.send(error)
-            elif api_result:
-                try:
-                    text = api_result["choices"][0]["message"]["content"]
-                    await ctx.send(f"\U0001f5bc Image Analysis:\n{text}")
-                except Exception:
-                    await ctx.send("Received unexpected response:\n" + str(api_result))
-
-    @commands.command(name="img2img")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def img2img(self, ctx: commands.Context, *, text: str = None):
-        """ Multi-Image-to-Generate an Image via gptimage model.
-            
-            Model: flux
-            
-            Detects images from attachments, reply, mention, ID, or URL.
-            Supports up to 3 images.
-            
-            Usage examples:
-            - !img2img put them together (with 2+ attachments)
-            - !img2img add a background here @username
-            - !img2img enhance this 123456789012345678
-            - !img2img (reply to an image) stylize this
-        """
-        images = []
-        prompt = text or ""
-
-        for i in range(1, 4):
-            match = re.search(rf"image{i}=(\S+)", prompt)
-            if match:
-                images.append(match.group(1))
-                prompt = prompt.replace(match.group(0), "").strip()
-
-        if ctx.message.reference and len(images) < 3:
-            replied = ctx.message.reference.resolved
-            if not replied:
-                try:
-                    replied = await ctx.channel.fetch_message(
-                        ctx.message.reference.message_id
-                    )
-                except Exception:
-                    replied = None
-            if replied:
-                if replied.attachments:
-                    images.extend(
-                        [a.url for a in replied.attachments[: 3 - len(images)]]
-                    )
-                elif replied.embeds:
-                    for embed in replied.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-                            if len(images) >= 3:
-                                break
-
-        if ctx.message.attachments and len(images) < 3:
-            images.extend([a.url for a in ctx.message.attachments[: 3 - len(images)]])
-
-        if len(images) < 3:
-            urls = re.findall(r"(https?://\S+)", prompt)
-            for url in urls:
-                if len(images) >= 3:
-                    break
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-
-        for mention in ctx.message.mentions:
-            if len(images) >= 3:
-                break
-            images.append(mention.display_avatar.url)
-            prompt = prompt.replace(mention.mention, "").strip()
-
-        if len(images) < 3:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                if len(images) >= 3:
-                    break
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    images.append(user.display_avatar.url)
-                    prompt = prompt.replace(mid, "").strip()
-
-        if not images:
-            await ctx.send(
-                "❌ Please provide 1–3 images (attachment, URL, mention, ID, or reply)."
-            )
-            return
-
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt after the image(s).")
-            return
-
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token") if pollinations_keys else None
-
-        encoded_prompt = quote(prompt)
-        encoded_images = [quote(url) for url in images]
-        images_param = ",".join(encoded_images)
-
-        seed = random.randint(0, 1000000)
-        query_params = {
-            "width": 512,
-            "height": 512,
-            "seed": seed,
-            "model": "flux",
-            "referrer": await self.config.referrer(),
-            "nologo": "True",
-            "private": "True",
-            "nofeed": "True",
-            "enhance": "True",
-        }
-
-        base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
-        query_str = urlencode(query_params)
-        full_url = f"{base_url}?{query_str}&image={images_param}"
-
-        headers = {"Authorization": f"Bearer {token}"} if token else {}
-
-        if isinstance(ctx, commands.Context):
-            typing_cm = ctx.typing()
-            send_func = ctx.send
-            author_name = f"{ctx.author.name}#{ctx.author.discriminator}"
-        elif isinstance(ctx, discord.Interaction):
-            typing_cm = ctx.channel.typing()
-            send_func = lambda *args, **kwargs: (
-                ctx.response.send_message(*args, **kwargs)
-                if not ctx.response.is_done()
-                else ctx.followup.send(*args, **kwargs)
-            )
-            author_name = f"{ctx.user.name}#{ctx.user.discriminator}"
-        else:
-            raise TypeError("ctx must be Context or Interaction")
-
-        async with typing_cm:
-            max_retries = 3
-            for attempt in range(1, max_retries + 1):
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(full_url, headers=headers) as resp:
-                        if resp.status == 200:
-                            data = await resp.read()
-                            file = BytesIO(data)
-                            file.seek(0)
-                            break
-                        elif attempt == max_retries:
-                            error = discord.Embed(
-                                title="⚠️ Oops! I couldn't generate your image",
-                                description=(
-                                    "Something went wrong while talking to the image service.\n\n"
-                                    "**Possible reasons:**\n"
-                                    "• One of the image links might be invalid or expired.\n"
-                                    "• The image might be private or not accessible.\n"
-                                    "• The generation service might be having temporary issues.\n\n"
-                                    "Please try again with different images or later."
-                                ),
-                                color=discord.Color.orange(),
-                            )
-                            # error.add_field(
-                            #     name="Technical details",
-                            #     value=f"HTTP Status: `{resp.status}`\n```\n{full_url}\n```",
-                            #     inline=False,
-                            # )
-                            await send_func(embed=error)
-                            return
-                        # else: retry
-
-        embed = discord.Embed(title="🖼️ Image Generated Successfully")
-        embed.set_image(url="attachment://img2img.png")
-        for key, value in query_params.items():
-            if key.lower() not in [
-                "private",
-                "nologo",
-                "referrer",
-                "enhance",
-                "nofeed",
-                "quality",
-            ]:
-                embed.add_field(name=key, value=f"```\n{value}\n```", inline=True)
-
-        if len(prompt) > 1024:
-            prompt = prompt[:1024]
-
-        prompt_value = f"```\n{prompt}\n```"
-        if len(prompt_value) > 1024:
-            trimmed = prompt[: 1024 - 10] + "..."
-            prompt_value = f"```\n{trimmed}\n```"
-
-        embed.add_field(name="Prompt", value=prompt_value, inline=False)
-        ref_value = "\n".join([f"[Image {i+1}]({img})" for i, img in enumerate(images)])
-        if len(ref_value) > 1024:
-            ref_value = ref_value[:1000] + "..."
-
-        embed.add_field(name="Reference Images", value=ref_value, inline=False)
-        # embed.add_field(
-        #     name="Images",
-        #     value=" • ".join([f"[Image{i+1}]({url})" for i, url in enumerate(images)]),
-        #     inline=False,
-        # )
-        author = ctx.author if hasattr(ctx, "author") else ctx.user
-        embed.set_footer(
-            text=f"Generated by {author} • {datetime.datetime.utcnow().strftime('%m/%d/%Y %I:%M %p')} • Powered by Pollinations.ai"
+        embed = discord.Embed(
+            title="🐝 Pollen Account Info",
+            description=description,
+            color=discord.Color.gold()
         )
 
-        view = discord.ui.View()
-        regenerate_button = discord.ui.Button(
-            label="Regenerate", style=discord.ButtonStyle.green
+        usage = info.get("usage", [])
+        if usage:
+            usage_text = ""
+            for item in usage:
+                model = item.get("model", "unknown")
+                cost = item.get("cost_usd", 0)
+                time = item.get("timestamp", "").replace("T", " ").split(".")[0]
+                usage_text += f"• `{model}`: ${cost:.4f} ({time})\n"
+            embed.add_field(name="Recent Usage", value=usage_text, inline=False)
+        elif "usage_error" in info:
+            embed.add_field(name="Recent Usage", value=f"⚠️ **Usage Error:** {info['usage_error']}", inline=False)
+        else:
+            embed.add_field(name="Recent Usage", value="No recent usage found.", inline=False)
+
+        await ctx.send(embed=embed)
+
+    # --- Slash Commands (Hybrid) ---
+
+    @commands.hybrid_command(name="image")
+    @app_commands.describe(
+        model="The AI model to use",
+        prompt="What you want to generate",
+        negative_prompt="What you want to avoid",
+        width="Image width (default 1024)",
+        height="Height of the image (default 1024)",
+        seed="Random seed for reproducibility",
+        image="Reference image for img2img (attachment)"
+    )
+    @app_commands.choices(model=[
+        app_commands.Choice(name="Flux (High Quality)", value="flux"),
+        app_commands.Choice(name="Flux 2 Dev", value="flux-2-dev"),
+        app_commands.Choice(name="Turbo (Fast)", value="turbo"),
+        app_commands.Choice(name="Z-Image", value="zimage"),
+        app_commands.Choice(name="Imagen-4", value="imagen-4"),
+        app_commands.Choice(name="Grok Imagine", value="grok-imagine"),
+        app_commands.Choice(name="Klein", value="klein"),
+        app_commands.Choice(name="Klein Large", value="klein-large"),
+        app_commands.Choice(name="Wan Image", value="wan-image"),
+        app_commands.Choice(name="Qwen Image", value="qwen-image"),
+        app_commands.Choice(name="GPT Image 2", value="gpt-image-2"),
+    ])
+    async def image_slash(self, ctx: commands.Context, model: str, prompt: str, 
+                          negative_prompt: str = None, width: int = None, 
+                          height: int = None, seed: int = None, 
+                          image: discord.Attachment = None):
+        """Generate an image using various AI models."""
+        images = [image.url] if image else None
+        await self.handle_image_generation(
+            ctx, model, prompt, 
+            negative_prompt=negative_prompt, 
+            width=width, height=height, 
+            seed=seed, images=images
         )
-        edit_button = discord.ui.Button(label="Edit", style=discord.ButtonStyle.blurple)
-        delete_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
 
-        async def regenerate_callback(interaction: discord.Interaction):
-            await interaction.response.defer()
-            img_args = " ".join([f"image{i+1}={url}" for i, url in enumerate(images)])
-            await self.img2img(interaction, text=f"{img_args} {prompt}")
+    @commands.hybrid_command(name="text")
+    @app_commands.describe(
+        model="The AI model to use",
+        query="Your question or prompt",
+        image="Optional image to analyze (multimodal)",
+        temperature="Creativity level (0.0 to 2.0)",
+        max_tokens="Maximum tokens in response"
+    )
+    @app_commands.choices(model=[
+        app_commands.Choice(name="OpenAI (GPT-4o)", value="openai"),
+        app_commands.Choice(name="Claude 3.5 Sonnet", value="claude-fast"),
+        app_commands.Choice(name="Gemini 2.0 Flash", value="gemini"),
+        app_commands.Choice(name="Grok 2", value="grok"),
+        app_commands.Choice(name="DeepSeek V3", value="deepseek"),
+        app_commands.Choice(name="OpenAI Reasoning (o1)", value="openai-reasoning"),
+        app_commands.Choice(name="Qwen Coder", value="qwen-coder"),
+        app_commands.Choice(name="Mistral Fast", value="mistral-fast"),
+        app_commands.Choice(name="Perplexity Fast", value="perplexity-fast"),
+        app_commands.Choice(name="Kimi K2.5", value="kimi"),
+        app_commands.Choice(name="MiniMax M2.1", value="minimax"),
+        app_commands.Choice(name="GLM-4", value="glm"),
+    ])
+    async def text_slash(self, ctx: commands.Context, model: str, query: str, 
+                         image: discord.Attachment = None,
+                         temperature: float = 1.0,
+                         max_tokens: int = 4096):
+        """Query AI text models."""
+        image_urls = [image.url] if image else None
+        await self.handle_text_generation(
+            ctx, model, query, 
+            image_urls=image_urls,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
 
-        async def edit_callback(interaction: discord.Interaction):
-            await interaction.response.send_modal(
-                EditModal(
-                    cog=self,
-                    interaction=interaction,
-                    model="flux",
-                    prompt=prompt,
-                    seed=seed,
-                    image_url=(
-                        ",".join(images) if images else None
-                    ),  # Pass comma-delimited
-                )
-            )
+    @commands.hybrid_command(name="video")
+    @app_commands.describe(
+        model="The video generation model",
+        prompt="Describe the video",
+        duration="Video length in seconds (default 5)",
+        image="Starting image for the video (attachment)"
+    )
+    @app_commands.choices(model=[
+        app_commands.Choice(name="Nova Reel", value="nova-reel"),
+        app_commands.Choice(name="LTX-2", value="ltx-2"),
+        app_commands.Choice(name="Wan Video", value="wan"),
+        app_commands.Choice(name="SeeDance", value="seedance"),
+    ])
+    async def video_slash(self, ctx: commands.Context, model: str, prompt: str, duration: int = 5, image: discord.Attachment = None):
+        """Generate a short video from text or image."""
+        image_url = image.url if image else None
+        await self.handle_video_generation(ctx, model, prompt, f"{model}.mp4", image_url=image_url, duration=duration)
 
-        async def delete_callback(interaction: discord.Interaction):
-            await interaction.message.delete()
+    @commands.hybrid_command(name="audio")
+    @app_commands.describe(
+        model="The audio model",
+        prompt="Text to turn into audio/music",
+        duration="Duration in seconds (default 30)"
+    )
+    @app_commands.choices(model=[
+        app_commands.Choice(name="Qwen TTS", value="qwen3"),
+        app_commands.Choice(name="ElevenMusic", value="elevenmusic"),
+    ])
+    async def audio_slash(self, ctx: commands.Context, model: str, prompt: str, duration: int = 30):
+        """Generate audio or music from text."""
+        await self.handle_audio_generation(ctx, model, prompt, duration=duration)
 
-        regenerate_button.callback = regenerate_callback
-        edit_button.callback = edit_callback
-        delete_button.callback = delete_callback
+    # --- Shortcut Commands (Prefix only) ---
 
-        view.add_item(regenerate_button)
-        view.add_item(edit_button)
-        view.add_item(delete_button)
-
-        await send_func(file=File(file, filename="img2img.png"), embed=embed, view=view)
+    @commands.command()
+    @commands.cooldown(1, 3, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def flux(self, ctx: commands.Context, *, prompt: str):
+        """Generate an image using Flux."""
+        await self.handle_image_generation(ctx, "flux", prompt, FLUX_DEFAULT_WIDTH, FLUX_DEFAULT_HEIGHT)
 
     @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def linkedin2(self, ctx: commands.Context, *, query: str = None):
-        """
-        Query via linkedin2
-        """
-
-        MODEL = "openai"  # Pollinations new API model name
-
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
-                "Get it from: <https://auth.pollinations.ai/>"
-            )
-            return
-        user = ctx.author if hasattr(ctx, "author") else ctx.user
-        # Prompt fallback
-        if not query and ctx.message.attachments:
-            query = "Describe this image"
-        if not query and not ctx.message.attachments:
-            await ctx.send("❌ Please provide a prompt or attach an image.")
-            return
-
-        # Collect image URLs
-        image_urls = []
-        for att in ctx.message.attachments:
-            if att.content_type and att.content_type.startswith("image/"):
-                image_urls.append(att.url)
-
-        linkedin_prompt = (
-            "You are a seasoned expert in \"LinkedIn Speak\" — the exaggerated, motivational, "
-            "corporate-jargon-heavy style used in LinkedIn posts and updates. "
-            "Your role is to transform ANY input text (casual, mundane, negative, humorous, or dark) "
-            "into a polished, enthusiastic, and slightly over-the-top LinkedIn-style post while "
-            "preserving the original core meaning as much as possible.\n\n"
-            "Core behavior and style guidelines:\n"
-            "1) Always begin with a high-energy professional opener such as: "
-            "\"I'm thrilled to announce...\", \"Excited to share that...\", "
-            "\"Reflecting on a pivotal moment...\", \"Big news!\", or "
-            "\"Honored and humbled to share...\".\n"
-            "2) Maintain an overwhelmingly positive, empowering, and forward-looking tone. "
-            "Reframe negative or neutral content as opportunities, lessons learned, growth moments, "
-            "or radical ownership. Avoid cynicism or overt negativity.\n"
-            "3) Use rich corporate and startup buzzwords where natural, such as: leverage, optimize, "
-            "pivot, strategic, high-impact, world-class, disruptive, game-changing, scalable, ROI, "
-            "ecosystem, stakeholder, innovation, value-add, mission-critical, best-in-class, "
-            "growth mindset, resilience, thought leadership, strategic alignment, operational excellence, "
-            "cross-functional, journey, roadmap.\n"
-            "4) Structure the post clearly:\n"
-            "- Start: Energetic opener + brief context.\n"
-            "- Middle: Clearly convey the main facts from the original text (do not invent new factual content), "
-            "wrap challenges or failures as learning experiences or strategic pivots, and add 1–3 natural "
-            "key learnings or insights.\n"
-            "- End: Include a soft call to action such as \"Let's connect!\", "
-            "\"What are your thoughts?\", \"How are you approaching this?\", "
-            "or \"Open to collaborations and new opportunities!\".\n"
-            "5) Include 2–4 relevant emojis where they feel natural (for example: 🚀 💼 💡 🙌 🌱 🔁 📈 🤝). "
-            "Do not spam emojis; keep them professional and contextually relevant.\n"
-            "6) End the post with 4–6 relevant professional hashtags adapted to the topic, for example:\n"
-            "#Leadership #GrowthMindset #Innovation #CareerGrowth #Resilience #Networking #Strategy #Learning.\n"
-            "7) Preserve all core facts, key events, and logical meaning from the original text. "
-            "You may reorganize or condense details to fit LinkedIn style, but do not contradict or omit "
-            "critical facts and do not introduce new specific facts, companies, or numbers.\n\n"
-            "Output ONLY the transformed LinkedIn-style post. "
-            "No explanations, no meta-comments, no quotes of the original text."
-        )
-
-        content_parts = [{"type": "text", "text": query}]
-        for url in image_urls:
-            content_parts.append({"type": "image_url", "image_url": {"url": url}})
-
-        messages = [
-            {"role": "system", "content": linkedin_prompt},
-            {"role": "user", "content": content_parts}
-        ]
-
-        # Pollinations token
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = poll_keys.get("token") if poll_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
-            )
-            return
-
-        payload = {
-            "model": MODEL,
-            "messages": messages,
-            "temperature": 1,
-            "top_p": 1,
-            "max_tokens": 4096,
-            "seed": 0,
-
-            # Pollinations custom fields
-            "referrer": referrer,
-            "isPrivate": bool(poll_token),
-
-            # streaming disabled
-            "stream": False
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-
-        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, json=payload, headers=headers) as resp:
-                        text = await resp.text()
-
-                        if resp.status != 200:
-                            await ctx.send(
-                                f"❌ **API Error:** HTTP {resp.status}\n"
-                                f"```\n{text[:1000]}\n```"
-                            )
-                            return
-
-                        # Parse response
-                        try:
-                            data = json.loads(text)
-                            result = data["choices"][0]["message"]["content"]
-                        except Exception:
-                            result = text  # fallback
-
-                        # Send in 2000-char chunks
-                        for i in range(0, len(result), 2000):
-                            embed = discord.Embed(
-                                title=f"What {user} actually wanted to say:",
-                                description=result[i : i + 2000],
-                                color=discord.Color.blue(),
-                            )
-                            embed.set_footer(text=f"lol, lmao even")
-                            await ctx.send(embed=embed)
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ **Request Failed:** `{e}`")
-            except Exception as e:
-                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+    async def flux2(self, ctx: commands.Context, *, prompt: str = None):
+        """Generate an image using Flux-2-Dev with image-to-image support."""
+        await self.handle_image_generation(ctx, "flux-2-dev", prompt, FLUX_DEFAULT_WIDTH, FLUX_DEFAULT_HEIGHT, extract_images=True)
 
     @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def linkedin(self, ctx: commands.Context, *, query: str = None):
-        """
-        Query via linkedin
-        """
+    async def turbo(self, ctx: commands.Context, *, prompt: str):
+        """Generate an image via turbo model."""
+        await self.handle_image_generation(ctx, "turbo", prompt)
 
-        MODEL = "gemini-fast"  # Pollinations new API model name
-
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
-                "Get it from: <https://auth.pollinations.ai/>"
-            )
-            return
-        user = ctx.author if hasattr(ctx, "author") else ctx.user
-        # Prompt fallback
-        if not query and ctx.message.attachments:
-            query = "Describe this image"
-        if not query and not ctx.message.attachments:
-            await ctx.send("❌ Please provide a prompt or attach an image.")
-            return
-
-        # Collect image URLs
-        image_urls = []
-        for att in ctx.message.attachments:
-            if att.content_type and att.content_type.startswith("image/"):
-                image_urls.append(att.url)
-
-        linkedin_prompt = (
-            "You are a master of \"LinkedIn Speak\" \u2014 the exaggerated, motivational, corporate jargon-filled writing style used in LinkedIn posts and updates. "
-            "Your job is to translate ANY input text (casual, mundane, negative, humorous, or even dark) into a polished, enthusiastic, and absurdly professional LinkedIn-style announcement or post while preserving the original meaning and context as much as possible.\n\n"
-            "Core rules of LinkedIn Speak:\n"
-            "1. If the input contains Discord-style user mentions (e.g., <@ID>), preserve them exactly. If a person is mentioned by name, use their name. NEVER invent or use placeholder IDs like <@123456789> if they are not present in the input.\n"
-            "2. The goal is COMEDIC EXAGGERATION. Lean into the ridiculousness of corporate posturing. The more buzzwords, the better.\n"
-            "3. Do NOT use generic filler. If the input is 'he is lazy', do not write about 'growth mindset' generally; instead, write about 'his radical ownership of energy-optimization and strategic downtime for maximum long-term ROI'.\n"
-            "4. Always start with an energetic opener: \"I'm thrilled to announce...\", \"Excited to share...\", \"Reflecting on a pivotal moment...\", \"Big news!\" or similar.\n"
-            "5. Use heavy corporate buzzwords: leverage, optimize, pivot, high-impact, world-class, disruptive, game-changing, scalable, ROI, ecosystem, growth mindset, resilience, strategic alignment, value-add, mission-critical, etc.\n"
-            "6. Turn everything positive: reframe negatives as \"opportunities\", \"lessons learned\", \"radical ownership\", or \"innovative cognitive friction\".\n"
-            "7. Write in short, punchy sentences with high energy.\n"
-            "8. Include 2\u20134 relevant emojis (\ud83d\ude80 \ud83d\udcbc \ud83d\udd25 \ud83d\udcc8 etc.) where natural.\n"
-            "9. End with 4\u20136 relevant hashtags (#Leadership #GrowthMindset #Innovation #Networking #CareerGrowth #Disruption).\n"
-            "10. Frequently add a soft call to action: \"Let's connect!\", \"What are your thoughts?\", \"Open to opportunities!\", or \"How are you approaching this?\".\n\n"
-            "Output ONLY the LinkedIn Speak version. No explanations, no quotes, no extra text."
-        )
-
-        content_parts = [{"type": "text", "text": query}]
-        for url in image_urls:
-            content_parts.append({"type": "image_url", "image_url": {"url": url}})
-
-        messages = [
-            {"role": "system", "content": linkedin_prompt},
-            {"role": "user", "content": content_parts}
-        ]
-
-        # Pollinations token
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = poll_keys.get("token") if poll_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
-            )
-            return
-
-        payload = {
-            "model": MODEL,
-            "messages": messages,
-            "temperature": 1,
-            "top_p": 1,
-            "max_tokens": 4096,
-            "seed": 0,
-
-            # Pollinations custom fields
-            "referrer": referrer,
-            "isPrivate": bool(poll_token),
-
-            # streaming disabled
-            "stream": False
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-
-        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, json=payload, headers=headers) as resp:
-                        text = await resp.text()
-
-                        if resp.status != 200:
-                            await ctx.send(
-                                f"❌ **API Error:** HTTP {resp.status}\n"
-                                f"```\n{text[:1000]}\n```"
-                            )
-                            return
-
-                        # Parse response
-                        try:
-                            data = json.loads(text)
-                            result = data["choices"][0]["message"]["content"]
-                        except Exception:
-                            result = text  # fallback
-
-                        # Send in 2000-char chunks
-                        for i in range(0, len(result), 2000):
-                            embed = discord.Embed(
-                                title=f"What {user} actually wanted to say:",
-                                description=result[i : i + 2000],
-                                color=discord.Color.blue(),
-                            )
-                            embed.set_footer(text=f"lol, lmao even")
-                            await ctx.send(embed=embed)
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ **Request Failed:** `{e}`")
-            except Exception as e:
-                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
-
-    @text.command()
+    @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def gemini3(self, ctx: commands.Context, *, query: str = None):
-        """
-        Query via Gemini3
-        """
+    async def zimage(self, ctx: commands.Context, *, prompt: str):
+        """Generate an image via Z-Image model."""
+        await self.handle_image_generation(ctx, "zimage", prompt)
 
-        MODEL = "gemini-fast"  # Pollinations new API model name
-
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
-                "Get it from: <https://auth.pollinations.ai/>"
-            )
-            return
-
-        # Prompt fallback
-        if not query and ctx.message.attachments:
-            query = "Describe this image"
-        if not query and not ctx.message.attachments:
-            await ctx.send("❌ Please provide a prompt or attach an image.")
-            return
-
-        # Collect image URLs
-        image_urls = []
-        for att in ctx.message.attachments:
-            if att.content_type and att.content_type.startswith("image/"):
-                image_urls.append(att.url)
-
-        # Build messages
-        content_parts = [{"type": "text", "text": query}]
-        for url in image_urls:
-            content_parts.append({"type": "image_url", "image_url": {"url": url}})
-
-        messages = [{"role": "user", "content": content_parts}]
-
-        # Pollinations token
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = poll_keys.get("token") if poll_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
-            )
-            return
-
-        payload = {
-            "model": MODEL,
-            "messages": messages,
-            "temperature": 1,
-            "top_p": 1,
-            "max_tokens": 4096,
-            "seed": 0,
-
-            # Pollinations custom fields
-            "referrer": referrer,
-            "isPrivate": bool(poll_token),
-
-            # streaming disabled
-            "stream": False
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-
-        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, json=payload, headers=headers) as resp:
-                        text = await resp.text()
-
-                        if resp.status != 200:
-                            await ctx.send(
-                                f"❌ **API Error:** HTTP {resp.status}\n"
-                                f"```\n{text[:1000]}\n```"
-                            )
-                            return
-
-                        # Parse response
-                        try:
-                            data = json.loads(text)
-                            result = data["choices"][0]["message"]["content"]
-                        except Exception:
-                            result = text  # fallback
-
-                        # Send in 2000-char chunks
-                        for i in range(0, len(result), 2000):
-                            embed = discord.Embed(
-                                title="🤖 Pollinations Response",
-                                description=result[i : i + 2000],
-                                color=discord.Color.blue(),
-                            )
-                            embed.set_footer(text=f"Model: {MODEL} | pollinations.ai")
-                            await ctx.send(embed=embed)
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ **Request Failed:** `{e}`")
-            except Exception as e:
-                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
-
-    @text.command()
+    @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def geminisearch(self, ctx: commands.Context, *, query: str = None):
-        """
-        Query via gemini-search
-        """
+    async def imagen(self, ctx: commands.Context, *, prompt: str):
+        """Generate an image via Imagen-4 model."""
+        await self.handle_image_generation(ctx, "imagen-4", prompt)
 
-        MODEL = "gemini-search"  # Pollinations new API model name
+    @commands.command(name="gimagine")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def grokimagine(self, ctx: commands.Context, *, prompt: str):
+        """Generate an image via Grok-Imagine model."""
+        await self.handle_image_generation(ctx, "grok-imagine", prompt)
 
-        referrer = await self.config.referrer()
-        if not referrer or referrer.lower() == "none":
-            await ctx.send(
-                "⚠️ Pollinations referrer not set.\n"
-                "Use `[p]referrer <your_referrer>` (bot owner only).\n"
-                "Get it from: <https://auth.pollinations.ai/>"
-            )
-            return
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def img2img(self, ctx: commands.Context, *, prompt: str = None):
+        """Generate an image using Flux based on other images."""
+        await self.handle_image_generation(ctx, "flux", prompt, extract_images=True)
 
-        # Prompt fallback
-        if not query and ctx.message.attachments:
-            query = "Describe this image"
-        if not query and not ctx.message.attachments:
-            await ctx.send("❌ Please provide a prompt or attach an image.")
-            return
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def klein(self, ctx: commands.Context, *, prompt: str = None):
+        """Generate an image via Klein model."""
+        await self.handle_image_generation(ctx, "klein", prompt, extract_images=True)
 
-        # Collect image URLs
-        image_urls = []
-        for att in ctx.message.attachments:
-            if att.content_type and att.content_type.startswith("image/"):
-                image_urls.append(att.url)
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def kleinpro(self, ctx: commands.Context, *, prompt: str = None):
+        """Generate an image via Klein-Large model."""
+        await self.handle_image_generation(ctx, "klein-large", prompt, 2048, 2048, extract_images=True)
 
-        # Build messages
-        content_parts = [{"type": "text", "text": query}]
-        for url in image_urls:
-            content_parts.append({"type": "image_url", "image_url": {"url": url}})
+    @commands.command(name="wanimage")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def wanimage(self, ctx: commands.Context, *, prompt: str = None):
+        """Generate an Image via wan-image model."""
+        await self.handle_image_generation(ctx, "wan-image", prompt, 1024, 1536, extract_images=True)
 
-        messages = [{"role": "user", "content": content_parts}]
-
-        # Pollinations token
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        poll_token = poll_keys.get("token") if poll_keys else None
-
-        if not poll_token:
-            await ctx.send(
-                "❌ Missing Pollinations API token. Use `[p]set api pollinations token,<value>`"
-            )
-            return
-
-        payload = {
-            "model": MODEL,
-            "messages": messages,
-            "temperature": 1,
-            "top_p": 1,
-            "max_tokens": 4096,
-            "seed": 0,
-
-            # Pollinations custom fields
-            "referrer": referrer,
-            "isPrivate": bool(poll_token),
-
-            # streaming disabled
-            "stream": False
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {poll_token}",
-            "referer": referrer,
-        }
-
-        url = "https://gen.pollinations.ai/api/generate/v1/chat/completions"
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, json=payload, headers=headers) as resp:
-                        text = await resp.text()
-
-                        if resp.status != 200:
-                            await ctx.send(
-                                f"❌ **API Error:** HTTP {resp.status}\n"
-                                f"```\n{text[:1000]}\n```"
-                            )
-                            return
-
-                        # Parse response
-                        try:
-                            data = json.loads(text)
-                            result = data["choices"][0]["message"]["content"]
-                        except Exception:
-                            result = text  # fallback
-
-                        # Send in 2000-char chunks
-                        for i in range(0, len(result), 2000):
-                            embed = discord.Embed(
-                                title="🤖 Pollinations Response",
-                                description=result[i : i + 2000],
-                                color=discord.Color.blue(),
-                            )
-                            embed.set_footer(text=f"Model: {MODEL} | pollinations.ai")
-                            await ctx.send(embed=embed)
-
-            except aiohttp.ClientError as e:
-                await ctx.send(f"❌ **Request Failed:** `{e}`")
-            except Exception as e:
-                await ctx.send(f"⚠️ **Unexpected Error:** `{type(e).__name__}: {e}`")
+    @commands.command(name="qwenimage")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    @checks.bot_has_permissions(attach_files=True)
+    async def qwenimage(self, ctx: commands.Context, *, prompt: str = None):
+        """Generate an Image via qwen-image model."""
+        await self.handle_image_generation(ctx, "qwen-image", prompt, 1024, 1536, extract_images=True)
 
     @commands.command(name="gptimage")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
     async def gptimage(self, ctx: commands.Context, *, prompt: str = None):
-        """
-        Generate an Image via gptimage model.
-        
-        Model: gptimage
-        Max size is 1024x1024
-        Usage:
-          [p]gptimage <prompt> [attach image(s), reply, mention, ID, or URL(s)]
-          [p]gptimage <prompt> (text-only prompt is supported)
-          Multiple images supported (comma-separated).
-        """
+        """Generate an Image via gpt-image-2 model."""
+        await self.handle_image_generation(ctx, "gpt-image-2", prompt, 1024, 1536, extract_images=True)
 
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE).strip()
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-                prompt = prompt.replace(user.mention, "").strip()
-        if prompt:
-            url_matches = re.findall(r"(https?://\S+)", prompt)
-            for url in url_matches:
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-        if prompt:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    if hasattr(user, "display_avatar"):
-                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                    else:
-                        images.append(user.avatar_url)
-                    prompt = prompt.replace(mid, "").strip()
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    async def hidream(self, ctx: commands.Context, *, prompt: str):
+        """Generate an Image via HiDream endpoint."""
+        endpoint = "https://huggingface.co/spaces/HiDream-ai/HiDream-I1-Dev/"
+        await hf_image_generate(self, ctx, prompt, endpoint, api_name_override="/generate_with_status")
 
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt.")
-            return
-        width = 1024
-        height = 1536
-        seed = random.randint(0, 1000000)
-        await self._pollinations_generate(
-            ctx,
-            "gptimage",
-            prompt or "",
-            seed=seed,
-            width=width,
-            height=height,
-            images=images if images else None,
-            negative_prompt=negative_prompt,
+    # --- Special Commands ---
+
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.guild)
+    async def linkedin(self, ctx: commands.Context, *, query: str = None):
+        """Transform text into LinkedIn-style post (v1)."""
+        author = ctx.author
+        await self.handle_text_generation(
+            ctx, "gemini-fast", query, 
+            system_prompt=LINKEDIN_PROMPT_1,
+            custom_title=f"What {author} actually wanted to say:",
+            custom_footer="lol, lmao even"
         )
 
-    async def _pollinations_request(
-        self,
-        *,
-        prompt: str,
-        model: str,
-        token: str,
-        images=None,
-        duration=None,
-        audio=False,
-        aspect_ratio=None,
-        resolution=None,
-        negative_prompt=None,
-        seed=None,
-        enhance=None,
-    ):
-        """
-        Handles Pollinations GET requests for all models, capturing all parameters for debugging.
-        Supports Wan 2.6 video generation with proper parameter handling.
-        """
-        encoded_prompt = urllib.parse.quote(prompt, safe="")
-        if model == "nova-reel" or model == "ltx-2":
-            base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
-        else:
-            base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
-        base_url = f"https://gen.pollinations.ai/image/{encoded_prompt}"
-        params = {
-            k: v
-            for k, v in {
-                "model": model,
-                "duration": duration,
-                "audio": "true" if audio else None,
-                "aspectRatio": aspect_ratio,
-                "resolution": resolution,
-                "negative_prompt": negative_prompt,
-                "seed": seed,
-                "enhance": enhance,
-            }.items()
-            if v is not None
-        }
-
-        if images:
-            params["image"] = images[0]  
-
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Referer": "https://pollinations.ai/",
-            "Origin": "https://pollinations.ai",
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "*/*",
-        }
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(base_url, params=params, headers=headers) as resp:
-                full_url = str(resp.url)
-
-                content_type = resp.headers.get("Content-Type", "")
-                if "application/json" in content_type:
-                    data = await resp.json()
-                else:
-                    data = await resp.read()
-
-        return data, full_url
-
-    @commands.command(name="seedance")
+    @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
-    @commands.has_permissions(attach_files=True)
-    async def seedance(self, ctx, *, prompt: str = None):
-        """Generate videos using Seedance Lite model.
-        
-        Model: seedance
-        """
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Provide a prompt and/or images.")
-        processed_images = []
-        temp_msgs = []
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token") if pollinations_keys else None
-        if prompt:
-            # Extract URLs from the prompt
-            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
-            found_urls = re.findall(url_regex, prompt)
-            for url in found_urls:
-                buf, result = await self.process_image(url)
-                if buf:
-                    msg = await ctx.channel.send(
-                        content="Processing Image... Please wait",
-                        file=discord.File(buf, filename=result),
-                    )
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-            # Remove URLs from prompt so Pollinations doesn't try to read them as text
-            for url in found_urls:
-                prompt = prompt.replace(url, "").strip()
-        # a
-        for a in ctx.message.attachments:
-            buf, result = await self.process_image(a.url.rstrip("&"))
-            if buf:
-                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                temp_msgs.append(msg)
-                processed_images.append(msg.attachments[0].url)
-            else:
-                processed_images.append(result)
+    async def linkedin2(self, ctx: commands.Context, *, query: str = None):
+        """Transform text into LinkedIn-style post (v2)."""
+        author = ctx.author
+        await self.handle_text_generation(
+            ctx, "openai", query, 
+            system_prompt=LINKEDIN_PROMPT_2,
+            custom_title=f"What {author} actually wanted to say:",
+            custom_footer="lol, lmao even"
+        )
 
-        if ctx.message.reference:
-            try:
-                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                for a in ref.attachments:
-                    buf, result = await self.process_image(a.url)
-                    if buf:
-                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                        temp_msgs.append(msg)
-                        processed_images.append(msg.attachments[0].url)
-                    else:
-                        processed_images.append(result)
-                for embed in ref.embeds:
-                    if embed.image and embed.image.url:
-                        buf, result = await self.process_image(embed.image.url)
-                        if buf:
-                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                            temp_msgs.append(msg)
-                            processed_images.append(msg.attachments[0].url)
-                        else:
-                            processed_images.append(result)
-            except Exception as e:
-                self.log.error(f"Failed fetching referenced message: {e}")
-
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                buf, result = await self.process_image(avatar_url)
-                if buf:
-                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-                prompt = prompt.replace(user.mention, "").strip()
-
-        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
-        async with ctx.typing():
-            result, full_url = await self._pollinations_request(
-                prompt=prompt or "",
-                model="seedance",
-                token=token,
-                images=images if images else None,
-                duration=duration,
-                aspect_ratio="16:9",
-            )
-            if isinstance(result, bytes):
-                # normal case: we got video bytes
-                try:
-                    await ctx.send(
-                        file=discord.File(io.BytesIO(result), "seedance.mp4")
-                    )
-                except discord.HTTPException:
-                    await ctx.send(
-                        f"🎬 Your Seedance video is ready: [Here]({full_url})"
-                    )
-            elif isinstance(result, dict) and result.get("error"):
-                # API returned an error, e.g., no credits
-                embed = discord.Embed(
-                    title="⚠️ Oops! Seedance Generation Failed",
-                    description=(
-                        "Something went wrong while generating your Seedance video.\n\n"
-                        "**Error message:**\n"
-                        f"```\n{result['error']['message']}\n```"
-                        "**Possible reasons:**\n"
-                        "• The generation service might be temporarily down.\n"
-                        "• Your prompt might be invalid or too long.\n"
-                        "• You might have run out of credits/pollen balance.\n\n"
-                        "Please try again later or adjust your prompt."
-                    ),
-                    color=discord.Color.orange(),
-                )
-                await ctx.send(embed=embed)
-            else:
-                # fallback
-                await ctx.send(f"🎬 Your Seedance video is ready: [Here]({full_url})")
-
-            for m in temp_msgs:
-                try:
-                    await m.delete()
-                except:
-                    pass
-
-    @commands.command(name="wan")
+    @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
-    @commands.has_permissions(attach_files=True)
-    async def wan(self, ctx, *, prompt: str = None):
-        """Generate videos using Wan model.
+    async def analyze(self, ctx: commands.Context, *, arg: str = None):
+        """Analyze an image using AI."""
+        images, prompt = await ImageExtractor.extract_images(ctx, arg or "")
+        if not images:
+            return await ctx.send("❌ No image found to analyze.")
         
-        Model: Wan
-        """
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Provide a prompt and/or images.")
-        processed_images = []
-        temp_msgs = []
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token") if pollinations_keys else None
-        if prompt:
-            # Extract URLs from the prompt
-            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
-            found_urls = re.findall(url_regex, prompt)
-            for url in found_urls:
-                buf, result = await self.process_image(url)
-                if buf:
-                    msg = await ctx.channel.send(
-                        content="Processing Image... Please wait",
-                        file=discord.File(buf, filename=result),
-                    )
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-            # Remove URLs from prompt so Pollinations doesn't try to read them as text
-            for url in found_urls:
-                prompt = prompt.replace(url, "").strip()
-        # a
-        for a in ctx.message.attachments:
-            buf, result = await self.process_image(a.url.rstrip("&"))
-            if buf:
-                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                temp_msgs.append(msg)
-                processed_images.append(msg.attachments[0].url)
-            else:
-                processed_images.append(result)
+        query = prompt or "Describe this image in detail."
+        await self.handle_text_generation(ctx, "claude-fast", query, image_urls=images)
 
-        if ctx.message.reference:
-            try:
-                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                for a in ref.attachments:
-                    buf, result = await self.process_image(a.url)
-                    if buf:
-                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                        temp_msgs.append(msg)
-                        processed_images.append(msg.attachments[0].url)
-                    else:
-                        processed_images.append(result)
-                for embed in ref.embeds:
-                    if embed.image and embed.image.url:
-                        buf, result = await self.process_image(embed.image.url)
-                        if buf:
-                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                            temp_msgs.append(msg)
-                            processed_images.append(msg.attachments[0].url)
-                        else:
-                            processed_images.append(result)
-            except Exception as e:
-                self.log.error(f"Failed fetching referenced message: {e}")
+    # --- Video Shortcuts ---
 
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                buf, result = await self.process_image(avatar_url)
-                if buf:
-                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-                prompt = prompt.replace(user.mention, "").strip()
-
-        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
-        async with ctx.typing():
-            result, full_url = await self._pollinations_request(
-                prompt=prompt or "",
-                model="wan",
-                token=token,
-                images=images if images else None,
-                duration=duration,
-                aspect_ratio="16:9",
-            )
-            if isinstance(result, bytes):
-                # normal case: we got video bytes
-                try:
-                    await ctx.send(
-                        file=discord.File(io.BytesIO(result), "Wan.mp4")
-                    )
-                except discord.HTTPException:
-                    await ctx.send(
-                        f"🎬 Your Wan video is ready: [Here]({full_url})"
-                    )
-            elif isinstance(result, dict) and result.get("error"):
-                # API returned an error, e.g., no credits
-                embed = discord.Embed(
-                    title="⚠️ Oops! Wan Generation Failed",
-                    description=(
-                        "Something went wrong while generating your Wan video.\n\n"
-                        "**Error message:**\n"
-                        f"```\n{result['error']['message']}\n```"
-                        "**Possible reasons:**\n"
-                        "• The generation service might be temporarily down.\n"
-                        "• Your prompt might be invalid or too long.\n"
-                        "• You might have run out of credits/pollen balance.\n\n"
-                        "Please try again later or adjust your prompt."
-                    ),
-                    color=discord.Color.orange(),
-                )
-                await ctx.send(embed=embed)
-            else:
-                # fallback
-                await ctx.send(f"🎬 Your Wan video is ready: [Here]({full_url})")
-
-            for m in temp_msgs:
-                try:
-                    await m.delete()
-                except:
-                    pass
-
-    @commands.command(name="nova")
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @commands.has_permissions(attach_files=True)
-    async def nova_video(self, ctx, *, prompt: str = None):
-        """Generate videos using nova-reel Video model.
-        
-        Model: nova-reel
-        
-        Supports text-to-video generation.
-        
-        Usage:
-        !nova a girl dancing in a field
-        !nova --duration 5 a person waving
-        """
-        if not prompt:
-            return await ctx.send("❌ Please provide a prompt for video generation.")
-
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = poll_keys.get("token") if poll_keys else None
-        if not token:
-            return await ctx.send("❌ Missing Pollinations API token.")
-
-        # Parse duration from prompt
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Provide a prompt and/or images.")
-        processed_images = []
-        temp_msgs = []
-
-        if prompt:
-            # Extract URLs from the prompt
-            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
-            found_urls = re.findall(url_regex, prompt)
-            for url in found_urls:
-                buf, result = await self.process_image(url)
-                if buf:
-                    msg = await ctx.channel.send(
-                        content="Processing Image... Please wait",
-                        file=discord.File(buf, filename=result),
-                    )
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-            # Remove URLs from prompt so Pollinations doesn't try to read them as text
-            for url in found_urls:
-                prompt = prompt.replace(url, "").strip()
-        # a
-        for a in ctx.message.attachments:
-            buf, result = await self.process_image(a.url.rstrip("&"))
-            if buf:
-                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                temp_msgs.append(msg)
-                processed_images.append(msg.attachments[0].url)
-            else:
-                processed_images.append(result)
-
-        if ctx.message.reference:
-            try:
-                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                for a in ref.attachments:
-                    buf, result = await self.process_image(a.url)
-                    if buf:
-                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                        temp_msgs.append(msg)
-                        processed_images.append(msg.attachments[0].url)
-                    else:
-                        processed_images.append(result)
-                for embed in ref.embeds:
-                    if embed.image and embed.image.url:
-                        buf, result = await self.process_image(embed.image.url)
-                        if buf:
-                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                            temp_msgs.append(msg)
-                            processed_images.append(msg.attachments[0].url)
-                        else:
-                            processed_images.append(result)
-            except Exception as e:
-                self.log.error(f"Failed fetching referenced message: {e}")
-
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                buf, result = await self.process_image(avatar_url)
-                if buf:
-                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-                prompt = prompt.replace(user.mention, "").strip()
-
-        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
-
-        async with ctx.typing():
-            try:
-                result, full_url = await self._pollinations_request(
-                    prompt=prompt or "",
-                    model="nova-reel",
-                    token=token,
-                    duration=duration,
-                    images=images,
-                    #enhance="true",
-                )
-                if isinstance(result, bytes):
-                    # Got video bytes - try to send as file
-                    try:
-                        await ctx.send(
-                            content="✨ Your Nova video is ready!",
-                            file=discord.File(io.BytesIO(result), "nova_video.mp4")
-                        )
-                    except discord.HTTPException:
-                        # File too large, send link instead
-                        await ctx.send(
-                            f"✨ Your Nova video is ready! [View Video]({full_url})"
-                        )
-                elif isinstance(result, dict) and result.get("error"):
-                    # API returned an error
-                    embed = discord.Embed(
-                        title="⚠️ Nova Video Generation Failed",
-                        description=(
-                            "Something went wrong while generating your video.\n\n"
-                            "**Error message:**\n"
-                            f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
-                            "**Possible reasons:**\n"
-                            "• The generation service might be temporarily down.\n"
-                            "• Your prompt might be invalid or too long.\n"
-                            "• You might have run out of credits/pollen balance.\n\n"
-                            "Please try again later or adjust your prompt."
-                        ),
-                        color=discord.Color.orange(),
-                    )
-                    await ctx.send(embed=embed)
-                else:
-                    # Unexpected response format
-                    await ctx.send(f"✨ Your Nova video is ready! [View Video]({full_url})")
-            except asyncio.TimeoutError:
-                await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
-            except Exception as e:
-                self.log.error(f"Nova video generation error: {e}", exc_info=True)
-                await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
-
-
-    @commands.command(name="ltx", aliases=["ltx2"])
-    @commands.cooldown(1, 60, commands.BucketType.guild)
-    @commands.has_permissions(attach_files=True)
-    async def ltx(self, ctx, *, prompt: str = None):
-        """Generate videos using ltx-2 Video model.
-        
-        Model: ltx-2
-        
-        Supports text-to-video generation.
-        
-        Usage:
-        !ltx a girl dancing in a field
-        !ltx --duration 5 a person waving
-        """
-        if not prompt:
-            return await ctx.send("❌ Please provide a prompt for video generation.")
-
-        poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = poll_keys.get("token") if poll_keys else None
-        if not token:
-            return await ctx.send("❌ Missing Pollinations API token.")
-
-        # Parse duration from prompt
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
-        if not prompt and not ctx.message.attachments and not ctx.message.reference:
-            return await ctx.send("❌ Provide a prompt and/or images.")
-        processed_images = []
-        temp_msgs = []
-
-        if prompt:
-            # Extract URLs from the prompt
-            url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
-            found_urls = re.findall(url_regex, prompt)
-            for url in found_urls:
-                buf, result = await self.process_image(url)
-                if buf:
-                    msg = await ctx.channel.send(
-                        content="Processing Image... Please wait",
-                        file=discord.File(buf, filename=result),
-                    )
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-            # Remove URLs from prompt so Pollinations doesn't try to read them as text
-            for url in found_urls:
-                prompt = prompt.replace(url, "").strip()
-        # a
-        for a in ctx.message.attachments:
-            buf, result = await self.process_image(a.url.rstrip("&"))
-            if buf:
-                msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                temp_msgs.append(msg)
-                processed_images.append(msg.attachments[0].url)
-            else:
-                processed_images.append(result)
-
-        if ctx.message.reference:
-            try:
-                ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                for a in ref.attachments:
-                    buf, result = await self.process_image(a.url)
-                    if buf:
-                        msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                        temp_msgs.append(msg)
-                        processed_images.append(msg.attachments[0].url)
-                    else:
-                        processed_images.append(result)
-                for embed in ref.embeds:
-                    if embed.image and embed.image.url:
-                        buf, result = await self.process_image(embed.image.url)
-                        if buf:
-                            msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                            temp_msgs.append(msg)
-                            processed_images.append(msg.attachments[0].url)
-                        else:
-                            processed_images.append(result)
-            except Exception as e:
-                self.log.error(f"Failed fetching referenced message: {e}")
-
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                buf, result = await self.process_image(avatar_url)
-                if buf:
-                    msg = await ctx.channel.send(content="Processing Image... Please wait",file=discord.File(buf, filename=result))
-                    temp_msgs.append(msg)
-                    processed_images.append(msg.attachments[0].url)
-                else:
-                    processed_images.append(result)
-                prompt = prompt.replace(user.mention, "").strip()
-
-        images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-        prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=8)
-
-        async with ctx.typing():
-            try:
-                result, full_url = await self._pollinations_request(
-                    prompt=prompt or "",
-                    model="ltx-2",
-                    token=token,
-                    duration=duration,
-                    images=images,
-                    #enhance="true",
-                )
-                if isinstance(result, bytes):
-                    # Got video bytes - try to send as file
-                    try:
-                        await ctx.send(
-                            content="✨ Your ltx-2 video is ready!",
-                            file=discord.File(io.BytesIO(result), "ltx_video.mp4")
-                        )
-                    except discord.HTTPException:
-                        # File too large, send link instead
-                        await ctx.send(
-                            f"✨ Your ltx-2 video is ready! [View Video]({full_url})"
-                        )
-                elif isinstance(result, dict) and result.get("error"):
-                    # API returned an error
-                    embed = discord.Embed(
-                        title="⚠️ ltx-2 Video Generation Failed",
-                        description=(
-                            "Something went wrong while generating your video.\n\n"
-                            "**Error message:**\n"
-                            f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
-                            "**Possible reasons:**\n"
-                            "• The generation service might be temporarily down.\n"
-                            "• Your prompt might be invalid or too long.\n"
-                            "• You might have run out of credits/pollen balance.\n\n"
-                            "Please try again later or adjust your prompt."
-                        ),
-                        color=discord.Color.orange(),
-                    )
-                    await ctx.send(embed=embed)
-                else:
-                    # Unexpected response format
-                    await ctx.send(f"✨ Your ltx-2 video is ready! [View Video]({full_url})")
-            except asyncio.TimeoutError:
-                await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
-            except Exception as e:
-                self.log.error(f"ltx-2 video generation error: {e}", exc_info=True)
-                await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
-
-    # @commands.command(name="wan")
-    # @commands.cooldown(1, 60, commands.BucketType.guild)
-    # @commands.has_permissions(attach_files=True)
-    # async def wan(self, ctx, *, prompt: str = None):
-    #     """Generate videos using Alibaba Wan 2.6 model.
-
-    #     Model: wan
-
-    #     Supports text-to-video and image-to-video generation.
-
-    #     Usage:
-    #     !wan a girl dancing in a field
-    #     !wan --resolution 720p --aspect_ratio 9:16 a vertical video of someone singing
-
-    #     Parameters in prompt:
-    #     --resolution: 720p or 1080p (default: 1080p)
-    #     --aspect_ratio: 16:9 or 9:16 (default: 16:9)
-    #     --negative_prompt: things to avoid in the video
-
-    #     Image-to-video: attach an image and provide a prompt.
-    #     Duration: automatically optimized (2-15 seconds).
-    #     """
-    #     if not prompt and not ctx.message.attachments and not ctx.message.reference:
-    #         return await ctx.send("❌ Please provide a prompt and/or images.")
-
-    #     poll_keys = await self.bot.get_shared_api_tokens("pollinations")
-    #     token = poll_keys.get("token") if poll_keys else None
-    #     if not token:
-    #         return await ctx.send("❌ Missing Pollinations API token.")
-
-    #     processed_images = []
-    #     temp_msgs = []
-
-    #     # Parse resolution from prompt
-    #     resolution = "1080p"  # default
-    #     resolution_match = re.search(r"--resolution\s+(720p|1080p)", prompt or "", re.IGNORECASE)
-    #     if resolution_match:
-    #         resolution = resolution_match.group(1).lower()
-    #         prompt = re.sub(r"--resolution\s+(?:720p|1080p)", "", prompt or "", flags=re.IGNORECASE).strip()
-
-    #     # Parse aspect ratio from prompt
-    #     aspect_ratio = "16:9"  # default
-    #     aspect_match = re.search(r"--aspect_ratio\s+(16:9|9:16)", prompt or "", re.IGNORECASE)
-    #     if aspect_match:
-    #         aspect_ratio = aspect_match.group(1)
-    #         prompt = re.sub(r"--aspect_ratio\s+(?:16:9|9:16)", "", prompt or "", flags=re.IGNORECASE).strip()
-
-    #     # Parse negative prompt
-    #     negative_prompt = None
-    #     neg_match = re.search(r"--negative_prompt\s+([^\-]+?)(?=--|$)", prompt or "", re.IGNORECASE)
-    #     if neg_match:
-    #         negative_prompt = neg_match.group(1).strip()
-    #         prompt = re.sub(r"--negative_prompt\s+[^\-]+?(?=--|$)", "", prompt or "", flags=re.IGNORECASE).strip()
-
-    #     # Parse seed from prompt
-    #     seed = None
-    #     seed_match = re.search(r"--seed\s+(\d+)", prompt or "", re.IGNORECASE)
-    #     if seed_match:
-    #         seed = int(seed_match.group(1))
-    #         prompt = re.sub(r"--seed\s+\d+", "", prompt or "", flags=re.IGNORECASE).strip()
-    #     else:
-    #         seed = random.randint(0, 1000000)
-
-    #     if prompt:
-    #         # Extract URLs from the prompt
-    #         url_regex = r"https?://\S+\.(?:png|jpg|jpeg|webp)"
-    #         found_urls = re.findall(url_regex, prompt)
-    #         for url in found_urls:
-    #             buf, result = await self.process_image(url)
-    #             if buf:
-    #                 msg = await ctx.channel.send(
-    #                     content="🔄 Processing image...",
-    #                     file=discord.File(buf, filename=result),
-    #                 )
-    #                 temp_msgs.append(msg)
-    #                 processed_images.append(msg.attachments[0].url)
-    #             else:
-    #                 processed_images.append(result)
-    #         # Remove URLs from prompt
-    #         for url in found_urls:
-    #             prompt = prompt.replace(url, "").strip()
-
-    #     # Process attachments
-    #     for a in ctx.message.attachments:
-    #         buf, result = await self.process_image(a.url.rstrip("&"))
-    #         if buf:
-    #             msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-    #             temp_msgs.append(msg)
-    #             processed_images.append(msg.attachments[0].url)
-    #         else:
-    #             processed_images.append(result)
-
-    #     # Process referenced message
-    #     if ctx.message.reference:
-    #         try:
-    #             ref = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-    #             for a in ref.attachments:
-    #                 buf, result = await self.process_image(a.url)
-    #                 if buf:
-    #                     msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-    #                     temp_msgs.append(msg)
-    #                     processed_images.append(msg.attachments[0].url)
-    #                 else:
-    #                     processed_images.append(result)
-    #             for embed in ref.embeds:
-    #                 if embed.image and embed.image.url:
-    #                     buf, result = await self.process_image(embed.image.url)
-    #                     if buf:
-    #                         msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-    #                         temp_msgs.append(msg)
-    #                         processed_images.append(msg.attachments[0].url)
-    #                     else:
-    #                         processed_images.append(result)
-    #         except Exception as e:
-    #             self.log.error(f"Failed fetching referenced message: {e}")
-
-    #     # Process mentions
-    #     if prompt and ctx.message.mentions:
-    #         for user in ctx.message.mentions:
-    #             avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-    #             buf, result = await self.process_image(avatar_url)
-    #             if buf:
-    #                 msg = await ctx.channel.send(content="🔄 Processing image...", file=discord.File(buf, filename=result))
-    #                 temp_msgs.append(msg)
-    #                 processed_images.append(msg.attachments[0].url)
-    #             else:
-    #                 processed_images.append(result)
-    #             prompt = prompt.replace(user.mention, "").strip()
-
-    #     # Get first image if available (Wan 2.6 supports image-to-video)
-    #     images = list(dict.fromkeys(processed_images))[:1] if processed_images else []
-
-    #     # Parse duration from prompt (Wan 2.6: 2-15 seconds, Pollinations optimizes automatically)
-    #     prompt, duration = self.parse_prompt_and_duration(prompt or "", default_duration=5)
-
-    #     async with ctx.typing():
-    #         try:
-    #             result, full_url = await self._pollinations_request(
-    #                 prompt=prompt or "",
-    #                 model="wan",
-    #                 token=token,
-    #                 images=images if images else None,
-    #                 duration=duration,
-    #                 aspect_ratio=aspect_ratio,
-    #                 resolution=resolution,
-    #                 negative_prompt=negative_prompt,
-    #                 seed=seed,
-    #             )
-    #             if isinstance(result, bytes):
-    #                 # Got video bytes - try to send as file
-    #                 try:
-    #                     await ctx.send(
-    #                         content="✨ Your Wan 2.6 video is ready!",
-    #                         file=discord.File(io.BytesIO(result), "wan.mp4")
-    #                     )
-    #                 except discord.HTTPException:
-    #                     # File too large, send link instead
-    #                     await ctx.send(
-    #                         f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})"
-    #                     )
-    #             elif isinstance(result, dict) and result.get("error"):
-    #                 # API returned an error
-    #                 embed = discord.Embed(
-    #                     title="⚠️ Wan 2.6 Generation Failed",
-    #                     description=(
-    #                         "Something went wrong while generating your video.\n\n"
-    #                         "**Error message:**\n"
-    #                         f"```\n{result['error'].get('message', 'Unknown error')}\n```\n"
-    #                         "**Possible reasons:**\n"
-    #                         "• The generation service might be temporarily down.\n"
-    #                         "• Your prompt might be invalid or too long.\n"
-    #                         "• You might have run out of credits/pollen balance.\n\n"
-    #                         "Please try again later or adjust your prompt."
-    #                     ),
-    #                     color=discord.Color.orange(),
-    #                 )
-    #                 await ctx.send(embed=embed)
-    #             else:
-    #                 # Unexpected response format
-    #                 await ctx.send(f"✨ Your Wan 2.6 video is ready! [View Video]({full_url})")
-    #         except asyncio.TimeoutError:
-    #             await ctx.send("⏱️ Request timed out. The video generation is taking longer than expected. Please try again later.")
-    #         except Exception as e:
-    #             self.log.error(f"Wan 2.6 generation error: {e}", exc_info=True)
-    #             await ctx.send(f"❌ An unexpected error occurred: {type(e).__name__}")
-    #         finally:
-    #             # Clean up temporary messages
-    #             for m in temp_msgs:
-    #                 try:
-    #                     await m.delete()
-    #                 except:
-    #                     pass
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def openai(self, ctx: commands.Context, *, query: str = None):
-        """Query with `openai`."""
-        await self._run_pollinations_text(ctx, "openai", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def openaifast(self, ctx: commands.Context, *, query: str = None):
-        """Query with `openai-fast`."""
-        await self._run_pollinations_text(ctx, "openai-fast", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def openailarge(self, ctx: commands.Context, *, query: str = None):
-        """Query with `openai-large`."""
-        await self._run_pollinations_text(ctx, "openai-large", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def qwencoder(self, ctx: commands.Context, *, query: str = None):
-        """Query with `qwen-coder`."""
-        await self._run_pollinations_text(ctx, "qwen-coder", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def mistral(self, ctx: commands.Context, *, query: str = None):
-        """Query with `mistral`."""
-        await self._run_pollinations_text(ctx, "mistral", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def mistralfast(self, ctx: commands.Context, *, query: str = None):
-        """Query with `mistral-fast`."""
-        await self._run_pollinations_text(ctx, "mistral-fast", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def deepseek(self, ctx: commands.Context, *, query: str = None):
-        """Query with `deepseek`."""
-        await self._run_pollinations_text(ctx, "deepseek", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def grok(self, ctx: commands.Context, *, query: str = None):
-        """Query with `grok`."""
-        await self._run_pollinations_text(ctx, "grok", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def claude(self, ctx: commands.Context, *, query: str = None):
-        """Query with `claude`."""
-        await self._run_pollinations_text(ctx, "claude-fast", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def openaireasoning(self, ctx: commands.Context, *, query: str = None):
-        """Query with `openai-reasoning`."""
-        await self._run_pollinations_text(ctx, "openai-reasoning", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def gemini(self, ctx: commands.Context, *, query: str = None):
-        """Query with `gemini`."""
-        await self._run_pollinations_text(ctx, "gemini", query)
-
-    # @text.command()
-    # @commands.cooldown(3, 5, commands.BucketType.guild)
-    # @checks.bot_has_permissions(attach_files=True)
-    # async def geminisearch(self, ctx: commands.Context, *, query: str = None):
-    #     """Query with `gemini-search`."""
-    #     await self._run_pollinations_text(ctx, "gemini-search", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def midijourney(self, ctx: commands.Context, *, query: str = None):
-        """Query with `midijourney`."""
-        await self._run_pollinations_text(ctx, "midijourney", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def chickytutor(self, ctx: commands.Context, *, query: str = None):
-        """Query with `chickytutor`."""
-        await self._run_pollinations_text(ctx, "chickytutor", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def perplexityfast(self, ctx: commands.Context, *, query: str = None):
-        """Query with `perplexity-fast`."""
-        await self._run_pollinations_text(ctx, "perplexity-fast", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def perplexityreasoning(self, ctx: commands.Context, *, query: str = None):
-        """Query with `perplexity-reasoning`."""
-        await self._run_pollinations_text(ctx, "perplexity-reasoning", query)
-
-    @text.command()
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def kimik2thinking(self, ctx: commands.Context, *, query: str = None):
-        """Query with `kimi-k2-thinking`."""
-        await self._run_pollinations_text(ctx, "kimi-k2-thinking", query)
-
-    @commands.command(name="klein")
+    @commands.command(name="nova_reel")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def klein(self, ctx: commands.Context, *, prompt: str = None):
-        """
-        Generate an Image via FLUX.2 Klein 4B model.
-        
-        Model: klein
-        Max size is 2048x2048
-        Usage:
-          [p]klein <prompt> [attach image(s), reply, mention, ID, or URL(s)]
-          [p]klein <prompt> (text-only prompt is supported)
-          Multiple images supported (comma-separated).
-        """
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
+    async def nova_prefix(self, ctx, *, prompt: str = None):
+        """Generate video via Nova-Reel."""
+        await self.handle_video_generation(ctx, "nova-reel", prompt, "nova.mp4")
 
-        # Parse height if present in format --height <number>
-        height = 3072  # default height
-        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
-        if height_match:
-            height = int(height_match.group(1))
-            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        # Parse width if present in format --width <number>
-        width = 5504  # default width
-        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
-        if width_match:
-            width = int(width_match.group(1))
-            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-
-        # --- Parse --seed ---
-        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
-        if seed_match:
-            seed = int(seed_match.group(1))
-            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(
-                        user.display_avatar.with_format("png").with_size(1024).url
-                    )
-                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-                prompt = prompt.replace(user.mention, "").strip()
-        if prompt:
-            url_matches = re.findall(r"(https?://\S+)", prompt)
-            for url in url_matches:
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-        if prompt:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    if hasattr(user, "display_avatar"):
-                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                    else:
-
-                        images.append(user.avatar_url)
-                    prompt = prompt.replace(mid, "").strip()
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt.")
-            return
-
-        seed = None
-        if not seed:
-            seed = random.randint(0, 1000000)
-        await self._pollinations_generate(
-            ctx,
-            "klein",
-            prompt or "",
-            seed=seed,
-            images=images if images else None,
-            negative_prompt=negative_prompt,
-            height=height,
-            width=width,
-        )
-
-
-    @commands.command(name="kleinpro")
+    @commands.command(name="ltx_video")
     @commands.cooldown(1, 60, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def kleinpro(self, ctx: commands.Context, *, prompt: str = None):
-        """
-        Generate an Image via FLUX.2 Klein 9B model.
-        
-        Model: klein-large
-        Max size is 2048x2048
-        Usage:
-          [p]kleinpro <prompt> [attach image(s), reply, mention, ID, or URL(s)]
-          [p]kleinpro <prompt> (text-only prompt is supported)
-          Multiple images supported (comma-separated).
-        """
-        # Parse negative prompt if present in format --negative <text>
-        negative_prompt = "worst quality, blurry"  # default negative prompt
-        negative_match = re.search(r"--negative\s+([^\n]+)", prompt, re.IGNORECASE)
-        if negative_match:
-            negative_prompt = negative_match.group(1).strip()
-            # Remove the --negative part from the prompt
-            prompt = re.sub(
-                r"--negative\s+[^\n]+", "", prompt, flags=re.IGNORECASE
-            ).strip()
+    async def ltx_prefix(self, ctx, *, prompt: str = None):
+        """Generate video via LTX-2."""
+        await self.handle_video_generation(ctx, "ltx-2", prompt, "ltx.mp4")
 
-        # Parse height if present in format --height <number>
-        height = 2048  # default height
-        height_match = re.search(r"--height\s+(\d+)", prompt, re.IGNORECASE)
-        if height_match:
-            height = int(height_match.group(1))
-            prompt = re.sub(r"--height\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        # Parse width if present in format --width <number>
-        width = 2048  # default width
-        width_match = re.search(r"--width\s+(\d+)", prompt, re.IGNORECASE)
-        if width_match:
-            width = int(width_match.group(1))
-            prompt = re.sub(r"--width\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
+    # --- Audio Shortcuts ---
 
-        # --- Parse --seed ---
-        seed_match = re.search(r"--seed\s+(\d+)", prompt, re.IGNORECASE)
-        if seed_match:
-            seed = int(seed_match.group(1))
-            prompt = re.sub(r"--seed\s+\d+", "", prompt, flags=re.IGNORECASE).strip()
-        images = []
-        if ctx.message.attachments:
-            images.extend([a.url for a in ctx.message.attachments])
-        if ctx.message.reference:
-            try:
-                referenced = await ctx.channel.fetch_message(
-                    ctx.message.reference.message_id
-                )
-                if referenced.attachments:
-                    images.extend([a.url for a in referenced.attachments])
-                elif referenced.embeds:
-                    for embed in referenced.embeds:
-                        if embed.image and embed.image.url:
-                            images.append(embed.image.url)
-            except Exception:
-                pass
-        if prompt and ctx.message.mentions:
-            for user in ctx.message.mentions:
-                if hasattr(user, "display_avatar"):
-                    images.append(
-                        user.display_avatar.with_format("png").with_size(1024).url
-                    )
-                    # images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                else:
-                    images.append(user.avatar_url)
-                prompt = prompt.replace(user.mention, "").strip()
-        if prompt:
-            url_matches = re.findall(r"(https?://\S+)", prompt)
-            for url in url_matches:
-                images.append(url)
-                prompt = prompt.replace(url, "").strip()
-        if prompt:
-            id_matches = re.findall(r"\b\d{17,20}\b", prompt)
-            for mid in id_matches:
-                user = ctx.guild.get_member(int(mid)) if ctx.guild else None
-                if not user:
-                    try:
-                        user = await self.bot.fetch_user(int(mid))
-                    except Exception:
-                        user = None
-                if user:
-                    if hasattr(user, "display_avatar"):
-                        # avatar_url = user.display_avatar.with_format("png").with_size(1024).url
-                        images.append(user.display_avatar.with_format("png").with_size(1024).url)
-                    else:
-
-                        images.append(user.avatar_url)
-                    prompt = prompt.replace(mid, "").strip()
-        images = [
-            (
-                img.replace(".gif", ".png")
-                if img.endswith(".gif") and "discordapp.com/avatars/" in img
-                else img
-            )
-            for img in images
-        ]
-        seen = set()
-        images = [x for x in images if not (x in seen or seen.add(x))]
-
-        if not prompt:
-            await ctx.send("❌ Please provide a prompt.")
-            return
-
-        seed = None
-        if not seed:
-            seed = random.randint(0, 1000000)
-        await self._pollinations_generate(
-            ctx,
-            "klein-large",
-            prompt or "",
-            seed=seed,
-            images=images if images else None,
-            negative_prompt=negative_prompt,
-            height=height,
-            width=width,
-        )
-
-    @text.command(name="qwencharacter")
+    @commands.command(name="qwentts_audio")
     @commands.cooldown(3, 5, commands.BucketType.guild)
     @checks.bot_has_permissions(attach_files=True)
-    async def qwencharacter(self, ctx: commands.Context, *, query: str = None):
-        """Query with Qwen Character model.
-        
-        Model: qwen-character
-        """
-        await self._run_pollinations_text(ctx, "qwen-character", query)
-
-    @text.command(name="novamicro")
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def novamicro(self, ctx: commands.Context, *, query: str = None):
-        """Query with Amazon Nova Micro model.
-        
-        Model: nova-fast
-        """
-        await self._run_pollinations_text(ctx, "nova-fast", query)
-
-    @text.command(name="minimax")
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def minimax(self, ctx: commands.Context, *, query: str = None):
-        """Query with MiniMax M2.1 model.
-        
-        Model: minimax
-        """
-        await self._run_pollinations_text(ctx, "minimax", query)
-
-    @text.command(name="kimi")
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def kimi(self, ctx: commands.Context, *, query: str = None):
-        """Query with Moonshot Kimi K2.5 model.
-        
-        Model: kimi
-        """
-        await self._run_pollinations_text(ctx, "kimi", query)
-
-    @text.command(name="glm")
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def glm(self, ctx: commands.Context, *, query: str = None):
-        """Query with Z.ai GLM-4.7 model.
-        
-        Model: glm
-        """
-        await self._run_pollinations_text(ctx, "glm", query)
-    # broken
-    # @text.command(name="nomnom")
-    # @commands.cooldown(3, 5, commands.BucketType.guild)
-    # @checks.bot_has_permissions(attach_files=True)
-    # async def nomnom(self, ctx: commands.Context, *, query: str = None):
-    #     """Query with NomNom for web research, scraping, and crawling.
-
-    #     Model: nomnom
-    #     """
-    #     await self._run_pollinations_text(ctx, "nomnom", query)
-
-    @commands.command(name="qwentts")
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def qwentts(self, ctx: commands.Context, *, prompt: str):
-        """Generate music using Qwen TTS model.
-        
-        Model: qwentts
-        """
-        # Parse duration from prompt if specified
-        duration = 30  # default duration
-        match = re.search(r"--duration\s+(\d+)", prompt)
-        if match:
-            duration = int(match.group(1))
-            prompt = re.sub(r"--duration\s+\d+", "", prompt).strip()
-
-        # Validate duration (3-300 seconds)
-        if duration < 3 or duration > 300:
-            await ctx.send("Duration must be between 3 and 300 seconds.")
-            return
-
-        # Get API token
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token")
-        if not token:
-            await ctx.send("Pollinations API token not set.")
-            return
-
-        # Generate music using POST endpoint (OpenAI-compatible)
-        url = "https://gen.pollinations.ai/v1/audio/speech"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": "qwen3",
-            "input": prompt,
-            "duration": duration,
-            "instrumental": False,
-        }
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, headers=headers, json=data) as response:
-                        if response.status == 200:
-                            music_data = await response.read()
-
-                            # Create filename from part of the prompt to avoid long filenames
-                            filename = prompt[:30].replace(' ', '_').replace(',', '').replace('.', '') + ".mp3"
-                            # Limit filename length
-                            if len(filename) > 30:
-                                filename = filename[:30] + ".mp3"
-
-                            music_file = discord.File(BytesIO(music_data), filename=filename)
-
-                            await ctx.send(file=music_file)
-                        else:
-                            response_text = await response.text()
-                            await ctx.send(f"Error generating music: {response.status} - {response_text}")
-            except Exception as e:
-                self.log.error(f"Error generating music: {e}")
-                await ctx.send("An error occurred while generating music.")
-
-    @commands.command(name="elevenmusic")
-    @commands.cooldown(3, 5, commands.BucketType.guild)
-    @checks.bot_has_permissions(attach_files=True)
-    async def elevenmusic(self, ctx: commands.Context, *, prompt: str):
-        """Generate music using ElevenMusic model.
-
-        Model: elevenmusic
-        """
-        # Parse duration from prompt if specified
-        duration = 30  # default duration
-        match = re.search(r"--duration\s+(\d+)", prompt)
-        if match:
-            duration = int(match.group(1))
-            prompt = re.sub(r"--duration\s+\d+", "", prompt).strip()
-
-        # Validate duration (3-300 seconds)
-        if duration < 3 or duration > 300:
-            await ctx.send("Duration must be between 3 and 300 seconds.")
-            return
-
-        # Get API token
-        pollinations_keys = await self.bot.get_shared_api_tokens("pollinations")
-        token = pollinations_keys.get("token")
-        if not token:
-            await ctx.send("Pollinations API token not set.")
-            return
-
-        # Generate music using POST endpoint (OpenAI-compatible)
-        url = "https://gen.pollinations.ai/v1/audio/speech"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        }
-        data = {
-            "model": "elevenmusic",
-            "input": prompt,
-            "duration": duration,
-            "instrumental": False,
-        }
-
-        async with ctx.typing():
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(
-                        url, headers=headers, json=data
-                    ) as response:
-                        if response.status == 200:
-                            music_data = await response.read()
-
-                            # Create filename from part of the prompt to avoid long filenames
-                            filename = (
-                                prompt[:30]
-                                .replace(" ", "_")
-                                .replace(",", "")
-                                .replace(".", "")
-                                + ".mp3"
-                            )
-                            # Limit filename length
-                            if len(filename) > 30:
-                                filename = filename[:30] + ".mp3"
-
-                            music_file = discord.File(
-                                BytesIO(music_data), filename=filename
-                            )
-
-                            await ctx.send(file=music_file)
-                        else:
-                            response_text = await response.text()
-                            await ctx.send(
-                                f"Error generating music: {response.status} - {response_text}"
-                            )
-            except Exception as e:
-                self.log.error(f"Error generating music: {e}")
-                await ctx.send("An error occurred while generating music.")
-
-
-class EditModal(ui.Modal):
-
-    def __init__(
-        self,
-        cog,
-        interaction: Interaction,
-        model: str,
-        prompt: str,
-        seed: int,
-        width: int = None,
-        height: int = None,
-        images: str = None,
-    ):
-
-        super().__init__(title="Edit Prompt & Seed")
-        self.cog = cog
-        self.interaction = interaction
-        self.model = model
-        self.seed = seed
-        self.images = images
-        self.width_input = width
-        self.width = width
-        self.height_input = height
-        self.height = height
-        self.prompt = prompt
-        self.prompt_input = ui.TextInput(
-            label="Prompt",
-            placeholder="Enter a new prompt",
-            style=discord.TextStyle.paragraph,
-            default=prompt,
-        )
-        self.add_item(self.prompt_input)
-
-        self.width_input = ui.TextInput(
-            label="Width (optional)",
-            placeholder="Enter a width or leave empty",
-            style=discord.TextStyle.short,
-            default=str(width) if width is not None else "",  # Fixed
-        )
-        self.add_item(self.width_input)
-
-        self.height_input = ui.TextInput(
-            label="Height (optional)",
-            placeholder="Enter a height or leave empty",
-            style=discord.TextStyle.short,
-            default=str(height) if height is not None else "",  # Fixed
-        )
-        self.add_item(self.height_input)
-
-        self.seed_input = ui.TextInput(
-            label="Seed (optional)",
-            placeholder="Enter a numeric seed or leave empty",
-            style=discord.TextStyle.short,
-            default=str(seed),
-            required=False,
-        )
-        self.add_item(self.seed_input)
-
-    async def on_submit(self, interaction: Interaction):
-        new_prompt = self.prompt_input.value
-        new_seed = self.seed
-        new_width = self.width_input.value.strip() or None
-        new_height = self.height_input.value.strip() or None
-        new_images = self.images
-
-        try:
-            new_width = int(new_width) if new_width and new_width != "None" else None
-            new_height = (
-                int(new_height) if new_height and new_height != "None" else None
-            )
-        except ValueError:
-            new_width = None
-            new_height = None
-
-        if self.seed_input.value.strip():
-            try:
-                new_seed = int(self.seed_input.value.strip())
-            except ValueError:
-                await interaction.response.send_message(
-                    "Seed must be an integer. Using previous seed.", ephemeral=True
-                )
-                return
-
-        if not interaction.response.is_done():
-            await interaction.response.defer()
-
-        try:
-            if self.model == "flux" and self.image_url:
-                await self.cog.img2img(
-                    interaction, text=f"{new_prompt} {self.image_url}"
-                )
-            else:
-                await self.cog._pollinations_generate(
-                    interaction,
-                    self.model,
-                    new_prompt,
-                    seed=new_seed,
-                    width=new_width,
-                    height=new_height,
-                    images=new_images,
-                )
-        except Exception as e:
-            self.cog.log.error(f"[EditModal Error] {e}", exc_info=True)
-            if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Something went wrong, try again.", ephemeral=True
-                )
-            else:
-                await interaction.followup.send(
-                    "Something went wrong, try again.", ephemeral=True
-                )
+    async def qwentts_prefix(self, ctx: commands.Context, *, prompt: str):
+        """Generate audio via qwen3 model."""
+        await self.handle_audio_generation(ctx, "qwen3", prompt)
