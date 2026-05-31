@@ -65,7 +65,6 @@
 |   Trickcal   | Generate random Trickcal avatars |                           Glas                          |        ✅        |
 |   ShindanMaker   | ShindanMaker integration for Red Discord Bot |                           Glas                          |        ✅        |
 |   AiGen   | Generate Free AI images using several endpoints |                           Glas                          |        ✅        |
-|   Ghibli   | Generate Ghibli-style images from Users, attachments, etc |                           Glas                          |        ✅        |
 |   Doro   | Dorifies user avatars |                           Glas                          |        ✅        |
 |   Shibe   | Shibe Images |                           [grayconcaves*](https://github.com/grayconcaves/FanCogs/)                         |        ✅        |
 |   HowLongToBeat   | Obtain game completion stats from Hltb.com |                           Glas                           |        ✅        |
