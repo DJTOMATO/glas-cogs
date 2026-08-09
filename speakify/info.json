@@ -1,0 +1,16 @@
+{
+  "author": ["Glas"],
+  "description": "Create Speakify-style animated GIFs from avatars or attachments.",
+  "disabled": false,
+  "end_user_data_statement": "This cog stores no user data.",
+  "hidden": false,
+  "install_msg": "Speakify is ready! Use [p]speakify [target] [low|mid|high].",
+  "min_bot_version": "3.5.3",
+  "min_python_version": [3, 10, 0],
+  "permissions": [],
+  "required_cogs": {},
+  "requirements": ["Pillow"],
+  "short": "Speakify avatar/attachment GIF generator",
+  "tags": ["fun", "images", "avatar"],
+  "type": "COG"
+}
