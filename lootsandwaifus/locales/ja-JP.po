@@ -1,0 +1,138 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LootAndWaifus 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
+
+msgid "This isn't your command."
+msgstr "これはあなたのコマンドではありません。"
+
+msgid "Version: {version}\nAuthor: {author}"
+msgstr "バージョン: {version}\n作者: {author}"
+
+msgid "Unknown"
+msgstr "不明"
+
+msgid "No description"
+msgstr "説明なし"
+
+msgid "Basic Stats"
+msgstr "基本ステータス"
+
+msgid "Unique Effect"
+msgstr "固有効果"
+
+msgid "Data is still loading or failed to load. Try again in a moment."
+msgstr "データの読み込み中、または失敗しました。しばらくしてからもう一度お試しください。"
+
+msgid "No results found for '{query}'."
+msgstr "'{query}' の結果が見つかりませんでした。"
+
+msgid "Multiple results found"
+msgstr "複数の結果が見つかりました"
+
+msgid "Please select one of the following:\n\n"
+msgstr "次のいずれかを選択してください:\n\n"
+
+msgid "\n*Showing first 25 results. Please be more specific.*"
+msgstr "\n*最初の25件を表示しています。さらに絞り込んでください。*"
+
+msgid "Search for NIKKE characters."
+msgstr "NIKKEのキャラクターを検索します。"
+
+msgid "Search for Trickcal characters, artifacts, and runes."
+msgstr "Trickcalのキャラクター、アーティファクト、ルーンを検索します。"
+
+msgid "Search for Sword x Staff data."
+msgstr "Sword x Staffのデータを検索します。"
+
+msgid "Search for MAD characters."
+msgstr "MADのキャラクターを検索します。"
+
+msgid "Set your preferred language for LootAndWaifus (e.g. es-ES, en-US, ja-JP)."
+msgstr "LootAndWaifusの優先言語を設定します (例: es-ES, en-US, ja-JP)。"
+
+msgid "Language preference cleared."
+msgstr "優先言語の設定をクリアしました。"
+
+msgid "Language preference set to {lang_code}."
+msgstr "優先言語を {lang_code} に設定しました。"
+
+msgid "Force refresh the API cache."
+msgstr "APIキャッシュを強制的に更新します。"
+
+msgid "Refreshing API cache..."
+msgstr "APIキャッシュを更新中..."
+
+msgid "Cache refreshed successfully!"
+msgstr "キャッシュが正常に更新されました！"
+
+msgid "Manufacturer"
+msgstr "製造企業"
+
+msgid "Class"
+msgstr "クラス"
+
+msgid "Element"
+msgstr "属性"
+
+msgid "Weapon"
+msgstr "武器"
+
+msgid "Rarity"
+msgstr "レアリティ"
+
+msgid "Role"
+msgstr "役割"
+
+msgid "Damage"
+msgstr "ダメージ"
+
+msgid "Position"
+msgstr "ポジション"
+
+msgid "Race"
+msgstr "種族"
+
+msgid "Server"
+msgstr "サーバー"
+
+msgid "Cost"
+msgstr "コスト"
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Tags"
+msgstr "タグ"
+
+msgid "Description"
+msgstr "説明"
+
+msgid "Set"
+msgstr "セット"
+
+msgid "Gift Type"
+msgstr "ギフトタイプ"
+
+msgid "Bond Id"
+msgstr "絆ID"
+
+msgid "Regions"
+msgstr "地域"
+
+msgid "Sources"
+msgstr "入手先"
+
+msgid "Faction"
+msgstr "派閥"
+
+msgid "Division"
+msgstr "所属"
+
+msgid "Bio"
+msgstr "略歴"
+
+msgid "Profile Info"
+msgstr "プロフィール情報"

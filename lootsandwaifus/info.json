@@ -1,0 +1,16 @@
+{
+  "author": ["Glas"],
+  "description": "Fetches data from the lootandwaifus.com API and displays it in embeds.",
+  "disabled": false,
+  "end_user_data_statement": "This cog does not persistently store data or telemetry about users.",
+  "hidden": false,
+  "install_msg": "Thank you for installing LootAndWaifus cog!",
+  "min_bot_version": "3.5.3",
+  "min_python_version": [3, 10, 0],
+  "permissions": [],
+  "required_cogs": {},
+  "requirements": ["aiohttp"],
+  "short": "LootAndWaifus API fetcher",
+  "tags": ["lootandwaifus", "nikke", "trickcal", "sxs", "mad"],
+  "type": "COG"
+}

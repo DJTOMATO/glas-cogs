@@ -1,0 +1,138 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LootAndWaifus 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+
+msgid "This isn't your command."
+msgstr "这不是你的指令。"
+
+msgid "Version: {version}\nAuthor: {author}"
+msgstr "版本: {version}\n作者: {author}"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "No description"
+msgstr "暂无描述"
+
+msgid "Basic Stats"
+msgstr "基础属性"
+
+msgid "Unique Effect"
+msgstr "独特效果"
+
+msgid "Data is still loading or failed to load. Try again in a moment."
+msgstr "数据仍在加载或加载失败。请稍后再试。"
+
+msgid "No results found for '{query}'."
+msgstr "未找到 '{query}' 的结果。"
+
+msgid "Multiple results found"
+msgstr "找到多个结果"
+
+msgid "Please select one of the following:\n\n"
+msgstr "请在以下选项中选择：\n\n"
+
+msgid "\n*Showing first 25 results. Please be more specific.*"
+msgstr "\n*仅显示前25个结果。请提供更具体的搜索条件。*"
+
+msgid "Search for NIKKE characters."
+msgstr "搜索 NIKKE 角色。"
+
+msgid "Search for Trickcal characters, artifacts, and runes."
+msgstr "搜索 Trickcal 角色、神器和符文。"
+
+msgid "Search for Sword x Staff data."
+msgstr "搜索 Sword x Staff 数据。"
+
+msgid "Search for MAD characters."
+msgstr "搜索 MAD 角色。"
+
+msgid "Set your preferred language for LootAndWaifus (e.g. es-ES, en-US, ja-JP)."
+msgstr "设置你的 LootAndWaifus 首选语言（如 es-ES, en-US, ja-JP）。"
+
+msgid "Language preference cleared."
+msgstr "语言首选项已清除。"
+
+msgid "Language preference set to {lang_code}."
+msgstr "语言首选项已设置为 {lang_code}。"
+
+msgid "Force refresh the API cache."
+msgstr "强制刷新 API 缓存。"
+
+msgid "Refreshing API cache..."
+msgstr "正在刷新 API 缓存..."
+
+msgid "Cache refreshed successfully!"
+msgstr "缓存刷新成功！"
+
+msgid "Manufacturer"
+msgstr "制造商"
+
+msgid "Class"
+msgstr "职业"
+
+msgid "Element"
+msgstr "属性"
+
+msgid "Weapon"
+msgstr "武器"
+
+msgid "Rarity"
+msgstr "稀有度"
+
+msgid "Role"
+msgstr "定位"
+
+msgid "Damage"
+msgstr "伤害"
+
+msgid "Position"
+msgstr "站位"
+
+msgid "Race"
+msgstr "种族"
+
+msgid "Server"
+msgstr "服务器"
+
+msgid "Cost"
+msgstr "花费"
+
+msgid "Type"
+msgstr "类型"
+
+msgid "Tags"
+msgstr "标签"
+
+msgid "Description"
+msgstr "描述"
+
+msgid "Set"
+msgstr "套装"
+
+msgid "Gift Type"
+msgstr "礼物类型"
+
+msgid "Bond Id"
+msgstr "羁绊 ID"
+
+msgid "Regions"
+msgstr "地区"
+
+msgid "Sources"
+msgstr "获取途径"
+
+msgid "Faction"
+msgstr "阵营"
+
+msgid "Division"
+msgstr "分部"
+
+msgid "Bio"
+msgstr "生平"
+
+msgid "Profile Info"
+msgstr "个人资料"

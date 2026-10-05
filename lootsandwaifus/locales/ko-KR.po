@@ -1,0 +1,138 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LootAndWaifus 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
+
+msgid "This isn't your command."
+msgstr "이것은 당신의 명령어가 아닙니다."
+
+msgid "Version: {version}\nAuthor: {author}"
+msgstr "버전: {version}\n제작자: {author}"
+
+msgid "Unknown"
+msgstr "알 수 없음"
+
+msgid "No description"
+msgstr "설명 없음"
+
+msgid "Basic Stats"
+msgstr "기본 능력치"
+
+msgid "Unique Effect"
+msgstr "고유 효과"
+
+msgid "Data is still loading or failed to load. Try again in a moment."
+msgstr "데이터를 불러오는 중이거나 실패했습니다. 잠시 후 다시 시도해주세요."
+
+msgid "No results found for '{query}'."
+msgstr "'{query}'에 대한 결과를 찾을 수 없습니다."
+
+msgid "Multiple results found"
+msgstr "여러 결과를 찾았습니다"
+
+msgid "Please select one of the following:\n\n"
+msgstr "다음 중 하나를 선택하세요:\n\n"
+
+msgid "\n*Showing first 25 results. Please be more specific.*"
+msgstr "\n*처음 25개의 결과를 표시합니다. 검색어를 더 구체적으로 입력해주세요.*"
+
+msgid "Search for NIKKE characters."
+msgstr "니케(NIKKE) 캐릭터를 검색합니다."
+
+msgid "Search for Trickcal characters, artifacts, and runes."
+msgstr "트릭컬(Trickcal) 캐릭터, 아티팩트 및 룬을 검색합니다."
+
+msgid "Search for Sword x Staff data."
+msgstr "소드 x 스태프(Sword x Staff) 데이터를 검색합니다."
+
+msgid "Search for MAD characters."
+msgstr "MAD 캐릭터를 검색합니다."
+
+msgid "Set your preferred language for LootAndWaifus (e.g. es-ES, en-US, ja-JP)."
+msgstr "LootAndWaifus의 선호 언어를 설정합니다 (예: es-ES, en-US, ja-JP)."
+
+msgid "Language preference cleared."
+msgstr "선호 언어 설정이 초기화되었습니다."
+
+msgid "Language preference set to {lang_code}."
+msgstr "선호 언어가 {lang_code}로 설정되었습니다."
+
+msgid "Force refresh the API cache."
+msgstr "API 캐시를 강제로 새로 고침합니다."
+
+msgid "Refreshing API cache..."
+msgstr "API 캐시를 새로 고침 중..."
+
+msgid "Cache refreshed successfully!"
+msgstr "캐시가 성공적으로 새로 고쳐졌습니다!"
+
+msgid "Manufacturer"
+msgstr "제조사"
+
+msgid "Class"
+msgstr "클래스"
+
+msgid "Element"
+msgstr "속성"
+
+msgid "Weapon"
+msgstr "무기"
+
+msgid "Rarity"
+msgstr "희귀도"
+
+msgid "Role"
+msgstr "역할"
+
+msgid "Damage"
+msgstr "데미지"
+
+msgid "Position"
+msgstr "포지션"
+
+msgid "Race"
+msgstr "종족"
+
+msgid "Server"
+msgstr "서버"
+
+msgid "Cost"
+msgstr "비용"
+
+msgid "Type"
+msgstr "타입"
+
+msgid "Tags"
+msgstr "태그"
+
+msgid "Description"
+msgstr "설명"
+
+msgid "Set"
+msgstr "세트"
+
+msgid "Gift Type"
+msgstr "선물 타입"
+
+msgid "Bond Id"
+msgstr "인연 ID"
+
+msgid "Regions"
+msgstr "지역"
+
+msgid "Sources"
+msgstr "획득처"
+
+msgid "Faction"
+msgstr "세력"
+
+msgid "Division"
+msgstr "소속"
+
+msgid "Bio"
+msgstr "약력"
+
+msgid "Profile Info"
+msgstr "프로필 정보"

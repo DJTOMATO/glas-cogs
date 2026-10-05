@@ -1,0 +1,138 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LootAndWaifus 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+
+msgid "This isn't your command."
+msgstr "Este no es tu comando."
+
+msgid "Version: {version}\nAuthor: {author}"
+msgstr "Versión: {version}\nAutor: {author}"
+
+msgid "Unknown"
+msgstr "Desconocido"
+
+msgid "No description"
+msgstr "Sin descripción"
+
+msgid "Basic Stats"
+msgstr "Estadísticas Básicas"
+
+msgid "Unique Effect"
+msgstr "Efecto Único"
+
+msgid "Data is still loading or failed to load. Try again in a moment."
+msgstr "Los datos aún se están cargando o no se pudieron cargar. Inténtalo de nuevo en un momento."
+
+msgid "No results found for '{query}'."
+msgstr "No se encontraron resultados para '{query}'."
+
+msgid "Multiple results found"
+msgstr "Se encontraron múltiples resultados"
+
+msgid "Please select one of the following:\n\n"
+msgstr "Por favor selecciona uno de los siguientes:\n\n"
+
+msgid "\n*Showing first 25 results. Please be more specific.*"
+msgstr "\n*Mostrando los primeros 25 resultados. Por favor sé más específico.*"
+
+msgid "Search for NIKKE characters."
+msgstr "Busca personajes de NIKKE."
+
+msgid "Search for Trickcal characters, artifacts, and runes."
+msgstr "Busca personajes, artefactos y runas de Trickcal."
+
+msgid "Search for Sword x Staff data."
+msgstr "Busca datos de Sword x Staff."
+
+msgid "Search for MAD characters."
+msgstr "Busca personajes de MAD."
+
+msgid "Set your preferred language for LootAndWaifus (e.g. es-ES, en-US, ja-JP)."
+msgstr "Establece tu idioma preferido para LootAndWaifus (ej. es-ES, en-US, ja-JP)."
+
+msgid "Language preference cleared."
+msgstr "Preferencia de idioma borrada."
+
+msgid "Language preference set to {lang_code}."
+msgstr "Preferencia de idioma establecida a {lang_code}."
+
+msgid "Force refresh the API cache."
+msgstr "Forzar la recarga del caché de la API."
+
+msgid "Refreshing API cache..."
+msgstr "Recargando caché de la API..."
+
+msgid "Cache refreshed successfully!"
+msgstr "¡Caché recargado con éxito!"
+
+msgid "Manufacturer"
+msgstr "Fabricante"
+
+msgid "Class"
+msgstr "Clase"
+
+msgid "Element"
+msgstr "Elemento"
+
+msgid "Weapon"
+msgstr "Arma"
+
+msgid "Rarity"
+msgstr "Rareza"
+
+msgid "Role"
+msgstr "Rol"
+
+msgid "Damage"
+msgstr "Daño"
+
+msgid "Position"
+msgstr "Posición"
+
+msgid "Race"
+msgstr "Raza"
+
+msgid "Server"
+msgstr "Servidor"
+
+msgid "Cost"
+msgstr "Costo"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Tags"
+msgstr "Etiquetas"
+
+msgid "Description"
+msgstr "Descripción"
+
+msgid "Set"
+msgstr "Conjunto"
+
+msgid "Gift Type"
+msgstr "Tipo de Regalo"
+
+msgid "Bond Id"
+msgstr "ID de Vínculo"
+
+msgid "Regions"
+msgstr "Regiones"
+
+msgid "Sources"
+msgstr "Fuentes"
+
+msgid "Faction"
+msgstr "Facción"
+
+msgid "Division"
+msgstr "División"
+
+msgid "Bio"
+msgstr "Bio"
+
+msgid "Profile Info"
+msgstr "Información del Perfil"

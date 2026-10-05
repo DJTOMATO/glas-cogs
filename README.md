@@ -59,6 +59,7 @@
 
 |    Name    | Description                                        |                          Author                          | d.py2 Compatible |
 | :--------: | -------------------------------------------------- | :------------------------------------------------------: | :--------------: |
+| LootsAndWaifus | Fetches data from the lootandwaifus.com API |                 Glas                          |        ✅        |
 | AiGen | Generate AI images for free |                 Glas                          |        ✅        |
 | Speakify | Create Speaki-style animated GIFs from avatars or attachments.  |                 Glas & [zeetee1235](https://github.com/zeetee1235/speakify)                         |        ✅        |
 | Arca | Automatically embeds Arca.live post contents when links are shared  |                 Glas                          |        ✅        |

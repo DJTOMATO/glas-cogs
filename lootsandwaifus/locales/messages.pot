@@ -1,0 +1,131 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LootAndWaifus 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "This isn't your command."
+msgstr ""
+
+msgid "Version: {version}\nAuthor: {author}"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "No description"
+msgstr ""
+
+msgid "Basic Stats"
+msgstr ""
+
+msgid "Unique Effect"
+msgstr ""
+
+msgid "Data is still loading or failed to load. Try again in a moment."
+msgstr ""
+
+msgid "No results found for '{query}'."
+msgstr ""
+
+msgid "Multiple results found"
+msgstr ""
+
+msgid "Please select one of the following:\n\n"
+msgstr ""
+
+msgid "\n*Showing first 25 results. Please be more specific.*"
+msgstr ""
+
+msgid "Search for NIKKE characters."
+msgstr ""
+
+msgid "Search for Trickcal characters, artifacts, and runes."
+msgstr ""
+
+msgid "Search for Sword x Staff data."
+msgstr ""
+
+msgid "Search for MAD characters."
+msgstr ""
+
+msgid "Set your preferred language for LootAndWaifus (e.g. es-ES, en-US, ja-JP)."
+msgstr ""
+
+msgid "Language preference cleared."
+msgstr ""
+
+msgid "Language preference set to {lang_code}."
+msgstr ""
+
+msgid "Force refresh the API cache."
+msgstr ""
+
+msgid "Refreshing API cache..."
+msgstr ""
+
+msgid "Cache refreshed successfully!"
+msgstr ""
+
+msgid "Manufacturer"
+msgstr ""
+
+msgid "Class"
+msgstr ""
+
+msgid "Element"
+msgstr ""
+
+msgid "Weapon"
+msgstr ""
+
+msgid "Rarity"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
+msgid "Damage"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Race"
+msgstr ""
+
+msgid "Server"
+msgstr ""
+
+msgid "Cost"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Tags"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Set"
+msgstr ""
+
+msgid "Gift Type"
+msgstr ""
+
+msgid "Bond Id"
+msgstr ""
+
+msgid "Regions"
+msgstr ""
+
+msgid "Sources"
+msgstr ""
+
+msgid "Faction"
+msgstr ""
+
+msgid "Division"
+msgstr ""
