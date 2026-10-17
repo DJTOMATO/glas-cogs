@@ -1,20 +1,25 @@
-import discord
-import random
+import asyncio
 from datetime import datetime
-from redbot.core import commands, app_commands
-import logging
-from .functions import (
-    get_steam_app_id_from_name,
-    get_ggdeals_api_prices_by_steamid,
-    get_steam_game_details,
-    get_ggdeals_bundles_by_steam_app_id,
-)
 import html
+import io
+import json
+import logging
+import os
+import random
 import re
 import unicodedata
-
-import asyncio
 from aiohttp import ClientConnectorError
+
+import discord
+from redbot.core import app_commands, commands
+
+from .functions import (
+    get_ggdeals_api_prices_by_steamid,
+    get_ggdeals_bundles_by_steam_app_id,
+    get_ggdeals_search_url,
+    get_steam_app_id_from_name,
+    get_steam_game_details,
+)
 
 
 def _ggdeals_game_slug(title):
@@ -23,11 +28,6 @@ def _ggdeals_game_slug(title):
     title = re.sub(r"(?<=[a-z])\.(?=[a-z])", "", title)
     title = title.replace("&", " ")
     return re.sub(r"[^a-z0-9]+", "-", title).strip("-")
-
-
-def __init__(self, bot):
-    self.bot = bot
-    self.log = logging.getLogger("glas.glas-cogs.ggdeals")
 
 
 class _NoopTyping:
@@ -76,6 +76,7 @@ class _InteractionContext:
 
 class Deals(commands.Cog):
     """A cog for finding game deals from various storefronts."""
+
     def __init__(self, bot):
         self.bot = bot
         self.log = logging.getLogger("glas.glas-cogs.ggdeals")
@@ -84,7 +85,7 @@ class Deals(commands.Cog):
         name="deals",
         description="Find current prices and bundles for a Steam game.",
     )
-    @app_commands.describe(gamename="The game title to search for")
+    @app_commands.describe(gamename="The game title to search for (or comma-separated titles)")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def deals_slash(self, interaction: discord.Interaction, gamename: str):
@@ -113,6 +114,7 @@ class Deals(commands.Cog):
                 return
             await interaction.edit_original_response(content=None, embed=embed)
             return
+
         command_context = _InteractionContext(interaction)
         try:
             await self.deals.callback(self, command_context, gamename=gamename)
@@ -131,6 +133,16 @@ class Deals(commands.Cog):
 
         data = api_result.get("data", {}) if isinstance(api_result, dict) else {}
         rows = []
+
+        def parse_price(val):
+            try:
+                return float(str(val).replace(",", "").strip())
+            except Exception:
+                return None
+
+        def is_valid_price(val):
+            return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None, "")
+
         for title, steam_id in zip(titles, steam_ids):
             if not steam_id:
                 rows.append((title, "NOT FOUND", None, None))
@@ -140,19 +152,37 @@ class Deals(commands.Cog):
                 rows.append((title, "N/A", None, None))
                 continue
             prices = game_data.get("prices", {}) or {}
-            price_value = prices.get("currentKeyshops")
-            if price_value in (None, "", 0, 0.0):
-                price_value = prices.get("currentRetail")
-            if price_value in (None, "", 0, 0.0):
+            retail_price = prices.get("currentRetail")
+            keyshops_price = prices.get("currentKeyshops")
+
+            retail_value = parse_price(retail_price)
+            keyshops_value = parse_price(keyshops_price)
+            price_val = None
+            price_source = None
+            if retail_value is not None and keyshops_value is not None:
+                if retail_value <= keyshops_value:
+                    price_val = retail_value
+                    price_source = "Official store"
+                else:
+                    price_val = keyshops_value
+                    price_source = "Keyshops"
+            elif retail_value is not None:
+                price_val = retail_value
+                price_source = "Official store"
+            elif keyshops_value is not None:
+                price_val = keyshops_value
+                price_source = "Keyshops"
+
+            if not is_valid_price(price_val):
                 rows.append((title, "N/A", None, None))
                 continue
+
             currency = prices.get("currency") or ""
-            try:
-                price_number = float(str(price_value).replace(",", "").strip())
-            except (TypeError, ValueError):
-                price_number = None
             currency_display = f" {currency}" if currency else ""
-            rows.append((title, f"${price_value}{currency_display}", price_number, currency))
+            price_text = f"${price_val:.2f}{currency_display}"
+            if price_source == "Official store":
+                price_text += " (official store cheapest)"
+            rows.append((title, price_text, price_val, currency))
 
         numeric_values = [row[2] for row in rows if row[2] is not None]
         currencies = {row[3] for row in rows if row[2] is not None and row[3] is not None}
@@ -228,7 +258,6 @@ class Deals(commands.Cog):
                 )
             if api_game_data:
                 # Fetch Steam game details for image, description, genres, reviews, release date
-                steam_details = await get_steam_game_details(steam_app_id)
                 if steam_details:
                     if steam_details.get("image"):
                         embed.set_image(url=steam_details["image"])
@@ -281,45 +310,84 @@ class Deals(commands.Cog):
                         inline=False,
                     )
                 # Add prices/fees at the bottom
-                if api_game_data:
-                    prices = api_game_data.get("prices", {})
-                    currency = prices.get("currency", "-")
-                    currency = f" {currency}" if currency != "-" else ""
+                prices = api_game_data.get("prices", {})
+                currency = prices.get("currency", "-")
+                currency = f" {currency}" if currency != "-" else ""
 
-                    def valid_price(val):
-                        return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None)
+                def valid_price(val):
+                    return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None)
 
-                    current_retail = prices.get("currentRetail", "-")
-                    if valid_price(current_retail):
-                        embed.add_field(
-                            name="Current Retail",
-                            value=f"${current_retail}{currency}",
-                            inline=True,
-                        )
+                current_retail = prices.get("currentRetail", "-")
+                current_keyshops = prices.get("currentKeyshops", "-")
 
-                    current_keyshops = prices.get("currentKeyshops", "-")
-                    if valid_price(current_keyshops):
-                        embed.add_field(
-                            name="Current Keyshops",
-                            value=f"${current_keyshops}{currency}",
-                            inline=True,
-                        )
+                def parse_price(val):
+                    try:
+                        return float(str(val).replace(",", "").strip())
+                    except Exception:
+                        return None
 
-                    historical_retail = prices.get("historicalRetail", "-")
-                    if valid_price(historical_retail):
-                        embed.add_field(
-                            name="Historical Retail",
-                            value=f"${historical_retail}{currency}",
-                            inline=True,
-                        )
+                retail_value = parse_price(current_retail)
+                keyshops_value = parse_price(current_keyshops)
 
-                    historical_keyshops = prices.get("historicalKeyshops", "-")
-                    if valid_price(historical_keyshops):
-                        embed.add_field(
-                            name="Historical Keyshops",
-                            value=f"${historical_keyshops}{currency}",
-                            inline=True,
-                        )
+                if valid_price(current_retail):
+                    embed.add_field(
+                        name="Current Retail",
+                        value=f"${current_retail}{currency}",
+                        inline=True,
+                    )
+
+                if valid_price(current_keyshops):
+                    embed.add_field(
+                        name="Current Keyshops",
+                        value=f"${current_keyshops}{currency}",
+                        inline=True,
+                    )
+
+                if retail_value is not None or keyshops_value is not None:
+                    if retail_value is not None and keyshops_value is not None:
+                        if retail_value <= keyshops_value:
+                            best_value = retail_value
+                            best_name = "Official store"
+                            note = "Official store is cheaper than keyshops."
+                        else:
+                            best_value = keyshops_value
+                            best_name = "Keyshops"
+                            note = "Keyshops are currently cheaper than the official store."
+                    elif retail_value is not None:
+                        best_value = retail_value
+                        best_name = "Official store"
+                        note = "Only official store pricing is available."
+                    else:
+                        best_value = keyshops_value
+                        best_name = "Keyshops"
+                        note = "Only keyshop pricing is available."
+
+                    embed.add_field(
+                        name="Best price",
+                        value=f"${best_value:.2f}{currency} ({best_name})",
+                        inline=True,
+                    )
+                    embed.add_field(
+                        name="Note",
+                        value=note,
+                        inline=False,
+                    )
+
+                historical_retail = prices.get("historicalRetail", "-")
+                if valid_price(historical_retail):
+                    embed.add_field(
+                        name="Historical Retail",
+                        value=f"${historical_retail}{currency}",
+                        inline=True,
+                    )
+
+                historical_keyshops = prices.get("historicalKeyshops", "-")
+                if valid_price(historical_keyshops):
+                    embed.add_field(
+                        name="Historical Keyshops",
+                        value=f"${historical_keyshops}{currency}",
+                        inline=True,
+                    )
             elif api_result and "error" in api_result:
                 embed.add_field(
                     name="API error",
@@ -327,12 +395,14 @@ class Deals(commands.Cog):
                     inline=False,
                 )
             else:
-                embed.description = "No deals found."
-            # Check if the bot has embed_links permission before sending embed
+                search_url = get_ggdeals_search_url(title)
+                embed.description = (
+                    "No deals found for this Steam App ID. "
+                    f"Try searching by name on gg.deals: {search_url}"
+                )
 
             await ctx.send(embed=embed)
 
-            # Optionally, you can also send a message if no Steam details were found
             if not steam_details:
                 await ctx.send("ℹ️ No extra Steam info found for this game.")
 
@@ -352,7 +422,6 @@ class Deals(commands.Cog):
                     bundle_url = bundle.get("url")
                     date_from = bundle.get("dateFrom")
                     date_to = bundle.get("dateTo")
-                    # Format dates to YYYY-MM-DD only
                     if date_from:
                         date_from = date_from.split(" ")[0]
                     if date_to:
@@ -385,8 +454,6 @@ class Deals(commands.Cog):
             elif bundles_result and "error" in bundles_result:
                 await ctx.send(f"Bundles API error: {bundles_result['error']}")
 
-
-
     @commands.command()
     async def deallist(self, ctx):
         """Read the invoking message for a list of game titles, fetch the lowest key price for each, and return a CSV + formatted list.
@@ -401,11 +468,9 @@ class Deals(commands.Cog):
             !deallist Game One, Game Two
         """
         raw = ctx.message.content or ""
-        # Parse game titles from message
         lines = raw.splitlines()
         items = []
         if len(lines) > 1:
-            # Everything after the first line is treated as an item list
             for ln in lines[1:]:
                 ln = ln.strip()
                 if not ln:
@@ -414,11 +479,9 @@ class Deals(commands.Cog):
                     ln = ln.lstrip("*").strip()
                 items.append(ln)
         else:
-            # single-line: try to capture the remainder after the command invocation
             parts = raw.split(None, 1)
             rest = parts[1].strip() if len(parts) > 1 else ""
             if rest:
-                # try common separators
                 sep_found = False
                 for sep in ["\n", ";", ",", "|"]:
                     if sep in rest:
@@ -434,20 +497,23 @@ class Deals(commands.Cog):
             )
             return
 
-        # Show typing while resolving ids, calling APIs and building CSV/message
         async with ctx.typing():
-            # Resolve Steam app ids concurrently
-            lookup_tasks = [get_steam_app_id_from_name(self.bot, title) for title in items]
-            try:
-                steam_ids = await asyncio.gather(*lookup_tasks)
-            except Exception as e:
-                await ctx.send(f"Error while resolving games: {e}")
-                return
+            steam_ids = []
+            batch_size = 5
+            batch_delay = 2.0
+            for i in range(0, len(items), batch_size):
+                batch = items[i : i + batch_size]
+                lookup_tasks = [get_steam_app_id_from_name(self.bot, title) for title in batch]
+                try:
+                    batch_ids = await asyncio.gather(*lookup_tasks)
+                except Exception as e:
+                    await ctx.send(f"Error while resolving games: {e}")
+                    return
+                steam_ids.extend(batch_ids)
+                if i + batch_size < len(items):
+                    await asyncio.sleep(batch_delay)
 
-            # Map titles to steam ids (None if not found)
             title_to_steam = {title: sid for title, sid in zip(items, steam_ids)}
-
-            # Prepare list of ids to query (unique, filter None)
             ids_to_query = [sid for sid in {sid for sid in steam_ids if sid}]
 
             api_result = None
@@ -461,43 +527,61 @@ class Deals(commands.Cog):
                     await ctx.send(f"Unexpected error fetching prices: {e}")
                     return
 
-            # Build results (also collect numeric values for total when possible)
-            rows = []  # list of tuples (title, price_text, price_num_or_None, currency_str)
+            def is_valid_price(val):
+                return val not in (0, 0.0, "0", "0.0", "0.00", 0.00, None, "")
+
+            rows = []
             data = api_result.get("data") if api_result else {}
             for title, sid in title_to_steam.items():
                 if not sid:
-                    rows.append((title, "NOT FOUND", None, None))
+                    rows.append((title, None, "NOT FOUND (no steam id)", None, None, "no_steam_id"))
                     continue
                 api_game_data = None
                 if data:
                     api_game_data = data.get(str(sid)) or data.get(int(sid))
                 if not api_game_data:
-                    rows.append((title, "N/A", None, None))
+                    rows.append((title, sid, "NO DEALS", None, None, "no_deals"))
                     continue
                 prices = api_game_data.get("prices", {}) or {}
-                # Prefer current keyshops price (lowest key price)
-                price_val = prices.get("currentKeyshops")
-                # Fallback to currentRetail
-                if price_val in (None, "", 0, 0.0):
-                    price_val = prices.get("currentRetail")
-                if price_val in (None, "", 0, 0.0):
-                    rows.append((title, "N/A", None, None))
-                else:
-                    # Determine currency
-                    currency = prices.get("currency") or ""
-                    # Attempt to parse numeric value
-                    price_num = None
-                    try:
-                        # Some APIs return strings or numbers; normalize
-                        price_num = float(str(price_val).replace(",", "").strip())
-                    except Exception:
-                        price_num = None
-                    currency_display = f" {currency}" if currency else ""
-                    rows.append((title, f"${price_val}{currency_display}", price_num, currency))
+                retail_price = prices.get("currentRetail")
+                keyshops_price = prices.get("currentKeyshops")
 
-            # Compute total if currencies are consistent across numeric entries
-            numeric_values = [r[2] for r in rows if r[2] is not None]
-            currencies = {r[3] for r in rows if r[2] is not None and r[3] is not None}
+                def parse_price(val):
+                    try:
+                        return float(str(val).replace(",", "").strip())
+                    except Exception:
+                        return None
+
+                retail_value = parse_price(retail_price)
+                keyshops_value = parse_price(keyshops_price)
+                price_val = None
+                price_source = None
+                if retail_value is not None and keyshops_value is not None:
+                    if retail_value <= keyshops_value:
+                        price_val = retail_value
+                        price_source = "Official store"
+                    else:
+                        price_val = keyshops_value
+                        price_source = "Keyshops"
+                elif retail_value is not None:
+                    price_val = retail_value
+                    price_source = "Official store"
+                elif keyshops_value is not None:
+                    price_val = keyshops_value
+                    price_source = "Keyshops"
+
+                if not is_valid_price(price_val):
+                    rows.append((title, sid, "N/A", None, None, "no_price_value"))
+                else:
+                    currency = prices.get("currency") or ""
+                    currency_display = f" {currency}" if currency else ""
+                    price_text = f"${price_val:.2f}{currency_display}"
+                    if price_source == "Official store":
+                        price_text += " (official store cheapest)"
+                    rows.append((title, sid, price_text, price_val, currency, "ok"))
+
+            numeric_values = [r[3] for r in rows if r[3] is not None]
+            currencies = {r[4] for r in rows if r[3] is not None and r[4] is not None}
             total_text = None
             if numeric_values:
                 if len(currencies) <= 1:
@@ -506,46 +590,110 @@ class Deals(commands.Cog):
                     currency_suffix = f" {currency_label}" if currency_label else ""
                     total_text = f"${total_value:.2f}{currency_suffix}"
                 else:
-                    # Mixed currencies - can't meaningfully sum
                     total_text = "(mixed currencies, total unavailable)"
-            rows.sort(key=lambda r: (r[2] is None, r[2]))
-            names_only = [title for title, _, _, _ in rows]
-            names_only_msg = "\n - ".join(names_only)
-            # Create CSV
-            import io
 
-            csv_lines = ["title,price"]
-            for t, p, _, _ in rows:
-                # Escape double quotes and wrap title in quotes if comma in title
+            rows.sort(key=lambda r: (r[3] is None, r[3]))
+            names_only = [r[0] for r in rows]
+            names_only_msg = "\n".join(f"- {name}" for name in names_only)
+
+            csv_lines = ["title,appid,price"]
+            for t, appid, p, _, _, _status in rows:
                 safe_title = t.replace('"', '""')
                 if "," in safe_title or "\n" in safe_title:
                     safe_title = f'"{safe_title}"'
-                csv_lines.append(f"{safe_title},{p}")
+                appid_cell = str(appid) if appid is not None else ""
+                csv_lines.append(f"{safe_title},{appid_cell},{p}")
             if total_text:
-                csv_lines.append(f"TOTAL,{total_text}")
+                csv_lines.append(f"TOTAL,,{total_text}")
 
             csv_text = "\n".join(csv_lines)
 
-            # Build formatted message
-            formatted_lines = [f"{t} — {p}" for t, p, _, _ in rows]
+            formatted_lines = [f"{t} — {p}" for t, _, p, _, _, _ in rows]
             if total_text:
                 formatted_lines.append("")
                 formatted_lines.append(f"Total value: {total_text}")
             formatted_msg = "\n".join(formatted_lines)
 
-            # Create embed (sending is done after typing context)
             embed = discord.Embed(title="Deal list: lowest key prices", description=formatted_msg)
-            await ctx.send("**Games sorted by lowest price:**\n" + names_only_msg)
-        # send CSV + embed (outside typing context)
+            embed.set_footer(text="Prices obtained from https://gg.deals")
+            await ctx.send("**Games sorted by lowest price:**\n```\n" + names_only_msg + "\n```")
+
         try:
-            # send CSV as file
             fp = io.BytesIO(csv_text.encode("utf-8"))
             fp.seek(0)
             file = discord.File(fp, filename="deals.csv")
             await ctx.send(embed=embed, file=file)
         except Exception:
-            # If sending file fails, just send the text
             await ctx.send(formatted_msg)
+
+    @commands.command()
+    @commands.is_owner()
+    async def deallist_debug(self, ctx):
+        """Owner-only: resolve appids and fetch raw gg.deals API results for debugging."""
+        raw = ctx.message.content or ""
+        lines = raw.splitlines()
+        items = []
+        if len(lines) > 1:
+            for ln in lines[1:]:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                if ln.startswith("*"):
+                    ln = ln.lstrip("*").strip()
+                items.append(ln)
+        else:
+            parts = raw.split(None, 1)
+            rest = parts[1].strip() if len(parts) > 1 else ""
+            if rest:
+                sep_found = False
+                for sep in ["\n", ";", ",", "|"]:
+                    if sep in rest:
+                        items = [p.strip().lstrip("*").strip() for p in rest.split(sep) if p.strip()]
+                        sep_found = True
+                        break
+                if not sep_found:
+                    items = [rest]
+
+        if not items:
+            await ctx.send("No games found to debug. Put a list after the command.")
+            return
+
+        await ctx.send("Resolving Steam IDs (may take a moment)...")
+        steam_ids = []
+        batch_size = 5
+        batch_delay = 1.0
+        for i in range(0, len(items), batch_size):
+            batch = items[i : i + batch_size]
+            lookup_tasks = [get_steam_app_id_from_name(self.bot, title) for title in batch]
+            try:
+                batch_ids = await asyncio.gather(*lookup_tasks)
+            except Exception as e:
+                await ctx.send(f"Error while resolving games: {e}")
+                return
+            steam_ids.extend(batch_ids)
+            if i + batch_size < len(items):
+                await asyncio.sleep(batch_delay)
+
+        title_to_steam = {title: sid for title, sid in zip(items, steam_ids)}
+        ids_to_query = [sid for sid in {sid for sid in steam_ids if sid}]
+
+        api_result = None
+        if ids_to_query:
+            try:
+                api_result = await get_ggdeals_api_prices_by_steamid(self.bot, ids_to_query)
+            except Exception as e:
+                await ctx.send(f"Error fetching gg.deals API: {e}")
+                return
+
+        report = {
+            "title_to_steam": title_to_steam,
+            "api_result": api_result,
+        }
+
+        fp = io.BytesIO(json.dumps(report, indent=2).encode("utf-8"))
+        fp.seek(0)
+        file = discord.File(fp, filename="deallist_debug.json")
+        await ctx.send("Debug report:", file=file)
 
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True)
@@ -566,8 +714,6 @@ class Deals(commands.Cog):
         embed = discord.Embed(title="Risks", description=warning)
         embed.set_image(url="https://bae.lena.moe/KHHRKQE1FoJl.jpg")
 
-        # Check if the bot has add_reactions permission
- 
         try:
             await ctx.message.add_reaction("✅")
         except discord.Forbidden:
@@ -575,11 +721,28 @@ class Deals(commands.Cog):
 
         try:
             await ctx.author.send(embed=embed)
-            # Use ctx.tick() to handle reactions gracefully instead of manual sleep/delete
             dm_message = await ctx.send("ℹ️ Sent you a DM with the risks.")
-            # Delete the message after 10 seconds using delete_after
             await dm_message.delete(delay=10)
         except discord.Forbidden:
             await ctx.send(
                 "⚠️ I couldn't send you a DM. Please enable DMs from server members to receive the risks."
             )
+
+    @commands.command()
+    @commands.is_owner()
+    async def clearcache(self, ctx):
+        """Clear local gg.deals and Steam app list caches."""
+        base = os.path.dirname(__file__)
+        files = [os.path.join(base, "ggdeals_cache.json"), os.path.join(base, "steam_app_list.json")]
+        removed = []
+        for f in files:
+            try:
+                if os.path.exists(f):
+                    os.remove(f)
+                    removed.append(os.path.basename(f))
+            except Exception:
+                pass
+        if removed:
+            await ctx.send(f"Removed cache files: {', '.join(removed)}")
+        else:
+            await ctx.send("No cache files found.")
