@@ -1,7 +1,7 @@
 import discord
 import random
 from datetime import datetime
-from redbot.core import commands
+from redbot.core import commands, app_commands
 import logging
 from .functions import (
     get_steam_app_id_from_name,
@@ -10,9 +10,19 @@ from .functions import (
     get_ggdeals_bundles_by_steam_app_id,
 )
 import html
+import re
+import unicodedata
 
 import asyncio
 from aiohttp import ClientConnectorError
+
+
+def _ggdeals_game_slug(title):
+    title = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii").lower()
+    title = re.sub(r"['’‘`´]", "", title)
+    title = re.sub(r"(?<=[a-z])\.(?=[a-z])", "", title)
+    title = title.replace("&", " ")
+    return re.sub(r"[^a-z0-9]+", "-", title).strip("-")
 
 
 def __init__(self, bot):
@@ -20,11 +30,153 @@ def __init__(self, bot):
     self.log = logging.getLogger("glas.glas-cogs.ggdeals")
 
 
+class _NoopTyping:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        return False
+
+
+class _InteractionContext:
+    def __init__(self, interaction):
+        self.interaction = interaction
+        self.messages = []
+
+    def typing(self):
+        return _NoopTyping()
+
+    async def send(self, *args, **kwargs):
+        content = args[0] if args else kwargs.pop("content", None)
+        self.messages.append({"content": content, **kwargs})
+
+    async def flush(self):
+        contents = []
+        embeds = []
+        for message in self.messages:
+            content = message.get("content")
+            if content:
+                content = str(content)
+                if content == "No bundles found for this game." and embeds:
+                    embeds[-1].add_field(name="Bundles", value=content, inline=False)
+                else:
+                    contents.append(content)
+            embed = message.get("embed")
+            if embed is not None:
+                if isinstance(embed, (list, tuple)):
+                    embeds.extend(embed)
+                else:
+                    embeds.append(embed)
+            embeds.extend(message.get("embeds", []) or [])
+        await self.interaction.edit_original_response(
+            content="\n\n".join(contents) if contents else None,
+            embeds=embeds,
+        )
+
+
 class Deals(commands.Cog):
     """A cog for finding game deals from various storefronts."""
     def __init__(self, bot):
         self.bot = bot
         self.log = logging.getLogger("glas.glas-cogs.ggdeals")
+
+    @app_commands.command(
+        name="deals",
+        description="Find current prices and bundles for a Steam game.",
+    )
+    @app_commands.describe(gamename="The game title to search for")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def deals_slash(self, interaction: discord.Interaction, gamename: str):
+        await interaction.response.defer(thinking=True)
+        if "," in gamename:
+            titles = [title.strip() for title in gamename.split(",") if title.strip()]
+            if not titles:
+                await interaction.edit_original_response(
+                    content="Please enter one or more game titles separated by commas.",
+                    embed=None,
+                )
+                return
+            try:
+                embed = await self._build_deallist_embed(titles)
+            except ClientConnectorError:
+                await interaction.edit_original_response(
+                    content="Price service unavailable (maintenance). Try later.",
+                    embed=None,
+                )
+                return
+            except Exception as e:
+                await interaction.edit_original_response(
+                    content=f"Unexpected error fetching prices: {e}",
+                    embed=None,
+                )
+                return
+            await interaction.edit_original_response(content=None, embed=embed)
+            return
+        command_context = _InteractionContext(interaction)
+        try:
+            await self.deals.callback(self, command_context, gamename=gamename)
+        except Exception as e:
+            await command_context.send(f"An unexpected error occurred: {e}")
+        await command_context.flush()
+
+    async def _build_deallist_embed(self, titles):
+        steam_ids = await asyncio.gather(
+            *(get_steam_app_id_from_name(self.bot, title) for title in titles)
+        )
+        ids_to_query = list({steam_id for steam_id in steam_ids if steam_id})
+        api_result = None
+        if ids_to_query:
+            api_result = await get_ggdeals_api_prices_by_steamid(self.bot, ids_to_query)
+
+        data = api_result.get("data", {}) if isinstance(api_result, dict) else {}
+        rows = []
+        for title, steam_id in zip(titles, steam_ids):
+            if not steam_id:
+                rows.append((title, "NOT FOUND", None, None))
+                continue
+            game_data = data.get(str(steam_id)) or data.get(int(steam_id))
+            if not game_data:
+                rows.append((title, "N/A", None, None))
+                continue
+            prices = game_data.get("prices", {}) or {}
+            price_value = prices.get("currentKeyshops")
+            if price_value in (None, "", 0, 0.0):
+                price_value = prices.get("currentRetail")
+            if price_value in (None, "", 0, 0.0):
+                rows.append((title, "N/A", None, None))
+                continue
+            currency = prices.get("currency") or ""
+            try:
+                price_number = float(str(price_value).replace(",", "").strip())
+            except (TypeError, ValueError):
+                price_number = None
+            currency_display = f" {currency}" if currency else ""
+            rows.append((title, f"${price_value}{currency_display}", price_number, currency))
+
+        numeric_values = [row[2] for row in rows if row[2] is not None]
+        currencies = {row[3] for row in rows if row[2] is not None and row[3] is not None}
+        total_text = None
+        if numeric_values:
+            if len(currencies) <= 1:
+                total_value = sum(numeric_values)
+                currency_label = (next(iter(currencies)) or "").strip()
+                currency_suffix = f" {currency_label}" if currency_label else ""
+                total_text = f"${total_value:.2f}{currency_suffix}"
+            else:
+                total_text = "(mixed currencies, total unavailable)"
+
+        rows.sort(key=lambda row: (row[2] is None, row[2]))
+        formatted_lines = [f"{title} — {price}" for title, price, _, _ in rows]
+        if total_text:
+            formatted_lines.extend(["", f"Total value: {total_text}"])
+        description = "\n".join(formatted_lines)
+        if len(description) > 4096:
+            description = description[:4093] + "..."
+        return discord.Embed(
+            title="Deal list: lowest key prices",
+            description=description or "No games were found.",
+        )
 
     @commands.command(cooldown_after_parsing=True)
     @commands.bot_has_permissions(embed_links=True)
@@ -106,19 +258,28 @@ class Deals(commands.Cog):
                             inline=True,
                         )
                 # Add link to all deals at the top
-                if steam_details and steam_details.get("name"):
-                    deals_url = f"https://gg.deals/game/{steam_details['name'].replace(' ', '-')}"
-                else:
-                    deals_url = f"https://gg.deals/game/{gamename.replace(' ', '-')}"
-
-                warning = (
-                    "Buying from keyshops it may have risks type ``{prefix}risks`` for details."
-                ).format(prefix=ctx.clean_prefix)
-                embed.add_field(
-                    name="Check all deals in current shops",
-                    value=f"[Clicking here]({deals_url}) \n\n{warning}",
-                    inline=False,
+                game_slug_title = (
+                    steam_details["name"]
+                    if steam_details and steam_details.get("name")
+                    else gamename
                 )
+                deals_url = f"https://gg.deals/game/{_ggdeals_game_slug(game_slug_title)}/"
+
+                if isinstance(ctx, _InteractionContext):
+                    embed.add_field(
+                        name="Check all deals in current shops",
+                        value=f"[Clicking here]({deals_url})",
+                        inline=False,
+                    )
+                else:
+                    warning = (
+                        "Buying from keyshops it may have risks type ``{prefix}risks`` for details."
+                    ).format(prefix=ctx.clean_prefix)
+                    embed.add_field(
+                        name="Check all deals in current shops",
+                        value=f"[Clicking here]({deals_url}) \n\n{warning}",
+                        inline=False,
+                    )
                 # Add prices/fees at the bottom
                 if api_game_data:
                     prices = api_game_data.get("prices", {})
